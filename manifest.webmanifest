@@ -1,0 +1,1 @@
+{"background_color":"#0c0e13","description":"A pocket companion for people who get scared on trains. Works offline, always.","display":"standalone","icons":[{"purpose":"any","sizes":"any","src":"icon.svg","type":"image/svg+xml"}],"name":"I Hate Trains","orientation":"portrait","scope":"./","short_name":"IHT","start_url":"./index.html","theme_color":"#0c0e13"}

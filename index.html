@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0c0e13">
+<meta name="description" content="I Hate Trains — a free pocket companion for people who get scared on trains. Works offline, always.">
+<title>I Hate Trains</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main id="app">
+
+  <!-- ONBOARDING 1/4 — first launch only -->
+  <section class="screen" id="screen-ob1" aria-label="Welcome">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">first, a hello</p>
+      <p class="obstep rise d1">1 of 4</p>
+      <h2 class="serene rise d2">What should<br>I call you?</h2>
+      <label class="field rise d3">Your name
+        <input id="ob-name" type="text" inputmode="text" autocomplete="off" placeholder="Whatever feels right">
+      </label>
+      <button class="btn calm big rise d4" id="btn-ob1-next">Next</button>
+      <button class="linklike quiet" id="btn-ob1-skip">Skip this</button>
+    </div>
+  </section>
+
+  <!-- ONBOARDING 2/4 — location, VISIBLE geolocation attempt -->
+  <section class="screen" id="screen-ob2" aria-label="Where are you">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">where are you</p>
+      <p class="obstep rise d1">2 of 4</p>
+      <h2 class="serene rise d2">Where's home base?</h2>
+      <div class="loccard rise d2" aria-live="polite">
+        <p class="body" id="ob-loc-status">Getting ready to look for you…</p>
+        <button class="linklike" id="btn-ob-loc-retry" hidden>Try again</button>
+      </div>
+      <label class="field rise d3">City
+        <input id="ob-city" type="text" inputmode="text" autocomplete="off" placeholder="Your city">
+      </label>
+      <label class="field rise d3">The line you ride most
+        <input id="ob-line" type="text" inputmode="text" autocomplete="off" placeholder="e.g. Line 1">
+      </label>
+      <button class="btn calm big rise d4" id="btn-ob2-next">Next</button>
+      <button class="linklike quiet" id="btn-ob2-back">Back</button>
+    </div>
+  </section>
+
+  <!-- ONBOARDING 3/4 — how are you feeling -->
+  <section class="screen" id="screen-ob3" aria-label="How are you feeling">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">right now</p>
+      <p class="obstep rise d1">3 of 4</p>
+      <h2 class="serene rise d2">How are you feeling<br>right now?</h2>
+      <div class="feelgrid rise d3" id="ob-feel">
+        <button class="feelbtn" data-feel="steady">Steady</button>
+        <button class="feelbtn" data-feel="uneasy">Uneasy</button>
+        <button class="feelbtn" data-feel="spiraling">Spiraling</button>
+      </div>
+      <p class="lede soft rise d3" id="ob-feel-note">No wrong answer. This just helps the app meet you where you are.</p>
+      <button class="btn calm big rise d4" id="btn-ob3-next">Next</button>
+      <button class="linklike quiet" id="btn-ob3-back">Back</button>
+    </div>
+  </section>
+
+  <!-- ONBOARDING 4/4 — comfort links, optional -->
+  <section class="screen" id="screen-ob4" aria-label="Your comforts">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">your comforts</p>
+      <p class="obstep rise d1">4 of 4 · optional</p>
+      <h2 class="serene rise d2">Anything that<br>steadies you?</h2>
+      <p class="lede soft rise d3">A favorite reel, a silly video, a calm playlist. Save a link or two now — you'll find them in your Comfort corner whenever you're online.</p>
+      <div class="addrow rise d3">
+        <input id="ob-comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste a link…" aria-label="Comfort link URL">
+      </div>
+      <div class="addrow rise d3">
+        <input id="ob-comfort-label" type="text" autocomplete="off" placeholder="Label it, e.g. puppy reel" aria-label="Comfort link label">
+        <button class="btn calm" id="ob-comfort-add">Save</button>
+      </div>
+      <div class="chiplist rise d3" id="ob-comfort-list"></div>
+      <button class="btn calm big rise d4" id="btn-ob4-done">Done — take me in</button>
+      <button class="linklike quiet" id="btn-ob4-back">Back</button>
+    </div>
+  </section>
+
+  <!-- HOME — panic-first, Rootd-style -->
+  <section class="screen active" id="screen-home" aria-label="Home">
+    <div class="wrap">
+      <p class="kicker rise d1">a pocket companion for scared riders</p>
+      <h1 class="mega rise d2">I hate<br>trains.</h1>
+      <p class="lede rise d3" id="home-greet">Same. Let's get through this ride together.</p>
+      <button class="panicbtn rise d3" data-go="screen-panic">I need help right now</button>
+      <div class="ridecard rise d4">
+        <p class="body" id="home-ride-line">Your ride</p>
+        <button class="btn calm big" data-go="screen-checkin" style="margin-bottom:0">Start a ride</button>
+      </div>
+      <div class="homerow rise d4">
+        <button class="btn ghost" data-go="screen-toolkit">Open the toolkit</button>
+        <button class="btn ghost" data-go="screen-comfort" id="link-comfort-home">Comfort</button>
+      </div>
+      <p class="fineprint rise d4">Free forever. Works offline. Always. Even in a tunnel.</p>
+      <nav class="homelinks rise d4">
+        <button class="linklike" data-go="screen-plan">My plan</button>
+        <span aria-hidden="true">·</span>
+        <button class="linklike" data-go="screen-history">History</button>
+        <span aria-hidden="true">·</span>
+        <button class="linklike" data-go="screen-privacy">Privacy</button>
+        <span aria-hidden="true">·</span>
+        <button class="linklike" data-go="screen-about">About</button>
+      </nav>
+    </div>
+  </section>
+
+  <!-- PANIC — the sacred flow. Calm, direct, zero jokes. -->
+  <section class="screen" id="screen-panic" aria-label="Panic help">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">right now</p>
+      <h2 class="serene rise d2">You're safe.</h2>
+      <p class="lede soft rise d3">This feels awful, but it will pass. Panic always does. Pick what sounds bearable:</p>
+      <button class="btn calm big rise d3" id="btn-panic-breathe">Breathe with me</button>
+      <button class="btn ghost rise d4" id="btn-panic-ground">Ground me instead</button>
+      <button class="linklike quiet rise d4" data-go="screen-nonbreath">Breathing and counting don't work for me</button>
+      <button class="backlink rise d4" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- BREATHE — starts the instant you arrive. No gates in the panic path. -->
+  <section class="screen" id="screen-breathe" aria-label="Breathing exercise">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">breathe with me</p>
+      <div class="patternchips rise d2" id="breath-patterns" role="group" aria-label="Breathing pattern">
+        <button class="pchip" data-pattern="gentle" aria-pressed="true">Gentle</button>
+        <button class="pchip" data-pattern="box" aria-pressed="false">Box</button>
+        <button class="pchip" data-pattern="478" aria-pressed="false">4–7–8</button>
+      </div>
+      <div class="breathcircle rise d2" id="breath-circle"><span id="breath-word">…</span></div>
+      <p class="breathcap" id="breath-cap">Follow the circle.</p>
+      <p class="fineprint" id="breath-safety">Breathing exercises are optional coping tools, not treatment. If breathing feels difficult, stop right away and pick a grounding tool instead.</p>
+      <button class="linklike quiet" id="btn-breathe-end">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- NON-BREATH — Manus's honest entry, surfaced first -->
+  <section class="screen" id="screen-nonbreath" aria-label="Without breathing">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">no breath required</p>
+      <h2 class="serene rise d2">Breathing isn't for everyone.</h2>
+      <p class="lede soft rise d3">That's completely fine. These don't ask you to change your breath or count anything:</p>
+      <div class="toolcards rise d3" id="nonbreath-list"></div>
+      <button class="btn ghost rise d4" data-go="screen-crisis">I'd rather reach someone</button>
+      <button class="backlink rise d4" data-go="screen-panic">← back</button>
+    </div>
+  </section>
+
+  <!-- TOOLKIT — the full coping library -->
+  <section class="screen" id="screen-toolkit" aria-label="Coping toolkit">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">the toolkit</p>
+      <h2 class="serene rise d2">Things that can help.</h2>
+      <p class="lede soft rise d3">These are coping tools, not treatment. Nothing here grades you. Pick whatever sounds bearable.</p>
+      <div id="toolkit-groups" class="rise d3"></div>
+      <button class="backlink rise d4" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- WALK — generic tool walkthrough -->
+  <section class="screen" id="screen-walk" aria-label="Guided tool">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1" id="walk-cat">tool</p>
+      <p class="stepcount" id="walk-count">1 of 3</p>
+      <h2 class="serene" id="walk-title">Title</h2>
+      <p class="groundprompt" id="walk-prompt">Step text.</p>
+      <p class="groundhint" id="walk-note"></p>
+      <div class="safetybox" id="walk-safety" hidden></div>
+      <div class="groundbar"><div id="walk-fill"></div></div>
+      <div class="walknav">
+        <button class="btn ghost" id="btn-walk-back">Back</button>
+        <button class="btn calm" id="btn-walk-next">Next</button>
+      </div>
+      <button class="linklike quiet" id="btn-walk-close">Close</button>
+    </div>
+  </section>
+
+  <!-- PRE-RIDE CHECK-IN — Stoic-style ritual -->
+  <section class="screen" id="screen-checkin" aria-label="How are you feeling">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">before we ride</p>
+      <h2 class="serene rise d2">How are you feeling right now?</h2>
+      <div class="feelgrid rise d3">
+        <button class="feelbtn" data-feel="steady">Steady</button>
+        <button class="feelbtn" data-feel="uneasy">Uneasy</button>
+        <button class="feelbtn" data-feel="spiraling">Spiraling</button>
+      </div>
+      <p class="lede soft" id="checkin-note" aria-live="polite"></p>
+      <div id="checkin-actions" hidden>
+        <button class="btn calm big" id="btn-checkin-breathe" hidden>Breathe for a minute first</button>
+        <button class="btn ghost" id="btn-checkin-continue">Continue</button>
+      </div>
+      <button class="backlink" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- CHECKLIST -->
+  <section class="screen" id="screen-checklist" aria-label="Ride prep">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">ride prep</p>
+      <h2 class="serene rise d2">Thirty seconds now.<br>Calmer ride later.</h2>
+      <div class="checklist rise d3" id="checklist">
+        <button class="check" data-item="water"><span class="box" aria-hidden="true"></span><span><strong>Water</strong><em>Drink some now.</em></span></button>
+        <button class="check" data-item="headphones"><span class="box" aria-hidden="true"></span><span><strong>Headphones</strong><em>They help.</em></span></button>
+        <button class="check" data-item="meds"><span class="box" aria-hidden="true"></span><span><strong>Prescribed meds</strong><em>With you, if you take them.</em></span></button>
+        <button class="check" data-item="exit"><span class="box" aria-hidden="true"></span><span><strong>Exit plan</strong><em>Know your stop.</em></span></button>
+      </div>
+      <button class="btn calm big rise d4" data-go="screen-setup">All set. Let's ride.</button>
+      <button class="backlink" data-go="screen-checkin">← back</button>
+    </div>
+  </section>
+
+  <!-- RIDE SETUP — location: try first, ask only if needed -->
+  <section class="screen" id="screen-setup" aria-label="Ride setup">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">your ride</p>
+      <h2 class="serene rise d2">Where to?</h2>
+      <div class="loccard rise d2" aria-live="polite">
+        <p class="body" id="loc-status">Finding you…</p>
+      </div>
+      <label class="field rise d3">City
+        <input id="in-city" type="text" inputmode="text" autocomplete="off" placeholder="Your city">
+      </label>
+      <label class="field rise d3">Line / train
+        <input id="in-line" type="text" inputmode="text" autocomplete="off" placeholder="Line 1">
+      </label>
+      <label class="field rise d3">Destination
+        <input id="in-dest" type="text" inputmode="text" autocomplete="off" placeholder="Your stop">
+      </label>
+      <div class="field rise d3">Stops to go
+        <div class="stepper">
+          <button id="stops-minus" aria-label="Fewer stops">−</button>
+          <span id="stops-count" aria-live="polite">5</span>
+          <button id="stops-plus" aria-label="More stops">+</button>
+        </div>
+      </div>
+      <button class="btn calm big rise d4" id="btn-start-trip">Start trip</button>
+      <button class="btn ghost rise d4" id="btn-share-card">Send trip card</button>
+      <p class="fineprint" id="share-hint">Shares your route and ETA with someone you trust, while you still have signal.</p>
+      <button class="backlink" data-go="screen-checklist">← back</button>
+    </div>
+  </section>
+
+  <!-- TRIP — the calm ritual -->
+  <section class="screen" id="screen-trip" aria-label="On your trip">
+    <div class="wrap narrow tripwrap">
+      <p class="kicker rise d1" id="trip-route">On your way</p>
+      <div class="counter rise d2">
+        <div class="counternum" id="stops-left" aria-live="polite">5</div>
+        <div class="counterlabel" id="stops-word">stops to go</div>
+      </div>
+      <button class="tapbtn rise d3" id="btn-stop-tap">Tap at each stop</button>
+      <p class="fineprint">One tap per stop. That's all you have to do.</p>
+      <div class="tools rise d3">
+        <button class="tool" id="tool-breathe"><span class="tool-ic" aria-hidden="true">◯</span>Breathe</button>
+        <button class="tool" id="tool-ground"><span class="tool-ic" aria-hidden="true">◎</span>Ground</button>
+        <button class="tool" id="tool-sound" aria-pressed="false"><span class="tool-ic" aria-hidden="true">〜</span><span id="sound-label">Hum off</span></button>
+      </div>
+      <div class="tools tools2 rise d4">
+        <button class="tool" data-go="screen-toolkit"><span class="tool-ic" aria-hidden="true">✦</span>Toolkit</button>
+        <button class="tool" data-go="screen-comfort" id="tool-comfort"><span class="tool-ic" aria-hidden="true">☁</span>Comfort</button>
+        <button class="tool" data-go="screen-crisis"><span class="tool-ic" aria-hidden="true">✆</span>Reach out</button>
+      </div>
+      <button class="linklike quiet" id="btn-end-trip">End trip</button>
+    </div>
+  </section>
+
+  <!-- ARRIVED -->
+  <section class="screen" id="screen-arrived" aria-label="You made it">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">last stop</p>
+      <h2 class="serene rise d2">You made it.</h2>
+      <p class="lede soft rise d3">That took courage.</p>
+      <button class="btn calm big rise d3" id="btn-im-home">I'm home</button>
+      <p class="fineprint" id="home-note">Your person has your trip card with the ETA.</p>
+    </div>
+  </section>
+
+  <!-- REFLECT — Stoic-style post-ride ritual -->
+  <section class="screen" id="screen-reflect" aria-label="Reflect on your ride">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">one more thing</p>
+      <h2 class="serene rise d2">How was that ride?</h2>
+      <p class="body rise d3">Compared to before:</p>
+      <div class="feelgrid rise d3">
+        <button class="feelbtn" data-r="calmer">Calmer</button>
+        <button class="feelbtn" data-r="same">Same</button>
+        <button class="feelbtn" data-r="harder">Harder</button>
+      </div>
+      <p class="body rise d3">Anything that helped? <em>(optional)</em></p>
+      <div class="chipgrid rise d3" id="reflect-tools"></div>
+      <label class="field rise d3">One line, if you want
+        <input id="in-reflect" type="text" inputmode="text" autocomplete="off" placeholder="Optional. Just for you.">
+      </label>
+      <button class="btn calm big rise d4" id="btn-reflect-done">Done</button>
+      <p class="fineprint">Private. Stays on this phone. No scores, no streaks.</p>
+    </div>
+  </section>
+
+  <!-- HISTORY — local only, no grades -->
+  <section class="screen" id="screen-history" aria-label="Ride history">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">your rides</p>
+      <h2 class="serene rise d2">What you've noticed.</h2>
+      <div id="history-list" class="rise d3"></div>
+      <button class="btn ghost rise d4" id="btn-erase">Erase everything on this phone</button>
+      <p class="fineprint">This deletes your plans, notes, reflections and saved links from this device. It can't be undone.</p>
+      <button class="backlink" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- MY PLAN — editable crowd/exit/coping plan -->
+  <section class="screen" id="screen-plan" aria-label="My ride plan">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">before boarding</p>
+      <h2 class="serene rise d2">My ride backup plan.</h2>
+      <p class="lede soft rise d3">Make a small plan while you have headspace. No live transit data is used. You are always allowed to reassess — this plan never tells you to stay.</p>
+      <label class="field rise d3">A stop where I could step off, if I choose
+        <input id="plan-exit" type="text" autocomplete="off" placeholder="e.g. the next big station">
+      </label>
+      <label class="field rise d3">One person or tool I could reach for
+        <input id="plan-reach" type="text" autocomplete="off" placeholder="e.g. text Maya, open the toolkit">
+      </label>
+      <p class="body rise d3">Pocket checklist <em>(things that help me)</em></p>
+      <div class="chiplist rise d3" id="plan-pocket"></div>
+      <div class="addrow rise d3">
+        <input id="plan-pocket-in" type="text" autocomplete="off" placeholder="Add something, e.g. water" aria-label="Add pocket item">
+        <button class="btn calm" id="plan-pocket-add">Add</button>
+      </div>
+      <p class="body rise d3">Confidence plan <em>(three small steps, in my words — only when I'm ready)</em></p>
+      <label class="field rise d3">Step 1
+        <input id="plan-c1" type="text" autocomplete="off" placeholder="Something small and manageable">
+      </label>
+      <label class="field rise d3">Step 2
+        <input id="plan-c2" type="text" autocomplete="off" placeholder="">
+      </label>
+      <label class="field rise d3">Step 3
+        <input id="plan-c3" type="text" autocomplete="off" placeholder="">
+      </label>
+      <p class="fineprint" id="plan-saved" aria-live="polite"></p>
+      <button class="backlink" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- COMFORT CORNER — online-enhanced only -->
+  <section class="screen" id="screen-comfort" aria-label="Comfort corner">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">a breather</p>
+      <h2 class="serene rise d2">Comfort corner.</h2>
+      <p class="lede soft rise d3">Save links to things that comfort you — a favorite reel, a silly video, a calm playlist. They open in your browser. Save them while you're online; the toolkit works even when you're not.</p>
+      <div class="chiplist rise d3" id="comfort-list"></div>
+      <div class="addrow rise d3">
+        <input id="comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste a link…" aria-label="Comfort link URL">
+      </div>
+      <div class="addrow rise d3">
+        <input id="comfort-label" type="text" autocomplete="off" placeholder="Label it, e.g. puppy reel" aria-label="Comfort link label">
+        <button class="btn calm" id="comfort-add">Save</button>
+      </div>
+      <button class="btn ghost rise d4" id="btn-instagram">Open Instagram</button>
+      <p class="fineprint">The app never reads your feed. It just opens what you saved, or Instagram itself, when you have internet.</p>
+      <button class="backlink" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- CRISIS -->
+  <section class="screen" id="screen-crisis" aria-label="Crisis resources">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">reach someone</p>
+      <h2 class="serene rise d2">You don't have to ride this out alone.</h2>
+      <div class="crisislist rise d3">
+        <a class="crisis" href="tel:988"><strong>Call or text 988</strong><em>US &amp; Canada · Suicide &amp; Crisis Lifeline</em></a>
+        <a class="crisis" href="tel:116123"><strong>Call 116 123</strong><em>UK · Samaritans</em></a>
+        <a class="crisis" id="crisis-local" href="#" hidden><strong id="crisis-local-num"></strong><em>My local number</em></a>
+      </div>
+      <label class="field rise d3">My local crisis number <em>(optional)</em>
+        <input id="in-crisis-local" type="tel" inputmode="tel" autocomplete="off" placeholder="Saved on this phone only">
+      </label>
+      <p class="fineprint">Tapping a number leaves the app and uses your phone service. If symptoms are new, severe, or medically concerning, seek urgent medical help.</p>
+      <button class="backlink" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section class="screen" id="screen-privacy" aria-label="Privacy and settings">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">yours, only</p>
+      <h2 class="serene rise d2">Privacy.</h2>
+      <p class="body rise d3">Everything you put here — plans, reflections, notes, saved links — stays on this phone. There is no account, no server, no analytics, no tracking, no ads. Deleting the app deletes everything.</p>
+      <div class="setrow rise d3">
+        <button class="check" id="set-haptics" aria-pressed="true"><span class="box" aria-hidden="true"></span><span><strong>Gentle vibrations</strong><em>Soft pulses during breathing. Android only — iPhones use sound cues instead.</em></span></button>
+      </div>
+      <div class="setrow rise d3">
+        <button class="check" id="set-sound" aria-pressed="true"><span class="box" aria-hidden="true"></span><span><strong>Breathing sound cues</strong><em>A soft chime marks each breath phase. Works on iPhone and Android.</em></span></button>
+      </div>
+      <p class="fineprint rise d3">The app respects your system's reduced-motion and large-text settings automatically.</p>
+      <button class="btn ghost rise d4" id="btn-erase-2">Erase everything on this phone</button>
+      <button class="backlink" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="screen" id="screen-about" aria-label="About">
+    <div class="wrap narrow">
+      <button class="backlink" data-go="screen-home">← back</button>
+      <h2 class="serene">What is this?</h2>
+      <p class="lede soft">A free pocket companion for people who get scared on trains. Built for the ride itself. It works fully offline, in any metro in the world.</p>
+      <h3>The not-medical-advice part</h3>
+      <p class="body">I Hate Trains is a comfort tool, not a medical device. It doesn't diagnose, treat, or replace professional help. These are coping tools, not treatment. If anxiety is running your life, please talk to a clinician you trust.</p>
+      <h3>If it gets really bad</h3>
+      <ul class="bodylist">
+        <li>US or Canada: call or text <strong>988</strong></li>
+        <li>UK: call Samaritans at <strong>116 123</strong></li>
+        <li>Anywhere in an emergency: call your local emergency number</li>
+      </ul>
+      <p class="fineprint">Made for everyone who holds their breath between stations.</p>
+      <p class="fineprint" id="app-version">version 5</p>
+    </div>
+  </section>
+
+</main>
+<button id="sos-float" class="sosfloat" data-go="screen-panic" aria-label="Get help right now" hidden>SOS</button>
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline-first: never block the app on SW failure */ });
+  });
+}
+</script>
+</body>
+</html>
