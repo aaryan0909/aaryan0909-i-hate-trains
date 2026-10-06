@@ -18,7 +18,7 @@
   <section class="screen" id="screen-ob1" aria-label="Welcome">
     <div class="wrap narrow">
       <p class="kicker rise d1">first, a hello</p>
-      <p class="obstep rise d1">1 of 4</p>
+      <p class="obstep rise d1">1 of 5</p>
       <h2 class="serene rise d2">What should<br>I call you?</h2>
       <label class="field rise d3">Your name
         <input id="ob-name" type="text" inputmode="text" autocomplete="off" placeholder="Whatever feels right">
@@ -32,7 +32,7 @@
   <section class="screen" id="screen-ob2" aria-label="Where are you">
     <div class="wrap narrow">
       <p class="kicker rise d1">where are you</p>
-      <p class="obstep rise d1">2 of 4</p>
+      <p class="obstep rise d1">2 of 5</p>
       <h2 class="serene rise d2">Where's home base?</h2>
       <div class="loccard rise d2" aria-live="polite">
         <p class="body" id="ob-loc-status">Getting ready to look for you…</p>
@@ -53,7 +53,7 @@
   <section class="screen" id="screen-ob3" aria-label="How are you feeling">
     <div class="wrap narrow">
       <p class="kicker rise d1">right now</p>
-      <p class="obstep rise d1">3 of 4</p>
+      <p class="obstep rise d1">3 of 5</p>
       <h2 class="serene rise d2">How are you feeling<br>right now?</h2>
       <div class="feelgrid rise d3" id="ob-feel">
         <button class="feelbtn" data-feel="steady">Steady</button>
@@ -70,26 +70,35 @@
   <section class="screen" id="screen-ob4" aria-label="Your comfort">
     <div class="wrap narrow">
       <p class="kicker rise d1">your comfort</p>
-      <p class="obstep rise d1">4 of 4 · optional</p>
+      <p class="obstep rise d1">4 of 5 · optional</p>
       <h2 class="serene rise d2">One thing that<br>steadies you?</h2>
       <p class="lede soft rise d3">A favorite reel, a playlist — one link. The app's calm cards always work, even offline.</p>
       <div class="addrow rise d3">
         <input id="ob-comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste one link (optional)…" aria-label="One comfort link">
       </div>
-      <button class="btn calm big rise d4" id="btn-ob4-done">Done — take me in</button>
+      <button class="btn calm big rise d4" id="btn-ob4-next">Next</button>
       <button class="linklike quiet" id="btn-ob4-back">Back</button>
     </div>
   </section>
 
-  <!-- TOUR — first-time walkthrough, shows once, skippable -->
-  <section class="screen" id="screen-tour" aria-label="Quick tour">
-    <div class="wrap narrow center">
-      <p class="kicker rise d1">a quick tour</p>
-      <p class="stepcount" id="tour-count">1 of 4</p>
-      <h2 class="serene" id="tour-title">Title</h2>
-      <p class="lede soft" id="tour-body">Body.</p>
-      <button class="btn calm big" id="btn-tour-next">Next</button>
-      <button class="linklike quiet" id="btn-tour-skip">Skip the tour</button>
+  <!-- ONBOARDING 5/5 — meet your co-rider -->
+  <section class="screen" id="screen-ob5" aria-label="Meet your co-rider">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">one more thing</p>
+      <p class="obstep rise d1">5 of 5 · optional</p>
+      <h2 class="serene rise d2">Meet your<br>co-rider.</h2>
+      <p class="lede soft rise d3">A small companion for scary rides. No feeding, no meters, no worries — just company.</p>
+      <div class="petpick rise d3" id="ob-pet-pick" role="group" aria-label="Pick your co-rider">
+        <button class="petopt" data-pet="blob" aria-pressed="true"><span class="petprev" id="ob-pet-blob"></span><strong>Mochi</strong><em>the blob</em></button>
+        <button class="petopt" data-pet="bird" aria-pressed="false"><span class="petprev" id="ob-pet-bird"></span><strong>Pip</strong><em>the bird</em></button>
+        <button class="petopt" data-pet="cat" aria-pressed="false"><span class="petprev" id="ob-pet-cat"></span><strong>Miso</strong><em>the cat</em></button>
+      </div>
+      <label class="field rise d3">Their name
+        <input id="ob-pet-name" type="text" inputmode="text" autocomplete="off" maxlength="24" placeholder="Mochi">
+      </label>
+      <button class="btn calm big rise d4" id="btn-ob5-done">Done — take me in</button>
+      <button class="linklike quiet" id="btn-ob5-back">Back</button>
+      <button class="linklike quiet" id="btn-ob5-skip">Skip for now</button>
     </div>
   </section>
 
@@ -100,10 +109,14 @@
       <h1 class="mega rise d2">I hate<br>trains.</h1>
       <p class="lede rise d3" id="home-greet">Same. Let's get through this ride together.</p>
       <p class="cityline rise d3" id="home-cityline"></p>
+      <button class="pethome rise d3" id="pet-home" aria-label="Say hi to your co-rider">
+        <span class="petsvg" id="pet-home-svg"></span>
+        <span class="petcap"><strong id="pet-home-name">Mochi</strong><em>is riding with you</em></span>
+      </button>
       <button class="panicbtn rise d3" data-go="screen-panic">I need help right now</button>
       <div class="ridecard rise d4">
         <p class="body" id="home-ride-line">Your ride</p>
-        <button class="btn calm big" data-go="screen-checkin" style="margin-bottom:0">Start a ride</button>
+        <button class="btn calm big" id="btn-start-ride" data-go="screen-checkin" style="margin-bottom:0">Start a ride</button>
       </div>
       <p class="fineprint rise d4">Free forever. Works offline. Always. Even in a tunnel.</p>
       <nav class="homelinks rise d4">
@@ -128,9 +141,18 @@
       <p class="kicker rise d1">right now</p>
       <h2 class="serene rise d2">You're safe.</h2>
       <p class="lede soft rise d3">This will pass. Pick what sounds bearable:</p>
-      <button class="btn calm big rise d3" id="btn-panic-breathe">Breathe with me</button>
-      <button class="btn ghost rise d4" id="btn-panic-ground">Ground me instead</button>
-      <button class="btn ghost rise d4" id="btn-panic-comfort">Show me something cute</button>
+      <button class="panicopt rise d3 po-breathe" id="btn-panic-breathe">
+        <span class="po-ic" aria-hidden="true">◯</span>
+        <span class="po-tx"><strong>Breathe with me</strong><em>Slow your breath, slow your heart.</em></span>
+      </button>
+      <button class="panicopt rise d4 po-ground" id="btn-panic-ground">
+        <span class="po-ic" aria-hidden="true">◎</span>
+        <span class="po-tx"><strong>Ground me instead</strong><em>Come back to the room, one sense at a time.</em></span>
+      </button>
+      <button class="panicopt rise d4 po-cute" id="btn-panic-comfort">
+        <span class="po-ic" aria-hidden="true">☁</span>
+        <span class="po-tx"><strong>Show me something cute</strong><em>Give your mind something gentle to hold.</em></span>
+      </button>
       <button class="linklike quiet rise d4" data-go="screen-nonbreath">Breathing and counting don't work for me</button>
       <button class="linklike quiet rise d4" id="btn-panic-plan">See my backup plan</button>
       <button class="backlink rise d4" data-go="screen-home">← back</button>
@@ -141,6 +163,7 @@
   <section class="screen" id="screen-breathe" aria-label="Breathing exercise">
     <div class="wrap narrow center">
       <p class="kicker rise d1">breathe with me</p>
+      <div class="petbreathe" id="pet-breathe" aria-hidden="true"></div>
       <div class="patternchips rise d2" id="breath-patterns" role="group" aria-label="Breathing pattern">
         <button class="pchip" data-pattern="gentle" aria-pressed="true">Gentle</button>
         <button class="pchip" data-pattern="box" aria-pressed="false">Box</button>
@@ -188,6 +211,8 @@
       <p class="kicker rise d1">the toolkit</p>
       <h2 class="serene rise d2">Things that can help.</h2>
       <p class="lede soft rise d3">These are coping tools, not treatment. Nothing here grades you. Pick whatever sounds bearable.</p>
+      <p class="toolgroup rise d3">Hands-on — do, don’t read</p>
+      <div class="toolcards featgrid rise d3" id="toolkit-featured"></div>
       <div id="toolkit-groups" class="rise d3"></div>
       <button class="backlink rise d4" data-go="screen-home">← back</button>
     </div>
@@ -286,6 +311,7 @@
         <div class="counternum" id="stops-left" aria-live="polite">5</div>
         <div class="counterlabel" id="stops-word">stops to go</div>
       </div>
+      <div class="pettrip" id="pet-trip" aria-hidden="true"></div>
       <button class="tapbtn rise d3" id="btn-stop-tap">Tap at each stop</button>
       <p class="fineprint" id="trip-fine">One tap per stop. That's all you have to do.</p>
       <div class="tools rise d3">
@@ -306,6 +332,7 @@
   <section class="screen" id="screen-arrived" aria-label="You made it">
     <div class="wrap narrow center">
       <p class="kicker rise d1">last stop</p>
+      <div class="petarrived" id="pet-arrived" aria-hidden="true"></div>
       <h2 class="serene rise d2">You made it.</h2>
       <p class="lede soft rise d3" id="arrived-lede">That took courage.</p>
       <button class="btn calm big rise d3" id="btn-im-home">I'm home</button>
@@ -408,6 +435,9 @@
       <p class="body rise d3">Short meditations. No audio needed, no counting.</p>
       <div class="rise d3" id="mini-list" style="display:grid;gap:12px;margin-bottom:8px"></div>
       <button class="backlink" id="btn-comfort-back">← back</button>
+    </div>
+  </section>
+
   <section class="screen" id="screen-calm" aria-label="A calm moment">
     <div class="wrap narrow center">
       <div class="calmart rise d1" id="calm-art" aria-hidden="true"></div>
@@ -452,6 +482,130 @@
       <button class="holdbtn" id="hold-btn" aria-label="Press and hold to steady"><span class="holdfill" id="hold-fill"></span><span class="holdlabel">hold</span></button>
       <p class="fineprint">Let go anytime. Nothing punishes letting go.</p>
       <button class="linklike quiet" id="btn-hold-done">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- 5-4-3-2-1, interactive: tap a dot per sense -->
+  <section class="screen" id="screen-senses" aria-label="Five four three two one">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">ground · <span id="sen-stage-label">5 · see</span></p>
+      <h2 class="serene" id="sen-title">Five things you can see</h2>
+      <p class="body" id="sen-hint">Look around. Tap a dot for each one. No rush.</p>
+      <div class="sendots" id="sen-dots"></div>
+      <p class="fineprint" id="sen-count" aria-live="polite"></p>
+      <button class="linklike quiet" id="btn-sen-skip">Skip this sense</button>
+      <button class="linklike quiet" id="btn-sen-done">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- COUNT BACKWARD, interactive -->
+  <section class="screen" id="screen-countdown" aria-label="Count backward">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">distract</p>
+      <h2 class="serene" id="cd-title">Count backward</h2>
+      <div id="cd-pick">
+        <p class="body">Start from…</p>
+        <div class="chipgrid" id="cd-starts" style="justify-content:center">
+          <button class="chip" data-n="10">10</button>
+          <button class="chip" data-n="20">20</button>
+          <button class="chip" data-n="50">50</button>
+          <button class="chip" data-n="100">100</button>
+        </div>
+      </div>
+      <div id="cd-run" hidden>
+        <button class="bignum" id="cd-num" aria-label="Tap to count down">10</button>
+        <p class="fineprint">Tap the number. No need to be exact.</p>
+      </div>
+      <button class="linklike quiet" id="btn-cd-done">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- CATEGORY GAME, interactive -->
+  <section class="screen" id="screen-categories" aria-label="Category game">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">distract</p>
+      <h2 class="serene rise d2">Quiet category game</h2>
+      <div class="chipgrid rise d3" id="cat-cats"></div>
+      <p class="body rise d3" id="cat-active">Pick a category.</p>
+      <div class="addrow rise d3">
+        <input id="cat-in" type="text" autocomplete="off" placeholder="Name one…" aria-label="Add an item">
+        <button class="btn calm" id="cat-add">Add</button>
+      </div>
+      <div class="chiplist rise d3" id="cat-list"></div>
+      <button class="linklike quiet" id="btn-cat-done">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- THOUGHT CHECK, interactive with private inputs -->
+  <section class="screen" id="screen-thought" aria-label="Thought check">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">understand</p>
+      <p class="stepcount" id="th-count">1 of 3</p>
+      <h2 class="serene" id="th-title">Name the scary thought</h2>
+      <p class="body" id="th-body">A few words, no arguing with yourself. This stays on your phone.</p>
+      <div class="addrow" id="th-row"><input id="th-in" type="text" autocomplete="off" placeholder="…" aria-label="Your words"></div>
+      <p class="groundprompt" id="th-out" hidden></p>
+      <div class="walknav" style="margin-top:18px">
+        <button class="btn ghost" id="btn-th-back">Back</button>
+        <button class="btn calm" id="btn-th-next">Next</button>
+      </div>
+      <button class="linklike quiet" id="btn-th-done">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- KIND WORDS deck -->
+  <section class="screen" id="screen-kindwords" aria-label="Kind words">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">ground</p>
+      <h2 class="serene">Kind, factual words</h2>
+      <p class="body">Believable — not promises you have to force.</p>
+      <div class="kindcard" id="kw-card"><p id="kw-text"></p></div>
+      <button class="btn ghost" id="btn-kw-next" style="max-width:280px;margin:0 auto">Another one</button>
+      <button class="linklike quiet" id="btn-kw-done">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- MUSCLE RELEASE, timed hold -->
+  <section class="screen" id="screen-muscle" aria-label="Muscle release">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">ground</p>
+      <p class="stepcount" id="mu-count">1 of 3</p>
+      <h2 class="serene" id="mu-title">Hands</h2>
+      <p class="body" id="mu-body">Press your fingertips together gently…</p>
+      <button class="holdbtn" id="mu-btn" aria-label="Press and hold to tense"><span class="holdfill" id="mu-fill"></span><span class="holdlabel">hold</span></button>
+      <p class="fineprint" id="mu-hint">Hold to tense · release to let go. Skip anything uncomfortable.</p>
+      <div class="walknav" id="mu-nav" style="margin-top:18px" hidden>
+        <button class="btn ghost" id="btn-mu-back">Back</button>
+        <button class="btn calm" id="btn-mu-next">Next</button>
+      </div>
+      <button class="linklike quiet" id="btn-mu-done">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- BUTTERFLY TAPS, bilateral -->
+  <section class="screen" id="screen-butterfly" aria-label="Butterfly taps">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">touch</p>
+      <h2 class="serene">Butterfly taps</h2>
+      <p class="body">Tap left, then right, back and forth — like a slow butterfly. Cross your arms or just tap the sides.</p>
+      <div class="flyrow">
+        <button class="flyzone" id="fly-l" aria-label="Tap left"><span>L</span></button>
+        <button class="flyzone" id="fly-r" aria-label="Tap right"><span>R</span></button>
+      </div>
+      <div class="flydots" id="fly-dots" aria-hidden="true"></div>
+      <p class="fineprint" id="fly-hint">Left, right, left, right…</p>
+      <button class="linklike quiet" id="btn-fly-done">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- PET PLAY -->
+  <section class="screen" id="screen-petplay" aria-label="Play with your co-rider">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">your co-rider</p>
+      <h2 class="serene" id="petplay-name">Mochi</h2>
+      <div class="petstage" id="petplay-stage" role="button" tabindex="0" aria-label="Pet your co-rider"></div>
+      <p class="body" id="petplay-line" aria-live="polite">Tap to give some love.</p>
+      <button class="linklike quiet" id="btn-petplay-done">Back</button>
     </div>
   </section>
 
@@ -524,8 +678,18 @@
         <button class="segbtn" data-theme="tokyo" aria-pressed="false">Tokyo</button>
         <button class="segbtn" data-theme="night" aria-pressed="false">Night</button>
       </div>
-      <button class="linklike quiet rise d4" id="btn-replay-tour">Replay the quick tour</button>
-      <p class="fineprint rise d4" id="app-version">version 9</p>
+      <h3 class="rise d4">Your co-rider</h3>
+      <p class="body rise d4">No feeding, no meters. Just company.</p>
+      <div class="seg segwrap rise d4" id="pet-seg" role="group" aria-label="Co-rider">
+        <button class="segbtn on" data-pet="blob" aria-pressed="true">Blob</button>
+        <button class="segbtn" data-pet="bird" aria-pressed="false">Bird</button>
+        <button class="segbtn" data-pet="cat" aria-pressed="false">Cat</button>
+      </div>
+      <label class="field rise d4">Their name
+        <input id="in-pet-name" type="text" autocomplete="off" maxlength="24" aria-label="Co-rider name">
+      </label>
+      <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
+      <p class="fineprint rise d4" id="app-version">version 10</p>
     </div>
   </section>
 
