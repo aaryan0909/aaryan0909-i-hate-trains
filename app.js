@@ -587,55 +587,138 @@
   $all('[data-go="screen-plan"]').forEach(function (b) { b.addEventListener('click', renderPlan); });
   renderPlan();
 
-  /* ---------- comfort corner (online-enhanced; hidden offline) ---------- */
+  /* ---------- comfort corner: bundled calm (always) + one comfort (online) ---------- */
+  var KIND_NOTES = [
+    'This ride will end. You\u2019re doing great.',
+    'You\u2019ve survived every bad ride so far.',
+    'One stop at a time is enough.',
+    'You\u2019re allowed to take up space and breathe.'
+  ];
+  var CALM_CARDS = [
+    { id: 'sky', title: 'Slow sky',
+      art: '<svg viewBox="0 0 120 120" width="100%" height="100%"><rect width="120" height="120" rx="28" fill="#26314d"/><circle cx="60" cy="74" r="24" fill="#e8a86f"/><rect y="82" width="120" height="38" fill="#1a2133"/><rect y="80" width="120" height="4" fill="#e8a86f" opacity="0.5"/></svg>',
+      note: 'The sky is doing this somewhere right now.' },
+    { id: 'puppy', title: 'Puppy',
+      art: '<svg viewBox="0 0 120 120" width="100%" height="100%"><rect width="120" height="120" rx="28" fill="#3a2f28"/><ellipse cx="34" cy="52" rx="12" ry="22" fill="#6b543f" transform="rotate(18 34 52)"/><ellipse cx="86" cy="52" rx="12" ry="22" fill="#6b543f" transform="rotate(-18 86 52)"/><circle cx="60" cy="62" r="28" fill="#8a6f52"/><circle cx="50" cy="56" r="4" fill="#1a1410"/><circle cx="70" cy="56" r="4" fill="#1a1410"/><ellipse cx="60" cy="70" rx="7" ry="5" fill="#1a1410"/><path d="M60 75 q0 6 -7 6 M60 75 q0 6 7 6" stroke="#1a1410" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+      note: 'Somewhere, a dog is thrilled to see you.' },
+    { id: 'ocean', title: 'Ocean',
+      art: '<svg viewBox="0 0 120 120" width="100%" height="100%"><rect width="120" height="120" rx="28" fill="#1e3a4d"/><path d="M0 50 q15 -12 30 0 t30 0 t30 0 t30 0" stroke="#7fb6c9" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M0 72 q15 -12 30 0 t30 0 t30 0 t30 0" stroke="#5d93ab" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M0 94 q15 -12 30 0 t30 0 t30 0 t30 0" stroke="#3f6d84" stroke-width="5" fill="none" stroke-linecap="round"/></svg>',
+      note: 'In\u2026 and out. Like the tide.' },
+    { id: 'words', title: 'Kind words',
+      art: '<svg viewBox="0 0 120 120" width="100%" height="100%"><rect width="120" height="120" rx="28" fill="#4d2f3a"/><path d="M60 92 C40 76 28 64 28 50 C28 40 36 34 44 34 C51 34 57 38 60 44 C63 38 69 34 76 34 C84 34 92 40 92 50 C92 64 80 76 60 92 Z" fill="#d98a9e"/></svg>',
+      note: null },
+    { id: 'stars', title: 'Night sky',
+      art: '<svg viewBox="0 0 120 120" width="100%" height="100%"><rect width="120" height="120" rx="28" fill="#141a2e"/><circle cx="82" cy="34" r="14" fill="#e8e4d2"/><circle cx="77" cy="30" r="12" fill="#141a2e"/><circle cx="30" cy="40" r="2.5" fill="#fff"/><circle cx="52" cy="70" r="2" fill="#fff"/><circle cx="40" cy="92" r="2.5" fill="#fff"/><circle cx="70" cy="88" r="2" fill="#fff"/><circle cx="95" cy="70" r="2.5" fill="#fff"/><circle cx="22" cy="66" r="2" fill="#fff"/></svg>',
+      note: 'Above the tunnel, the stars are still there.' },
+    { id: 'cup', title: 'Warm drink',
+      art: '<svg viewBox="0 0 120 120" width="100%" height="100%"><rect width="120" height="120" rx="28" fill="#2e3b33"/><path d="M48 34 q6 -8 0 -16 M62 34 q6 -8 0 -16" stroke="#a8c4b5" stroke-width="4" fill="none" stroke-linecap="round"/><rect x="36" y="44" width="48" height="44" rx="10" fill="#d9c6a5"/><rect x="84" y="52" width="14" height="22" rx="7" fill="none" stroke="#d9c6a5" stroke-width="6"/><rect x="36" y="44" width="48" height="10" rx="5" fill="#b89a6e"/></svg>',
+      note: 'Picture something warm in your hands.' }
+  ];
+  var calmReturn = 'screen-comfort';
+  function renderCalmGrid() {
+    var host = $('calm-grid'); if (!host || host.children.length) { return; }
+    CALM_CARDS.forEach(function (c) {
+      var b = document.createElement('button'); b.className = 'calmcard';
+      b.setAttribute('aria-label', c.title);
+      b.innerHTML = '<span class="calmthumb">' + c.art + '</span><span class="calmtitle">' + c.title + '</span>';
+      b.addEventListener('click', function () { tick(); openCalm(c.id, 'screen-comfort'); });
+      host.appendChild(b);
+    });
+  }
+  function openCalm(id, returnTo) {
+    var c = null;
+    CALM_CARDS.forEach(function (x) { if (x.id === id) { c = x; } });
+    if (!c) { return; }
+    calmReturn = returnTo || 'screen-comfort';
+    $('calm-art').innerHTML = c.art;
+    $('calm-note').textContent = c.note || KIND_NOTES[Math.floor(Math.random() * KIND_NOTES.length)];
+    go('screen-calm');
+  }
+  $('btn-calm-done').addEventListener('click', function () { tick(); go(calmReturn); });
+  /* cute things, one tap: curated categories, pick a platform once */
+  var SOCIAL_PLAT = 'yt';
+  var SOCIAL_CATS = [
+    { id: 'puppies', title: 'Puppies', emoji: '\uD83D\uDC36', q: 'cute puppies' },
+    { id: 'kittens', title: 'Kittens', emoji: '\uD83D\uDC31', q: 'cute kittens' },
+    { id: 'babies', title: 'Baby animals', emoji: '\uD83D\uDC23', q: 'cute baby animals' },
+    { id: 'funny', title: 'Something funny', emoji: '\uD83D\uDE02', q: 'funny animals' },
+    { id: 'nature', title: 'Calm nature', emoji: '\uD83C\uDF3F', q: 'relaxing nature' }
+  ];
+  function socialUrl(cat) {
+    if (SOCIAL_PLAT === 'tt') { return 'https://www.tiktok.com/search?q=' + encodeURIComponent(cat.q); }
+    if (SOCIAL_PLAT === 'ig') { return 'https://www.instagram.com/explore/'; }
+    return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(cat.q);
+  }
+  function renderSocialGrid() {
+    var host = $('social-grid'); if (!host || host.children.length) { return; }
+    SOCIAL_CATS.forEach(function (c) {
+      var b = document.createElement('button'); b.className = 'calmcard socialcard';
+      b.setAttribute('aria-label', c.title);
+      b.innerHTML = '<span class="calmemo">' + c.emoji + '</span><span class="calmtitle">' + c.title + '</span>';
+      b.addEventListener('click', function () {
+        tick();
+        if (!navigator.onLine) { return; }
+        window.open(socialUrl(c), '_blank', 'noopener');
+      });
+      host.appendChild(b);
+    });
+  }
+  $all('#social-seg .segbtn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      tick();
+      SOCIAL_PLAT = b.getAttribute('data-plat');
+      $all('#social-seg .segbtn').forEach(function (x) {
+        var on = x === b;
+        x.classList.toggle('on', on);
+        x.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    });
+  });
+  /* one comfort: a single favorite link, online only */
+  function getOneComfort() { return (read('iht_comfort_one') || '').trim(); }
+  function setOneComfort(url) {
+    url = (url || '').trim();
+    if (!/^https?:\/\//i.test(url)) { return false; }
+    store('iht_comfort_one', url); return true;
+  }
+  (function migrateComfort() {
+    if (getOneComfort()) { return; }
+    var old = readJSON('iht_comfort', []);
+    if (old.length && old[0].url) { store('iht_comfort_one', old[0].url); }
+    try { localStorage.removeItem('iht_comfort'); } catch (e) {}
+    /* pre-seed so the button never sits empty: cute puppies on YouTube */
+    if (!getOneComfort()) { store('iht_comfort_one', 'https://www.youtube.com/results?search_query=cute+puppies'); }
+  })();
+  function renderOneComfort() {
+    var url = getOneComfort(), online = navigator.onLine;
+    var btn = $('btn-one-comfort'), note = $('one-comfort-note');
+    btn.disabled = !online || !url;
+    if (!url) { note.textContent = 'Save one above — a reel, a playlist, whatever steadies you.'; }
+    else if (!online) { note.textContent = 'Needs internet — the calm cards above work offline.'; }
+    else { note.textContent = 'Opens in your browser.'; }
+  }
+  $('btn-one-comfort').addEventListener('click', function () {
+    tick();
+    var url = getOneComfort();
+    if (!url) { $('one-comfort-url').focus(); return; }
+    if (!navigator.onLine) { return; }
+    window.open(url, '_blank', 'noopener');
+  });
+  $('one-comfort-save').addEventListener('click', function () {
+    tick();
+    if (!setOneComfort($('one-comfort-url').value)) { $('one-comfort-url').focus(); return; }
+    $('one-comfort-url').value = '';
+    renderOneComfort();
+  });
   function updateComfort() {
-    var online = navigator.onLine;
-    var h = $('link-comfort-home'); if (h) { h.style.display = online ? '' : 'none'; }
-    var t = $('tool-comfort'); if (t) { t.style.display = online ? '' : 'none'; }
+    renderOneComfort();
+    var sg = $('social-grid'); if (sg) { sg.classList.toggle('dim', !navigator.onLine); }
   }
   window.addEventListener('online', updateComfort);
   window.addEventListener('offline', updateComfort);
+  renderCalmGrid();
+  renderSocialGrid();
   updateComfort();
-  function addComfortLink(url, label) {
-    url = (url || '').trim();
-    if (!/^https?:\/\//i.test(url)) { return false; }
-    var cur = readJSON('iht_comfort', []);
-    cur.push({ label: (label || '').trim().slice(0, 60) || url, url: url });
-    store('iht_comfort', JSON.stringify(cur.slice(0, 30)));
-    return true;
-  }
-  function renderComfort() {
-    var host = $('comfort-list'); host.innerHTML = '';
-    var links = readJSON('iht_comfort', []);
-    if (!links.length) {
-      var p = document.createElement('p'); p.className = 'histempty';
-      p.textContent = 'No saved comforts yet. Paste a link below — a reel, a video, a playlist — anything that steadies you.';
-      host.appendChild(p);
-    }
-    links.forEach(function (l, i) {
-      var card = document.createElement('div'); card.className = 'linkcard'; card.style.cursor = 'default';
-      var open = document.createElement('button'); open.className = 'linklike go'; open.style.margin = '0'; open.style.padding = '10px';
-      open.textContent = l.label || l.url;
-      open.addEventListener('click', function () { window.open(l.url, '_blank', 'noopener'); });
-      var del = document.createElement('button'); del.className = 'del'; del.setAttribute('aria-label', 'Remove'); del.textContent = '✕';
-      del.addEventListener('click', function () {
-        tick();
-        var cur = readJSON('iht_comfort', []);
-        cur.splice(i, 1); store('iht_comfort', JSON.stringify(cur)); renderComfort();
-      });
-      card.appendChild(open); card.appendChild(del);
-      host.appendChild(card);
-    });
-  }
-  $('comfort-add').addEventListener('click', function () {
-    tick();
-    var ok = addComfortLink($('comfort-url').value, $('comfort-label').value);
-    if (!ok) { $('comfort-url').focus(); return; }
-    $('comfort-url').value = ''; $('comfort-label').value = '';
-    renderComfort();
-  });
-  $('btn-instagram').addEventListener('click', function () { tick(); window.open('https://www.instagram.com/', '_blank', 'noopener'); });
-  $all('[data-go="screen-comfort"]').forEach(function (b) { b.addEventListener('click', renderComfort); });
 
   /* ---------- crisis: rider-entered local number ---------- */
   function renderCrisisLocal() {
@@ -699,31 +782,10 @@
     go('screen-ob4');
   });
   $('btn-ob3-back').addEventListener('click', function () { tick(); enterOb2(); });
-  function renderObComfort() {
-    var host = $('ob-comfort-list'); host.innerHTML = '';
-    readJSON('iht_comfort', []).forEach(function (l, i) {
-      var c = document.createElement('button');
-      c.className = 'chip';
-      var label = document.createElement('span'); label.textContent = l.label;
-      var x = document.createElement('span'); x.className = 'x'; x.textContent = '✕';
-      c.appendChild(label); c.appendChild(x);
-      c.addEventListener('click', function () {
-        tick();
-        var cur = readJSON('iht_comfort', []);
-        cur.splice(i, 1); store('iht_comfort', JSON.stringify(cur)); renderObComfort();
-      });
-      host.appendChild(c);
-    });
-  }
-  $('ob-comfort-add').addEventListener('click', function () {
-    tick();
-    var ok = addComfortLink($('ob-comfort-url').value, $('ob-comfort-label').value);
-    if (!ok) { $('ob-comfort-url').focus(); return; }
-    $('ob-comfort-url').value = ''; $('ob-comfort-label').value = '';
-    renderObComfort();
-  });
   $('btn-ob4-done').addEventListener('click', function () {
     tick();
+    var v = ($('ob-comfort-url').value || '').trim();
+    if (v && /^https?:\/\//i.test(v)) { store('iht_comfort_one', v); }
     try { localStorage.setItem('iht_onboarded', '1'); } catch (e) {}
     applyProfileToHome();
     go('screen-home');

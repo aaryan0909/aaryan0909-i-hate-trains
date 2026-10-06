@@ -2,6 +2,7 @@
 :root {
   --bg: #0c0e13;
   --surface: #141821;
+  --card: #151b26;
   --line: #242b3a;
   --ink: #ede8da;
   --dim: #a49d89;
@@ -25,7 +26,7 @@ body {
 #app { min-height: 100dvh; }
 
 /* screens — slow fade + gentle rise, never a slide */
-.screen { display: none; min-height: 100dvh; padding: calc(env(safe-area-inset-top, 0px) + 36px) 0 calc(env(safe-area-inset-bottom, 0px) + 44px); }
+.screen { display: none; min-height: 100dvh; padding: calc(env(safe-area-inset-top, 0px) + 36px) 0 calc(env(safe-area-inset-bottom, 0px) + 104px); }
 .screen.active { display: block; }
 .screen.active .rise { animation: risein .6s cubic-bezier(.22,.61,.36,1) both; }
 .screen.active .rise.d1 { animation-delay: .05s; }
@@ -287,6 +288,33 @@ em { font-style: normal; }
 }
 .sosfloat:active { transform: scale(.92); }
 .sosfloat[hidden] { display: none; }
+
+/* comfort corner — bundled calm cards */
+.calmgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 0 0 8px; }
+.calmcard {
+  background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 10px 8px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; min-height: 60px;
+  transition: transform .14s ease, border-color .2s ease;
+}
+.calmcard:active { transform: scale(.94); }
+.calmthumb { width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; display: block; }
+.calmthumb svg { display: block; }
+.calmtitle { font-size: 13px; color: var(--dim); font-weight: 500; }
+.calmart { width: min(72vw, 260px); aspect-ratio: 1; margin: 26px auto 30px; border-radius: 32px; overflow: hidden; box-shadow: 0 18px 60px rgba(0,0,0,.45); }
+.calmart svg { display: block; width: 100%; height: 100%; }
+#btn-one-comfort:disabled { opacity: .45; cursor: default; }
+.calmgrid.dim { opacity: .45; }
+
+/* platform segmented control */
+.seg { display: flex; gap: 8px; margin: 0 0 14px; }
+.segbtn {
+  flex: 1; min-height: 48px; border-radius: 14px; border: 1px solid var(--line);
+  background: var(--card); color: var(--dim); font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: transform .14s ease, background .2s ease, color .2s ease;
+}
+.segbtn:active { transform: scale(.95); }
+.segbtn.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.calmemo { font-size: 40px; line-height: 1; display: block; padding: 8px 0; }
 
 /* generic hide */
 .hidden { display: none !important; }

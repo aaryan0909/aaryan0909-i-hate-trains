@@ -66,21 +66,16 @@
     </div>
   </section>
 
-  <!-- ONBOARDING 4/4 — comfort links, optional -->
-  <section class="screen" id="screen-ob4" aria-label="Your comforts">
+  <!-- ONBOARDING 4/4 — one comfort, optional -->
+  <section class="screen" id="screen-ob4" aria-label="Your comfort">
     <div class="wrap narrow">
-      <p class="kicker rise d1">your comforts</p>
+      <p class="kicker rise d1">your comfort</p>
       <p class="obstep rise d1">4 of 4 · optional</p>
-      <h2 class="serene rise d2">Anything that<br>steadies you?</h2>
-      <p class="lede soft rise d3">A favorite reel, a silly video, a calm playlist. Save a link or two now — you'll find them in your Comfort corner whenever you're online.</p>
+      <h2 class="serene rise d2">One thing that<br>steadies you?</h2>
+      <p class="lede soft rise d3">A favorite reel, a playlist — one link. The app's calm cards always work, even offline.</p>
       <div class="addrow rise d3">
-        <input id="ob-comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste a link…" aria-label="Comfort link URL">
+        <input id="ob-comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste one link (optional)…" aria-label="One comfort link">
       </div>
-      <div class="addrow rise d3">
-        <input id="ob-comfort-label" type="text" autocomplete="off" placeholder="Label it, e.g. puppy reel" aria-label="Comfort link label">
-        <button class="btn calm" id="ob-comfort-add">Save</button>
-      </div>
-      <div class="chiplist rise d3" id="ob-comfort-list"></div>
       <button class="btn calm big rise d4" id="btn-ob4-done">Done — take me in</button>
       <button class="linklike quiet" id="btn-ob4-back">Back</button>
     </div>
@@ -351,23 +346,40 @@
     </div>
   </section>
 
-  <!-- COMFORT CORNER — online-enhanced only -->
+  <!-- COMFORT CORNER — bundled calm, always works -->
   <section class="screen" id="screen-comfort" aria-label="Comfort corner">
     <div class="wrap narrow">
       <p class="kicker rise d1">a breather</p>
       <h2 class="serene rise d2">Comfort corner.</h2>
-      <p class="lede soft rise d3">Save links to things that comfort you — a favorite reel, a silly video, a calm playlist. They open in your browser. Save them while you're online; the toolkit works even when you're not.</p>
-      <div class="chiplist rise d3" id="comfort-list"></div>
-      <div class="addrow rise d3">
-        <input id="comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste a link…" aria-label="Comfort link URL">
+      <p class="lede soft rise d3">Small calm things. They work even in a tunnel.</p>
+      <div class="calmgrid rise d3" id="calm-grid"></div>
+      <h3 class="rise d3">Cute things, one tap</h3>
+      <p class="body rise d3">Pick a platform, then a mood. Zero searching.</p>
+      <div class="seg rise d3" id="social-seg" role="group" aria-label="Platform">
+        <button class="segbtn on" data-plat="yt" aria-pressed="true">YouTube</button>
+        <button class="segbtn" data-plat="tt" aria-pressed="false">TikTok</button>
+        <button class="segbtn" data-plat="ig" aria-pressed="false">Instagram</button>
       </div>
-      <div class="addrow rise d3">
-        <input id="comfort-label" type="text" autocomplete="off" placeholder="Label it, e.g. puppy reel" aria-label="Comfort link label">
-        <button class="btn calm" id="comfort-add">Save</button>
+      <div class="calmgrid rise d3" id="social-grid"></div>
+      <p class="fineprint rise d3">Needs internet — the calm cards above work offline.</p>
+      <h3 class="rise d3">My one comfort</h3>
+      <p class="body rise d3">One favorite — a reel, a playlist, whatever steadies you.</p>
+      <button class="btn calm big rise d3" id="btn-one-comfort">Show me something good</button>
+      <p class="fineprint rise d3" id="one-comfort-note"></p>
+      <div class="addrow rise d4">
+        <input id="one-comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste your one link…" aria-label="One comfort link">
+        <button class="btn calm" id="one-comfort-save">Save</button>
       </div>
-      <button class="btn ghost rise d4" id="btn-instagram">Open Instagram</button>
-      <p class="fineprint">The app never reads your feed. It just opens what you saved, or Instagram itself, when you have internet.</p>
       <button class="backlink" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- CALM CARD — a full-screen calm moment -->
+  <section class="screen" id="screen-calm" aria-label="A calm moment">
+    <div class="wrap narrow center">
+      <div class="calmart rise d1" id="calm-art" aria-hidden="true"></div>
+      <p class="serene rise d2" id="calm-note"></p>
+      <button class="btn ghost rise d3" id="btn-calm-done">Back</button>
     </div>
   </section>
 
@@ -422,7 +434,7 @@
         <li>Anywhere in an emergency: call your local emergency number</li>
       </ul>
       <p class="fineprint">Made for everyone who holds their breath between stations.</p>
-      <p class="fineprint" id="app-version">version 5</p>
+      <p class="fineprint" id="app-version">version 7</p>
     </div>
   </section>
 

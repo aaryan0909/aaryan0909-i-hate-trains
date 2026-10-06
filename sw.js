@@ -1,5 +1,5 @@
 /* I Hate Trains service worker — offline law: cache everything, serve from cache first. */
-var CACHE = 'iht-v5';
+var CACHE = 'iht-v7';
 var ASSETS = [
   './',
   'index.html',
