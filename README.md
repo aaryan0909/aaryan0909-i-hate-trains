@@ -43,4 +43,4 @@ Service worker (`sw.js`, cache `iht-v4`) precaches the whole app shell. After fi
 
 ## Deploy
 
-Static site, zero dependencies. Vercel file deployment to the existing project (same production URL). GitHub repo still pending owner-side creation.
+Static site, zero dependencies. Vercel project `i-hate-trains` is git-connected to https://github.com/aaryan0909/aaryan0909-i-hate-trains — pushes to `main` auto-deploy to production (https://i-hate-trains-aaryan0909s-projects.vercel.app). No manual file deploys needed.
