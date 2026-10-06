@@ -92,12 +92,12 @@
         <p class="body" id="home-ride-line">Your ride</p>
         <button class="btn calm big" data-go="screen-checkin" style="margin-bottom:0">Start a ride</button>
       </div>
-      <div class="homerow rise d4">
-        <button class="btn ghost" data-go="screen-toolkit">Open the toolkit</button>
-        <button class="btn ghost" data-go="screen-comfort" id="link-comfort-home">Comfort</button>
-      </div>
       <p class="fineprint rise d4">Free forever. Works offline. Always. Even in a tunnel.</p>
       <nav class="homelinks rise d4">
+        <button class="linklike" data-go="screen-toolkit">Toolkit</button>
+        <span aria-hidden="true">·</span>
+        <button class="linklike" data-go="screen-comfort" id="link-comfort-home">Comfort</button>
+        <span aria-hidden="true">·</span>
         <button class="linklike" data-go="screen-plan">My plan</button>
         <span aria-hidden="true">·</span>
         <button class="linklike" data-go="screen-history">History</button>
@@ -114,7 +114,7 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">right now</p>
       <h2 class="serene rise d2">You're safe.</h2>
-      <p class="lede soft rise d3">This feels awful, but it will pass. Panic always does. Pick what sounds bearable:</p>
+      <p class="lede soft rise d3">This will pass. Pick what sounds bearable:</p>
       <button class="btn calm big rise d3" id="btn-panic-breathe">Breathe with me</button>
       <button class="btn ghost rise d4" id="btn-panic-ground">Ground me instead</button>
       <button class="linklike quiet rise d4" data-go="screen-nonbreath">Breathing and counting don't work for me</button>
@@ -239,8 +239,8 @@
         </div>
       </div>
       <button class="btn calm big rise d4" id="btn-start-trip">Start trip</button>
-      <button class="btn ghost rise d4" id="btn-share-card">Send trip card</button>
-      <p class="fineprint" id="share-hint">Shares your route and ETA with someone you trust, while you still have signal.</p>
+      <button class="linklike quiet rise d4" id="btn-share-card">Send a trip card to someone you trust</button>
+      <p class="fineprint" id="share-hint">Shares your route and ETA, while you still have signal.</p>
       <button class="backlink" data-go="screen-checklist">← back</button>
     </div>
   </section>
@@ -254,7 +254,7 @@
         <div class="counterlabel" id="stops-word">stops to go</div>
       </div>
       <button class="tapbtn rise d3" id="btn-stop-tap">Tap at each stop</button>
-      <p class="fineprint">One tap per stop. That's all you have to do.</p>
+      <p class="fineprint" id="trip-fine">One tap per stop. That's all you have to do.</p>
       <div class="tools rise d3">
         <button class="tool" id="tool-breathe"><span class="tool-ic" aria-hidden="true">◯</span>Breathe</button>
         <button class="tool" id="tool-ground"><span class="tool-ic" aria-hidden="true">◎</span>Ground</button>
@@ -366,7 +366,8 @@
       <p class="body rise d3">One favorite — a reel, a playlist, whatever steadies you.</p>
       <button class="btn calm big rise d3" id="btn-one-comfort">Show me something good</button>
       <p class="fineprint rise d3" id="one-comfort-note"></p>
-      <div class="addrow rise d4">
+      <button class="linklike quiet rise d3" id="btn-one-comfort-edit">Change my one comfort</button>
+      <div class="addrow rise d4 hidden" id="one-comfort-edit-row">
         <input id="one-comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste your one link…" aria-label="One comfort link">
         <button class="btn calm" id="one-comfort-save">Save</button>
       </div>
@@ -422,19 +423,20 @@
   <!-- ABOUT -->
   <section class="screen" id="screen-about" aria-label="About">
     <div class="wrap narrow">
-      <button class="backlink" data-go="screen-home">← back</button>
-      <h2 class="serene">What is this?</h2>
-      <p class="lede soft">A free pocket companion for people who get scared on trains. Built for the ride itself. It works fully offline, in any metro in the world.</p>
-      <h3>The not-medical-advice part</h3>
-      <p class="body">I Hate Trains is a comfort tool, not a medical device. It doesn't diagnose, treat, or replace professional help. These are coping tools, not treatment. If anxiety is running your life, please talk to a clinician you trust.</p>
-      <h3>If it gets really bad</h3>
-      <ul class="bodylist">
+      <button class="backlink rise d1" data-go="screen-home">← back</button>
+      <p class="kicker rise d1">about</p>
+      <h2 class="serene rise d2">What is this?</h2>
+      <p class="lede soft rise d3">A free pocket companion for people who get scared on trains. Built for the ride itself. It works fully offline, in any metro in the world.</p>
+      <h3 class="rise d3">The not-medical-advice part</h3>
+      <p class="body rise d3">I Hate Trains is a comfort tool, not a medical device. It doesn't diagnose, treat, or replace professional help. These are coping tools, not treatment. If anxiety is running your life, please talk to a clinician you trust.</p>
+      <h3 class="rise d3">If it gets really bad</h3>
+      <ul class="bodylist rise d3">
         <li>US or Canada: call or text <strong>988</strong></li>
         <li>UK: call Samaritans at <strong>116 123</strong></li>
         <li>Anywhere in an emergency: call your local emergency number</li>
       </ul>
-      <p class="fineprint">Made for everyone who holds their breath between stations.</p>
-      <p class="fineprint" id="app-version">version 7</p>
+      <p class="fineprint rise d4">Made for everyone who holds their breath between stations.</p>
+      <p class="fineprint rise d4" id="app-version">version 8</p>
     </div>
   </section>
 

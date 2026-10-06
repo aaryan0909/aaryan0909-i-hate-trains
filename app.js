@@ -1,4 +1,4 @@
-/* I Hate Trains — v3. Free forever. Feel-first, quality over quantity. Offline-first: no network in core flows. */
+/* I Hate Trains — v8. Free forever. Feel-first, quality over quantity. Offline-first: no network in core flows. */
 (function () {
   'use strict';
 
@@ -254,9 +254,10 @@
     }, 200);
     var c = $('breath-circle');
     var grow = (p.k === 'in');
-    c.style.transition = 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
+    c.style.transition = 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1), box-shadow ' + p.secs + 's ease';
     void c.offsetWidth;
     c.style.transform = 'scale(' + (grow ? 1.28 : 1) + ')';
+    c.style.boxShadow = grow ? '0 0 72px rgba(143,195,168,.38)' : '0 0 26px rgba(143,195,168,.12)';
     breathHaptic(p.k);
     phaseCue(p.k);
     breathTimer = setTimeout(function () { runPhase(phases, i + 1); }, p.secs * 1000);
@@ -270,6 +271,7 @@
     var c = $('breath-circle');
     c.style.transition = 'none';
     c.style.transform = 'scale(1)';
+    c.style.boxShadow = '0 0 26px rgba(143,195,168,.12)';
     tick(); go('screen-breathe');
     runPhase(PATTERNS[breathPattern].phases, 0); // no gate: the exercise starts NOW
   }
@@ -419,6 +421,12 @@
   });
 
   var trip = { city: '', line: '', dest: '', left: 0, total: 0 };
+  var tripCardSent = false;
+  function arrivedNote() {
+    $('home-note').textContent = tripCardSent
+      ? 'Your person has your trip card with the ETA.'
+      : 'Take a breath. You\u2019re off the train.';
+  }
   $('btn-start-trip').addEventListener('click', function () {
     tick();
     trip.city = $('in-city').value.trim();
@@ -426,8 +434,13 @@
     trip.dest = $('in-dest').value.trim();
     trip.total = setupStops;
     trip.left = setupStops;
+    tripCardSent = false;
     var route = (trip.city ? trip.city + ' · ' : '') + (trip.line ? trip.line + ' \u2192 ' : '') + (trip.dest ? trip.dest : 'On your way');
     $('trip-route').textContent = route;
+    var nm = (profile.name || '').trim();
+    $('trip-fine').textContent = nm
+      ? ('One tap per stop, ' + nm + '. That\u2019s all you have to do.')
+      : 'One tap per stop. That\u2019s all you have to do.';
     renderStops();
     go('screen-trip');
   });
@@ -442,9 +455,9 @@
     var n = $('stops-left');
     n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump');
     if (trip.left > 0) { trip.left--; renderStops(); }
-    if (trip.left === 0) { setTimeout(function () { go('screen-arrived'); }, 600); }
+    if (trip.left === 0) { setTimeout(function () { arrivedNote(); go('screen-arrived'); }, 600); }
   });
-  $('btn-end-trip').addEventListener('click', function () { tick(); go('screen-arrived'); });
+  $('btn-end-trip').addEventListener('click', function () { tick(); arrivedNote(); go('screen-arrived'); });
 
   /* ---------- trip card share (online-enhanced, never a dead end) ---------- */
   $('btn-share-card').addEventListener('click', function () {
@@ -457,11 +470,11 @@
     var etaStr = eta.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     var text = 'Riding ' + (city ? city + ' ' : '') + line + ' to ' + dest + ' (' + setupStops + ' stops, ETA ~' + etaStr + '). If I go quiet past ' + etaStr + ', check on me. \u2014 via I Hate Trains';
     var hint = $('share-hint');
-    function done(msg) { hint.textContent = msg; }
+    function done(msg, sent) { hint.textContent = msg; if (sent) { tripCardSent = true; } }
     if (navigator.share) {
-      navigator.share({ title: 'My trip card', text: text }).then(function () { done('Trip card sent. They have your ETA.'); }, function () { done('Share dismissed. The card is still yours to send.'); });
+      navigator.share({ title: 'My trip card', text: text }).then(function () { done('Trip card sent. They have your ETA.', true); }, function () { done('Share dismissed. The card is still yours to send.'); });
     } else if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { done('Trip card copied. Paste it to your person.'); }, function () { done(text); });
+      navigator.clipboard.writeText(text).then(function () { done('Trip card copied. Paste it to your person.', true); }, function () { done(text); });
     } else {
       done(text);
     }
@@ -708,7 +721,14 @@
     tick();
     if (!setOneComfort($('one-comfort-url').value)) { $('one-comfort-url').focus(); return; }
     $('one-comfort-url').value = '';
+    $('one-comfort-edit-row').classList.add('hidden');
     renderOneComfort();
+  });
+  $('btn-one-comfort-edit').addEventListener('click', function () {
+    tick();
+    var row = $('one-comfort-edit-row');
+    row.classList.toggle('hidden');
+    if (!row.classList.contains('hidden')) { $('one-comfort-url').focus(); }
   });
   function updateComfort() {
     renderOneComfort();

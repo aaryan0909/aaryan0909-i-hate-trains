@@ -25,9 +25,10 @@ body {
 }
 #app { min-height: 100dvh; }
 
-/* screens — slow fade + gentle rise, never a slide */
+/* screens — slow fade + gentle rise, never a slide. A soft crossfade on entry says "you moved" without startling. */
 .screen { display: none; min-height: 100dvh; padding: calc(env(safe-area-inset-top, 0px) + 36px) 0 calc(env(safe-area-inset-bottom, 0px) + 104px); }
-.screen.active { display: block; }
+.screen.active { display: block; animation: screenin .3s ease both; }
+@keyframes screenin { from { opacity: 0; } to { opacity: 1; } }
 .screen.active .rise { animation: risein .6s cubic-bezier(.22,.61,.36,1) both; }
 .screen.active .rise.d1 { animation-delay: .05s; }
 .screen.active .rise.d2 { animation-delay: .16s; }
@@ -185,7 +186,7 @@ em { font-style: normal; }
 
 /* grounding / walkthrough */
 .stepcount { font-size: 14px; color: var(--dim); letter-spacing: .12em; margin: 0 0 18px; }
-.groundprompt { font-size: 24px; font-weight: 500; margin: 0 0 14px; line-height: 1.4; }
+.groundprompt { font-size: 24px; font-weight: 500; margin: 0 0 14px; line-height: 1.4; transition: opacity .25s ease; }
 .groundhint { color: var(--dim); font-size: 16px; min-height: 52px; margin: 0 0 6px; }
 .groundbar { height: 6px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 20px 0 26px; }
 #ground-fill, #walk-fill { height: 100%; width: 0; background: var(--calm); transition: width .45s ease; }
@@ -256,6 +257,7 @@ em { font-style: normal; }
 
 /* reduced motion — honor it everywhere */
 @media (prefers-reduced-motion: reduce) {
+  .screen.active { animation: none; }
   .screen.active .rise { animation: none; }
   .breathcircle { transition: none !important; }
   #ground-fill, #walk-fill { transition: none; }
@@ -275,8 +277,6 @@ em { font-style: normal; }
   padding: 18px; margin: 6px 0 4px;
 }
 .ridecard .body { margin: 0 0 12px; font-size: 15px; }
-.homerow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-.homerow .btn { margin: 0; font-size: 16px; min-height: 60px; padding: 14px 10px; }
 
 /* floating SOS — one tap away on every screen except home, the panic flow, and onboarding */
 .sosfloat {
