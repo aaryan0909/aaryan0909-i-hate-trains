@@ -1,4 +1,4 @@
-/* I Hate Trains — v9. Free forever. Feel-first, quality over quantity. Offline-first: no network in core flows. */
+/* I Hate Trains — v10. Free forever. Feel-first, quality over quantity. Offline-first: no network in core flows. */
 (function () {
   'use strict';
 
@@ -11,11 +11,14 @@
     opts = opts || {};
     var cur = currentScreen();
     if (!opts.keep && cur && cur !== id) { navBack.push(cur); if (navBack.length > 30) { navBack.shift(); } navFwd = []; }
+    if (coachVisible) { coachHide(); } // navigating dismisses the hint (it returns next visit)
     $all('.screen').forEach(function (s) { s.classList.remove('active'); });
     var el = $(id);
     if (el) { el.classList.add('active'); window.scrollTo(0, 0); }
     if (id !== 'screen-breathe') { stopBreathe(); } // leaving the exercise always stops it cleanly
+    if (id === 'screen-butterfly') { flyReset(); }
     updateSosFloat(id);
+    maybeCoach(id);
   }
   function navGoBack() { var p = navBack.pop(); if (!p) { return; } navFwd.push(currentScreen()); tick(); go(p, { keep: true }); }
   function navGoFwd() { var n = navFwd.pop(); if (!n) { return; } var c = currentScreen(); if (c) { navBack.push(c); } tick(); go(n, { keep: true }); }
@@ -37,7 +40,7 @@
     if (dx > 0) { navGoBack(); } else { navGoFwd(); }
   }, { passive: true });
   /* SOS stays one tap away on every screen except home (has the big button), the panic flow itself, and onboarding */
-  var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-ob1': 1, 'screen-ob2': 1, 'screen-ob3': 1, 'screen-ob4': 1, 'screen-tour': 1 };
+  var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-ob1': 1, 'screen-ob2': 1, 'screen-ob3': 1, 'screen-ob4': 1, 'screen-ob5': 1 };
   function updateSosFloat(id) {
     var f = $('sos-float');
     if (f) { f.hidden = !!SOS_HIDDEN[id]; }
@@ -155,8 +158,8 @@
   /* ---------- the coping library (ported from the Manus native build, steps + safety notes intact) ---------- */
   var CAT_LABEL = { ground: 'Ground', touch: 'Touch', breath: 'Breathe', understand: 'Understand', distract: 'Distract', plan: 'Plan', reflect: 'Reflect' };
   var TOOLS = [
-    { id: 'five-senses', title: '5–4–3–2–1 senses', cat: 'ground', time: 'A few minutes',
-      summary: 'Let the carriage around you be the place you are, one sense at a time.',
+    { id: 'five-senses', title: '5–4–3–2–1 senses', cat: 'ground', time: 'A few minutes', fn: 'senses',
+      summary: 'Tap a dot for each thing you notice — see, feel, hear, smell, taste.',
       steps: ['Name five things you can see, noticing color or shape.', 'Notice four things you can feel: your feet, fabric, a cool surface, or your hands.', 'Listen for three sounds. They can be quiet or ordinary.', 'Notice two smells, or two neutral details if smells are hard to notice.', 'Notice one taste, or the feeling of your mouth. You can skip any sense.'] },
     { id: 'three-three-three', title: '3–3–3 noticing', cat: 'ground', time: 'About a minute',
       summary: 'A shorter sensory route that does not ask you to change your breathing.',
@@ -185,12 +188,12 @@
       summary: 'Trace a slow circle with your finger. A ring fills as you go.' },
     { id: 'hold-steady', title: 'Hold to steady', cat: 'touch', time: 'As long as you like', screen: 'screen-hold',
       summary: 'Press and hold. A soft tone rises with you. Let go anytime.' },
-    { id: 'muscle-release', title: 'Progressive muscle release', cat: 'ground', time: '30 seconds',
-      summary: 'A gentle, seated tighten-and-release sequence. Skip any movement that does not feel comfortable.',
+    { id: 'muscle-release', title: 'Progressive muscle release', cat: 'ground', time: 'About a minute', fn: 'muscle',
+      summary: 'Hold to tense, release to let go — hands, shoulders, jaw. Skip anything uncomfortable.',
       steps: ['Let your hands rest. If comfortable, press your fingertips together gently for a moment, then release.', 'If it feels okay, lift your shoulders just a little without straining, then let them drop.', 'Optionally soften your jaw or face; skip this if it is uncomfortable.', 'Notice the support beneath you. Keep breathing however it happens naturally — this tool does not ask you to change your breath.'],
       safety: 'Do not tense around an injury or painful area. Stop any movement that hurts or feels unsafe; you can skip the movement and simply notice the chair supporting you.' },
-    { id: 'kind-words', title: 'Kind, factual words', cat: 'ground', time: 'A few seconds',
-      summary: 'Choose a line that feels believable — not a promise you have to force yourself to believe.',
+    { id: 'kind-words', title: 'Kind, factual words', cat: 'ground', time: 'A few seconds', fn: 'kindwords',
+      summary: 'A deck of believable lines — tap through, keep what lands.',
       steps: ['Try: This is a hard moment, and I can choose one small next step.', 'Or: I am allowed to ask someone for support.', 'Or use your own words. You do not have to feel reassured for this to count.'] },
     { id: 'breath-box', title: 'Even square breathing', cat: 'breath', time: 'Three gentle cycles', pattern: 'box',
       summary: 'An optional paced-breathing exercise with even sides.',
@@ -207,18 +210,17 @@
     { id: 'panic-facts', title: 'What panic can feel like', cat: 'understand', time: 'A short read',
       summary: 'A calm, factual reminder. This cannot tell you what is causing your symptoms.',
       steps: ['Panic can bring intense fear and physical sensations such as a pounding heart, dizziness, trembling, tingling, or breathing discomfort.', 'These sensations can be frightening. A panic response can rise and change over time; you do not have to solve it all at once.', 'An app cannot diagnose you. If symptoms are new, severe, or medically concerning, seek urgent medical help.'] },
-    { id: 'thought-check', title: 'A gentle thought check', cat: 'understand', time: 'A minute or two',
-      summary: 'A CBT-inspired reflection prompt. It is not therapy and you may skip it.',
+    { id: 'thought-check', title: 'A gentle thought check', cat: 'understand', time: 'A minute or two', fn: 'thought',
+      summary: 'Write the scary thought out, then meet it with facts. Stays on your phone.',
       steps: ['Name the scary thought in a few words, without arguing with yourself.', 'Ask: what do I know for sure right now, and what is my fear predicting?', 'Offer one kinder, more balanced possibility: I can take one step and reassess.', 'This is a self-help prompt, not a substitute for CBT or professional care.'] },
-    { id: 'categories', title: 'Quiet category game', cat: 'distract', time: 'As long as you like',
-      summary: 'Give your attention a small, changeable task. No scoring and no rush.',
+    { id: 'categories', title: 'Quiet category game', cat: 'distract', time: 'As long as you like', fn: 'categories',
+      summary: 'Pick a category, name things, watch the list grow. No scoring, no rush.',
       steps: ['Choose a category you enjoy: foods, films, animals, plants, or places.', 'Think of one item at a time, at your own pace.', 'Change categories whenever you want. You can stop without finishing.'] },
-    { id: 'backwards-count', title: 'Count backward (optional)', cat: 'distract', time: 'As long as you like',
-      summary: 'A silent attention exercise. If counting does not help, choose another card instead.',
+    { id: 'backwards-count', title: 'Count backward', cat: 'distract', time: 'As long as you like', fn: 'countdown',
+      summary: 'Pick a number, tap it down. A silent attention exercise.',
       steps: ['Start anywhere that feels easy, such as 20 or 10.', 'Count backward by ones, or skip this and pick another option.', 'No need to be exact; switch tools if this starts to feel frustrating.'] },
-    { id: 'comfort-cue', title: 'Familiar comedy or music', cat: 'distract', time: 'Use at your own pace',
-      summary: 'A comfort cue that you choose for yourself. The app does not stream or play media.',
-      steps: ['If you want, think of a familiar joke, scene, song, or voice that feels like yours.', 'Use a saved clip from your own device only if you choose and it is already available offline.', 'If sound is not right for this moment, try object details or contact someone instead.'] },
+    { id: 'butterfly-hug', title: 'Butterfly taps', cat: 'touch', time: 'About a minute', screen: 'screen-butterfly',
+      summary: 'Alternate left-right taps, slow and steady — a phone-friendly take on a classic calming technique.' },
     { id: 'ride-plan', title: 'My ride backup plan', cat: 'plan', time: 'Before boarding', goto: 'screen-plan',
       summary: 'Make a small plan while you have more headspace; no live transit data is used.', steps: [] },
     { id: 'confidence-ladder', title: 'Gentle confidence practice', cat: 'plan', time: 'Only when ready, before a ride', goto: 'screen-plan',
@@ -228,7 +230,7 @@
       summary: 'Notice what happened and what helped, without judging how the ride went.', steps: [] }
   ];
   function getTool(id) { for (var i = 0; i < TOOLS.length; i++) { if (TOOLS[i].id === id) { return TOOLS[i]; } } return null; }
-  var NONBREATH_IDS = ['object-detail', 'comfort-cue', 'muscle-release', 'safe-place', 'kind-words', 'categories', 'trace-calm', 'hold-steady', 'med-body-scan', 'med-kind-wishes', 'med-sounds'];
+  var NONBREATH_IDS = ['object-detail', 'muscle-release', 'safe-place', 'kind-words', 'categories', 'trace-calm', 'hold-steady', 'butterfly-hug', 'med-body-scan', 'med-kind-wishes', 'med-sounds'];
 
   /* ---------- tool walkthrough (generic, paced, calm) ---------- */
   var walkReturn = 'screen-home', walkTool = null, walkIdx = 0;
@@ -238,6 +240,7 @@
     if (!t) { return; }
     if (t.screen) { gestureReturn = returnTo || 'screen-home'; tick(); go(t.screen); return; }
     if (t.goto) { if (t.goto === 'screen-plan') { planReturn = returnTo || 'screen-home'; } tick(); go(t.goto); return; }
+    if (t.fn && TOOL_FNS[t.fn]) { TOOL_FNS[t.fn](returnTo || 'screen-home'); return; } // interactive tools: experiential, not reading
     walkTool = t; walkReturn = returnTo || 'screen-home'; walkIdx = 0;
     renderWalk(); tick(); go('screen-walk');
   }
@@ -282,11 +285,41 @@
     });
     return b;
   }
+  /* featured hands-on row: the most experiential tools, with living mini-visuals. No more buried categories. */
+  var FEATURED = [
+    { id: 'swipe-breathe', vis: 'tvis-swipe', n: 1 },
+    { id: 'trace-calm', vis: 'tvis-trace', n: 1 },
+    { id: 'hold-steady', vis: 'tvis-hold', n: 1 },
+    { id: 'butterfly-hug', vis: 'tvis-flap', n: 2 },
+    { id: 'five-senses', vis: 'tvis-senses', n: 5 },
+    { id: 'categories', vis: 'tvis-cats', n: 3 }
+  ];
+  var FEATURED_IDS = FEATURED.map(function (f) { return f.id; });
+  (function renderFeatured() {
+    var host = $('toolkit-featured');
+    if (!host) { return; }
+    FEATURED.forEach(function (f) {
+      var t = getTool(f.id);
+      if (!t) { return; }
+      var b = document.createElement('button'); b.className = 'toolcard feat';
+      var vis = document.createElement('span'); vis.className = 'tvis ' + f.vis; vis.setAttribute('aria-hidden', 'true');
+      for (var i = 0; i < f.n; i++) {
+        var dot = document.createElement('i');
+        if (f.vis === 'tvis-flap') { dot.className = i === 0 ? 'l' : 'r'; }
+        vis.appendChild(dot);
+      }
+      var title = document.createElement('strong'); title.textContent = t.title;
+      var sum = document.createElement('p'); sum.textContent = t.summary;
+      b.appendChild(vis); b.appendChild(title); b.appendChild(sum);
+      b.addEventListener('click', function () { openTool(t.id, 'screen-toolkit'); });
+      host.appendChild(b);
+    });
+  })();
   (function renderToolkit() {
     var host = $('toolkit-groups');
-    var order = ['ground', 'touch', 'breath', 'distract', 'understand', 'plan', 'reflect'];
+    var order = ['ground', 'breath', 'distract', 'understand', 'plan', 'reflect'];
     order.forEach(function (cat) {
-      var items = TOOLS.filter(function (t) { return t.cat === cat; });
+      var items = TOOLS.filter(function (t) { return t.cat === cat && FEATURED_IDS.indexOf(t.id) === -1; });
       if (!items.length) { return; }
       var h = document.createElement('p'); h.className = 'toolgroup'; h.textContent = CAT_LABEL[cat];
       host.appendChild(h);
@@ -459,6 +492,7 @@
     breatheReturn = returnTo || 'screen-home';
     stopBreathe();
     ensureAudio(); // first user gesture: safe to init audio on iOS
+    petInto($('pet-breathe'), 'sleepy'); // the co-rider gets sleepy too
     setBreathPattern(pattern || 'gentle');
     $('breath-patterns').classList.toggle('hidden', !!minimal);
     var c = $('breath-circle');
@@ -630,6 +664,7 @@
   var trip = { city: '', line: '', dest: '', left: 0, total: 0 };
   var tripCardSent = false;
   function arrivedNote() {
+    petInto($('pet-arrived'), 'celebrate'); // you made it — so did they
     $('home-note').textContent = tripCardSent
       ? 'Your person has your trip card with the ETA.'
       : 'Take a breath. You\u2019re off the train.';
@@ -646,6 +681,7 @@
     applyTheme(); // ride city can differ from home base (hello, Italy)
     var route = (trip.city ? trip.city + ' · ' : '') + (trip.line ? trip.line + ' \u2192 ' : '') + (trip.dest ? trip.dest : 'On your way');
     $('trip-route').textContent = route;
+    petInto($('pet-trip'), 'idle'); // the co-rider rides along
     var nm = (profile.name || '').trim();
     $('trip-fine').textContent = nm
       ? ('One tap per stop, ' + nm + '. That\u2019s all you have to do.')
@@ -1014,14 +1050,12 @@
     go('screen-ob4');
   });
   $('btn-ob3-back').addEventListener('click', function () { tick(); enterOb2(); });
-  $('btn-ob4-done').addEventListener('click', function () {
+  $('btn-ob4-next').addEventListener('click', function () {
     tick();
     var v = ($('ob-comfort-url').value || '').trim();
     if (v && /^https?:\/\//i.test(v)) { store('iht_comfort_one', v); }
-    try { localStorage.setItem('iht_onboarded', '1'); } catch (e) {}
-    applyProfileToHome();
-    if (!read('iht_toured')) { startTour('screen-home'); }
-    else { go('screen-home'); }
+    petPreviewOb();
+    go('screen-ob5');
   });
   $('btn-ob4-back').addEventListener('click', function () { tick(); go('screen-ob3'); });
 
@@ -1232,39 +1266,540 @@
     btn.addEventListener('mouseleave', end);
   })();
 
-  /* ---------- first-time walkthrough: 3-4 steps, skippable, shows once.
-     Assume the rider knows nothing. This is the "nobody else will understand" fix. ---------- */
-  var TOUR_STEPS = [
-    { title: 'SOS is always one tap away.', body: 'The red SOS button follows you on every screen. Tap it any time you need help — no setup, no questions first.' },
-    { title: 'Start a ride when you board.', body: 'Say how you feel, run the 30-second prep, then tap once per stop. That\u2019s the whole job.' },
-    { title: 'The toolkit is your calm shelf.', body: 'Breathing, grounding, touch tools, comfort — everything works offline, even in a tunnel.' },
-    { title: 'Set your backup plan once.', body: 'Exits, people to reach, things that help. Set it while you\u2019re calm — it\u2019s there when you\u2019re not.' }
-  ];
-  var tourIdx = 0, tourReturn = 'screen-home';
-  function startTour(returnTo) {
-    tourReturn = returnTo || 'screen-home';
-    tourIdx = 0;
-    renderTour(); tick(); go('screen-tour');
-  }
-  function renderTour() {
-    var n = TOUR_STEPS.length;
-    $('tour-count').textContent = (tourIdx + 1) + ' of ' + n;
-    $('tour-title').textContent = TOUR_STEPS[tourIdx].title;
-    $('tour-body').textContent = TOUR_STEPS[tourIdx].body;
-    $('btn-tour-next').textContent = tourIdx === n - 1 ? 'Got it — take me in' : 'Next';
-  }
-  function endTour() { try { localStorage.setItem('iht_toured', '1'); } catch (e) {} tick(); go(tourReturn); }
-  $('btn-tour-next').addEventListener('click', function () {
-    if (tourIdx < TOUR_STEPS.length - 1) { tourIdx++; renderTour(); tick(); }
-    else { endTour(); }
-  });
-  $('btn-tour-skip').addEventListener('click', endTour);
-  $('btn-replay-tour').addEventListener('click', function () { startTour('screen-about'); });
+  /* ---------- the old full-screen tour is gone: contextual coach marks replace it (see boot block) ---------- */
 
-  /* ---------- boot: onboarding first, then the tour, then home ---------- */
+  /* ============ v10: THE PET — a co-rider. Zero maintenance: no meters, no death, no guilt. Ever. ============ */
+  var PET_DEFAULTS = { blob: 'Mochi', bird: 'Pip', cat: 'Miso' };
+  var pet = readJSON('iht_pet', null) || { type: 'blob', name: 'Mochi' };
+  function savePet() { store('iht_pet', JSON.stringify(pet)); }
+  function petSVG(type) {
+    var eyeOpen = '<g class="peye peye-open"><circle cx="48" cy="62" r="5.5" fill="#10141b"/><circle cx="72" cy="62" r="5.5" fill="#10141b"/><circle cx="50" cy="60" r="1.8" fill="#fff"/><circle cx="74" cy="60" r="1.8" fill="#fff"/></g>';
+    var eyeShut = '<g class="peye-shut"><path d="M42 62 q6 5 12 0 M66 62 q6 5 12 0" stroke="#10141b" stroke-width="3" fill="none" stroke-linecap="round"/></g>';
+    var blush = '<ellipse cx="37" cy="72" rx="5" ry="3.5" fill="#d98a9e" opacity=".55"/><ellipse cx="83" cy="72" rx="5" ry="3.5" fill="#d98a9e" opacity=".55"/>';
+    if (type === 'bird') {
+      return '<svg viewBox="0 0 120 120" class="petsvg" aria-hidden="true">'
+        + '<path d="M30 78 q-16 4 -20 18 q16 2 24 -8 Z" fill="#8a96cc"/>'
+        + '<circle cx="60" cy="66" r="30" fill="#a9b6e8"/>'
+        + '<ellipse cx="42" cy="70" rx="11" ry="17" fill="#8a96cc" transform="rotate(14 42 70)"/>'
+        + '<ellipse cx="50" cy="52" rx="9" ry="12" fill="#ffffff" opacity=".18" transform="rotate(-16 50 52)"/>'
+        + '<path d="M60 62 l13 5 l-13 5 Z" fill="#e8b86f"/>'
+        + '<g class="peye peye-open"><circle cx="70" cy="52" r="5.5" fill="#10141b"/><circle cx="72" cy="50" r="1.8" fill="#fff"/></g>'
+        + '<g class="peye-shut"><path d="M64 52 q6 5 12 0" stroke="#10141b" stroke-width="3" fill="none" stroke-linecap="round"/></g>'
+        + '<ellipse cx="60" cy="62" rx="5" ry="3.5" fill="#d98a9e" opacity=".55"/>'
+        + '<path d="M52 94 l0 9 M68 94 l0 9" stroke="#e8b86f" stroke-width="3" stroke-linecap="round"/></svg>';
+    }
+    if (type === 'cat') {
+      return '<svg viewBox="0 0 120 120" class="petsvg" aria-hidden="true">'
+        + '<path d="M90 86 q18 -2 22 -20" stroke="#e8b86f" stroke-width="9" fill="none" stroke-linecap="round"/>'
+        + '<path d="M34 42 L27 16 L49 30 Z" fill="#e8b86f"/><path d="M86 42 L93 16 L71 30 Z" fill="#e8b86f"/>'
+        + '<path d="M36 35 L31 21 L45 30 Z" fill="#d9a05f"/><path d="M84 35 L89 21 L75 30 Z" fill="#d9a05f"/>'
+        + '<circle cx="60" cy="64" r="30" fill="#e8b86f"/>'
+        + '<path d="M48 40 q3 5 0 10 M60 38 q3 5 0 10 M72 40 q3 5 0 10" stroke="#d9a05f" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+        + eyeOpen + eyeShut + blush
+        + '<path d="M56 74 h8 l-4 5 Z" fill="#d98a9e"/>'
+        + '<path d="M30 66 l-15 -3 M30 73 l-15 3 M90 66 l15 -3 M90 73 l15 3" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".7"/></svg>';
+    }
+    return '<svg viewBox="0 0 120 120" class="petsvg" aria-hidden="true">'
+      + '<ellipse cx="60" cy="104" rx="30" ry="7" fill="rgba(0,0,0,.28)"/>'
+      + '<path d="M60 22 C36 22 26 44 26 66 C26 90 40 100 60 100 C80 100 94 90 94 66 C94 44 84 22 60 22 Z" fill="#93d3ab"/>'
+      + '<ellipse cx="45" cy="46" rx="10" ry="15" fill="#ffffff" opacity=".16" transform="rotate(-18 45 46)"/>'
+      + eyeOpen + eyeShut + blush
+      + '<path d="M54 76 q6 5 12 0" stroke="#10141b" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
+  }
+  function petInto(el, mode, forceType) {
+    if (!el) { return; }
+    el.innerHTML = petSVG(forceType || pet.type);
+    var wrap = (el.closest && el.closest('.pethome,.petstage,.pettrip,.petbreathe,.petarrived,.petprev')) || el;
+    wrap.classList.remove('pet-idle', 'pet-happy', 'pet-celebrate', 'pet-sleepy');
+    wrap.classList.add(mode === 'sleepy' ? 'pet-sleepy' : mode === 'celebrate' ? 'pet-celebrate' : 'pet-idle');
+  }
+  function petHearts(el, n) {
+    for (var i = 0; i < (n || 3); i++) {
+      (function (i) {
+        setTimeout(function () {
+          var h = document.createElement('span');
+          h.className = 'heart'; h.textContent = '\u2665';
+          h.style.setProperty('--hx', ((i - 1) * 26 + (Math.random() * 14 - 7)) + 'px');
+          h.style.left = (40 + i * 10) + '%';
+          el.appendChild(h);
+          setTimeout(function () { if (h.parentNode) { h.parentNode.removeChild(h); } }, 1350);
+        }, i * 170);
+      })(i);
+    }
+  }
+  function petTap(el) {
+    tick();
+    var wrap = (el.closest && el.closest('.pethome,.petstage')) || el;
+    wrap.classList.remove('pet-happy'); void wrap.offsetWidth; wrap.classList.add('pet-happy');
+    petHearts(wrap, 3);
+    try { ensureAudio(); chime(880, 0.5, 0.045); } catch (e) {}
+    setTimeout(function () { wrap.classList.remove('pet-happy'); }, 700);
+  }
+  function renderHomePet() {
+    if (!$('pet-home-svg')) { return; }
+    petInto($('pet-home-svg'), 'idle');
+    $('pet-home-name').textContent = pet.name || 'Mochi';
+  }
+  /* pet play */
+  var petPlayReturn = 'screen-home';
+  var PET_LINES = [
+    'leans into your hand.',
+    'is very glad you\u2019re here.',
+    'says the train isn\u2019t so bad with you.',
+    'purrs quietly.',
+    'wants you to know: you\u2019ve got this.'
+  ];
+  function openPetPlay(returnTo) {
+    petPlayReturn = returnTo || 'screen-home';
+    var nm = pet.name || 'Mochi';
+    $('petplay-name').textContent = nm;
+    var n2 = $('petplay-name2'); if (n2) { n2.textContent = nm; }
+    petInto($('petplay-stage'), 'idle');
+    $('petplay-line').textContent = 'Tap to give some love.';
+    tick(); go('screen-petplay');
+  }
+  function petPat() {
+    var st = $('petplay-stage');
+    petTap(st);
+    $('petplay-line').textContent = (pet.name || 'Mochi') + ' ' + PET_LINES[Math.floor(Math.random() * PET_LINES.length)];
+  }
+  /* onboarding: meet your co-rider */
+  var obPetType = 'blob';
+  function petPreviewOb() {
+    petInto($('ob-pet-blob'), 'idle', 'blob');
+    petInto($('ob-pet-bird'), 'idle', 'bird');
+    petInto($('ob-pet-cat'), 'idle', 'cat');
+  }
+  $all('#ob-pet-pick .petopt').forEach(function (b) {
+    b.addEventListener('click', function () {
+      tick();
+      $all('#ob-pet-pick .petopt').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+      b.setAttribute('aria-pressed', 'true');
+      obPetType = b.getAttribute('data-pet');
+      var nm = $('ob-pet-name');
+      if (!nm.value) { nm.placeholder = PET_DEFAULTS[obPetType]; }
+    });
+  });
+  function finishOnboarding() {
+    pet.type = obPetType;
+    var nm = ($('ob-pet-name').value || '').trim().slice(0, 24);
+    pet.name = nm || PET_DEFAULTS[obPetType];
+    savePet();
+    try { localStorage.setItem('iht_onboarded', '1'); } catch (e) {}
+    applyProfileToHome();
+    renderHomePet();
+    go('screen-home');
+  }
+  $('btn-ob5-done').addEventListener('click', function () { tick(); finishOnboarding(); });
+  $('btn-ob5-skip').addEventListener('click', function () { tick(); obPetType = 'blob'; var i = $('ob-pet-name'); if (i) { i.value = ''; } finishOnboarding(); });
+  $('btn-ob5-back').addEventListener('click', function () { tick(); go('screen-ob4'); });
+  /* About: co-rider settings */
+  function renderPetSeg() {
+    $all('#pet-seg .segbtn').forEach(function (b) {
+      var on = b.getAttribute('data-pet') === pet.type;
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    var inp = $('in-pet-name');
+    if (inp && document.activeElement !== inp) { inp.value = pet.name || ''; }
+  }
+  $all('#pet-seg .segbtn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      tick();
+      pet.type = b.getAttribute('data-pet');
+      savePet(); renderPetSeg(); renderHomePet();
+      petInto($('pet-trip'), 'idle'); petInto($('pet-breathe'), 'sleepy'); petInto($('pet-arrived'), 'celebrate');
+    });
+  });
+  $('in-pet-name').addEventListener('change', function () {
+    var v = $('in-pet-name').value.trim().slice(0, 24);
+    if (v) { pet.name = v; savePet(); renderHomePet(); }
+  });
+  $all('[data-go="screen-about"]').forEach(function (b) { b.addEventListener('click', renderPetSeg); });
+  /* pet mounts across the app */
+  $('pet-home').addEventListener('click', function () { petTap($('pet-home')); });
+  $('petplay-stage').addEventListener('click', petPat);
+  $('petplay-stage').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); petPat(); } });
+  var ppb = $('btn-pet-pat');
+  if (ppb) { ppb.addEventListener('click', petPat); }
+  $('btn-petplay-done').addEventListener('click', function () { tick(); go(petPlayReturn); });
+  (function renderPetComfortCard() {
+    var host = $('mini-list');
+    if (!host) { return; }
+    var b = document.createElement('button'); b.className = 'linkcard';
+    var label = document.createElement('span');
+    var st = document.createElement('strong'); st.textContent = 'Play with ' + (pet.name || 'Mochi');
+    var em = document.createElement('span'); em.className = 'body'; em.textContent = 'No rules. Just company.';
+    label.appendChild(st); label.appendChild(document.createElement('br')); label.appendChild(em);
+    var go2 = document.createElement('span'); go2.className = 'go'; go2.textContent = '\u2192';
+    b.appendChild(label); b.appendChild(go2);
+    b.addEventListener('click', function () { openPetPlay('screen-comfort'); });
+    host.appendChild(b);
+  })();
+
+  /* ============ v10: contextual coach marks — video-game tutorial style ============ */
+  var COACH_DEFS = {
+    'screen-home': [
+      { key: 'sos', sel: '#screen-home .panicbtn', title: 'SOS is one tap away', body: 'Anytime, anywhere in the app. No setup, no questions first.' },
+      { key: 'pet', sel: '#pet-home', title: 'Meet your co-rider', body: '{pet} rides with you. Tap for a little love — no feeding, no fuss.' },
+      { key: 'ride', sel: '#btn-start-ride', title: 'Start a ride when you board', body: 'How you feel, 30-second prep, then one tap per stop.' }
+    ],
+    'screen-toolkit': [
+      { key: 'tools', sel: '#toolkit-featured .toolcard', title: 'Hands-on tools', body: 'These you do with your fingers — no reading required.' }
+    ],
+    'screen-trip': [
+      { key: 'tap', sel: '#btn-stop-tap', title: 'One tap per stop', body: 'That\u2019s the whole job. The app counts down with you.' }
+    ],
+    'screen-comfort': [
+      { key: 'cute', sel: '#social-grid', title: 'Cute things, one tap', body: 'Pick a platform up top, then a mood. Zero searching.' }
+    ],
+    'screen-plan': [
+      { key: 'exit', sel: '#plan-exit', title: 'Your backup plan', body: 'Set it while you\u2019re calm. One glance when you\u2019re not.' }
+    ]
+  };
+  var coachQueue = [], coachCurrent = null, coachVisible = false;
+  function coachFlag(k) { return read('iht_coach_' + k); }
+  function coachSet(k) { try { localStorage.setItem('iht_coach_' + k, '1'); } catch (e) {} }
+  function coachEnsure() {
+    var layer = $('coach-layer');
+    if (layer) { return layer; }
+    layer = document.createElement('div');
+    layer.id = 'coach-layer';
+    layer.innerHTML = '<div class="coach-shade" id="cs-t"></div><div class="coach-shade" id="cs-b"></div>'
+      + '<div class="coach-shade" id="cs-l"></div><div class="coach-shade" id="cs-r"></div>'
+      + '<div class="coach-ring" id="coach-ring"></div>'
+      + '<div class="coach-bubble" id="coach-bubble"><strong id="coach-title"></strong><p id="coach-body"></p>'
+      + '<button class="btn calm" id="coach-got">Got it</button>'
+      + '<button class="linklike quiet" id="coach-skip" style="margin:6px auto 0">Skip hints</button></div>';
+    document.body.appendChild(layer);
+    $('coach-got').addEventListener('click', function () {
+      tick();
+      if (coachCurrent) { coachSet(coachCurrent.key); }
+      coachNext();
+    });
+    $('coach-skip').addEventListener('click', function () { tick(); coachSkipAll(); });
+    return layer;
+  }
+  function coachHide() {
+    var l = $('coach-layer');
+    if (l) { l.classList.remove('on'); }
+    coachVisible = false; coachCurrent = null;
+  }
+  function coachPlace(id, css) {
+    var el = $(id);
+    if (!el) { return; }
+    for (var k in css) { el.style[k] = css[k]; }
+  }
+  function coachNext() {
+    coachCurrent = coachQueue.shift() || null;
+    if (!coachCurrent) { coachHide(); return; }
+    var t = document.querySelector(coachCurrent.sel);
+    if (!t || !t.offsetParent) { coachNext(); return; } // target not on screen: skip, it re-queues next visit
+    var r = t.getBoundingClientRect(), pad = 10;
+    coachEnsure();
+    coachPlace('cs-t', { left: '0', right: '0', top: '0', height: Math.max(0, r.top - pad) + 'px' });
+    coachPlace('cs-b', { left: '0', right: '0', top: (r.bottom + pad) + 'px', bottom: '0' });
+    coachPlace('cs-l', { left: '0', top: (r.top - pad) + 'px', height: (r.height + pad * 2) + 'px', width: Math.max(0, r.left - pad) + 'px' });
+    coachPlace('cs-r', { top: (r.top - pad) + 'px', height: (r.height + pad * 2) + 'px', left: (r.right + pad) + 'px', right: '0' });
+    coachPlace('coach-ring', { left: (r.left - pad) + 'px', top: (r.top - pad) + 'px', width: (r.width + pad * 2) + 'px', height: (r.height + pad * 2) + 'px' });
+    $('coach-title').textContent = coachCurrent.title;
+    $('coach-body').textContent = (coachCurrent.body || '').replace('{pet}', pet.name || 'Mochi');
+    var bw = Math.min(330, window.innerWidth - 32);
+    var bx = Math.max(16, Math.min(r.left, window.innerWidth - bw - 16));
+    var bh = 250;
+    var by = (r.bottom + pad + 16 + bh < window.innerHeight) ? (r.bottom + pad + 16) : Math.max(16, r.top - pad - bh - 12);
+    coachPlace('coach-bubble', { left: bx + 'px', top: by + 'px', width: bw + 'px' });
+    $('coach-layer').classList.add('on');
+    coachVisible = true;
+  }
+  function maybeCoach(screenId) {
+    var defs = COACH_DEFS[screenId];
+    if (!defs || coachVisible) { return; }
+    var fresh = false;
+    defs.forEach(function (d) { if (!coachFlag(d.key)) { coachQueue.push(d); fresh = true; } });
+    if (fresh) { coachNext(); }
+  }
+  function coachSkipAll() {
+    Object.keys(COACH_DEFS).forEach(function (s) { COACH_DEFS[s].forEach(function (d) { coachSet(d.key); }); });
+    coachQueue = []; coachHide();
+  }
+  function coachReplay() {
+    Object.keys(COACH_DEFS).forEach(function (s) {
+      COACH_DEFS[s].forEach(function (d) { try { localStorage.removeItem('iht_coach_' + d.key); } catch (e) {} });
+    });
+    coachQueue = [];
+    go('screen-home');
+  }
+  $('btn-replay-coach').addEventListener('click', function () { tick(); coachReplay(); });
+  window.addEventListener('scroll', function () { if (coachVisible) { coachHide(); } }, { passive: true, capture: true });
+
+  /* ============ v10: interactive tools — experiential, not reading assignments ============ */
+  var TOOL_FNS = {};
+  var ixReturn = 'screen-home';
+
+  /* 5-4-3-2-1, interactive: tap a dot per sense */
+  var SEN_STAGES = [
+    { n: 5, tag: '5 · see', title: 'Five things you can see', hint: 'Look around. Tap a dot for each one. No rush.' },
+    { n: 4, tag: '4 · feel', title: 'Four things you can feel', hint: 'Your feet, the seat, your hands, the air.' },
+    { n: 3, tag: '3 · hear', title: 'Three things you can hear', hint: 'They can be quiet or ordinary.' },
+    { n: 2, tag: '2 · smell', title: 'Two things you can smell', hint: 'Or two neutral details, if smells are hard.' },
+    { n: 1, tag: '1 · taste', title: 'One thing you can taste', hint: 'Or the feeling of your mouth.' }
+  ];
+  var senStage = 0, senDone = 0;
+  function renderSen() {
+    var st = SEN_STAGES[senStage];
+    $('sen-stage-label').textContent = st.tag;
+    $('sen-title').textContent = st.title;
+    $('sen-hint').textContent = st.hint;
+    senDone = 0;
+    $('sen-count').textContent = '0 of ' + st.n;
+    $('btn-sen-skip').style.visibility = 'visible';
+    var host = $('sen-dots'); host.innerHTML = '';
+    for (var i = 0; i < st.n; i++) {
+      (function () {
+        var d = document.createElement('button');
+        d.className = 'sendot'; d.setAttribute('aria-label', 'Mark one noticed');
+        d.addEventListener('click', function () {
+          if (d.classList.contains('on')) { return; }
+          tick(); d.classList.add('on'); senDone++;
+          $('sen-count').textContent = senDone + ' of ' + st.n;
+          if (senDone >= st.n) { setTimeout(senNext, 500); }
+        });
+        host.appendChild(d);
+      })();
+    }
+  }
+  function senNext() {
+    if (senStage < SEN_STAGES.length - 1) { senStage++; renderSen(); return; }
+    $('sen-title').textContent = 'Well done.';
+    $('sen-hint').textContent = 'You\u2019re back in the room.';
+    $('sen-dots').innerHTML = ''; $('sen-count').textContent = '';
+    $('btn-sen-skip').style.visibility = 'hidden';
+    setTimeout(function () { go(ixReturn); }, 1500);
+  }
+  TOOL_FNS.senses = function (r) { ixReturn = r; senStage = 0; renderSen(); tick(); go('screen-senses'); };
+  $('btn-sen-skip').addEventListener('click', function () { tick(); senNext(); });
+  $('btn-sen-done').addEventListener('click', function () { tick(); go(ixReturn); });
+
+  /* count backward, interactive */
+  var cdN = 0;
+  TOOL_FNS.countdown = function (r) {
+    ixReturn = r;
+    $('cd-pick').hidden = false; $('cd-run').hidden = true;
+    $('cd-title').textContent = 'Count backward';
+    tick(); go('screen-countdown');
+  };
+  $all('#cd-starts .chip').forEach(function (c) {
+    c.addEventListener('click', function () {
+      tick();
+      cdN = parseInt(c.getAttribute('data-n'), 10);
+      $('cd-num').textContent = cdN;
+      $('cd-pick').hidden = true; $('cd-run').hidden = false;
+    });
+  });
+  $('cd-num').addEventListener('click', function () {
+    if (cdN <= 0) { return; }
+    cdN--; tick();
+    var el = $('cd-num');
+    el.textContent = cdN;
+    el.style.transform = 'scale(.92)';
+    setTimeout(function () { el.style.transform = ''; }, 130);
+    if (cdN === 0) {
+      $('cd-title').textContent = 'Done. Nicely steady.';
+      setTimeout(function () { go(ixReturn); }, 1300);
+    }
+  });
+  $('btn-cd-done').addEventListener('click', function () { tick(); go(ixReturn); });
+
+  /* quiet category game, interactive */
+  var CAT_CATS = ['Foods', 'Films', 'Animals', 'Places', 'Songs'];
+  var catActive = null;
+  (function renderCatChips() {
+    var host = $('cat-cats');
+    if (!host) { return; }
+    CAT_CATS.forEach(function (c) {
+      var b = document.createElement('button');
+      b.className = 'chip'; b.textContent = c; b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () {
+        tick();
+        $all('#cat-cats .chip').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
+        catActive = c;
+        $('cat-active').textContent = c + ' — name one at a time. Change whenever.';
+        $('cat-list').innerHTML = '';
+        $('cat-in').focus();
+      });
+      host.appendChild(b);
+    });
+  })();
+  function catAdd() {
+    var v = $('cat-in').value.trim().slice(0, 40);
+    if (!v) { return; }
+    if (!catActive) { $('cat-active').textContent = 'Pick a category first.'; return; }
+    tick();
+    var host = $('cat-list');
+    var c = document.createElement('button');
+    c.className = 'chip'; c.setAttribute('aria-pressed', 'false');
+    var label = document.createElement('span'); label.textContent = v;
+    var x = document.createElement('span'); x.className = 'x'; x.textContent = ' \u2715';
+    c.appendChild(label); c.appendChild(x);
+    c.addEventListener('click', function () { tick(); host.removeChild(c); });
+    host.appendChild(c);
+    $('cat-in').value = ''; $('cat-in').focus();
+  }
+  $('cat-add').addEventListener('click', catAdd);
+  $('cat-in').addEventListener('keydown', function (e) { if (e.key === 'Enter') { catAdd(); } });
+  $('btn-cat-done').addEventListener('click', function () { tick(); go(ixReturn); });
+  TOOL_FNS.categories = function (r) { ixReturn = r; tick(); go('screen-categories'); };
+
+  /* gentle thought check, interactive with private inputs */
+  var TH_STEPS = [
+    { title: 'Name the scary thought', body: 'A few words, no arguing with yourself. This stays on your phone.', ph: 'e.g. I\u2019m trapped in here' },
+    { title: 'What do you know for sure?', body: 'Facts only — not what fear is predicting.', ph: 'e.g. I\u2019m on a train; I can get off at the next stop' },
+    { title: 'One kinder possibility', body: 'Not forced positivity — just a steadier story.', ph: 'e.g. I\u2019ve ridden this out before' }
+  ];
+  var thStep = 0, thData = {};
+  function renderTh() {
+    $('th-count').textContent = (thStep + 1) + ' of 3';
+    $('th-title').textContent = TH_STEPS[thStep].title;
+    $('th-body').textContent = TH_STEPS[thStep].body;
+    $('th-in').placeholder = TH_STEPS[thStep].ph;
+    $('th-in').value = thData[thStep] || '';
+    $('btn-th-back').style.visibility = thStep === 0 ? 'hidden' : 'visible';
+    $('btn-th-next').textContent = thStep === 2 ? 'Done' : 'Next';
+  }
+  TOOL_FNS.thought = function (r) { ixReturn = r; thStep = 0; thData = {}; renderTh(); tick(); go('screen-thought'); };
+  $('btn-th-next').addEventListener('click', function () {
+    tick();
+    thData[thStep] = $('th-in').value.trim();
+    if (thStep < 2) { thStep++; renderTh(); $('th-in').focus(); }
+    else { go(ixReturn); }
+  });
+  $('btn-th-back').addEventListener('click', function () { tick(); if (thStep > 0) { thStep--; renderTh(); } });
+  $('btn-th-done').addEventListener('click', function () { tick(); go(ixReturn); });
+
+  /* kind words deck */
+  var KW_LINES = [
+    'This is a hard moment, and I can choose one small next step.',
+    'I am allowed to ask someone for support.',
+    'Panic is awful, but it is not dangerous — and it always passes.',
+    'I\u2019ve felt this before and I got through it.',
+    'I don\u2019t have to solve the whole ride. Just this minute.',
+    'My body is trying to protect me. I can thank it and stand down.',
+    'It\u2019s okay to take up space and breathe.',
+    'One stop at a time is enough.'
+  ];
+  var kwIdx = 0;
+  function renderKw() {
+    var el = $('kw-text');
+    el.style.transition = 'opacity .25s ease';
+    el.style.opacity = '0';
+    setTimeout(function () {
+      el.textContent = '\u201C' + KW_LINES[kwIdx % KW_LINES.length] + '\u201D';
+      el.style.opacity = '1';
+    }, 170);
+  }
+  TOOL_FNS.kindwords = function (r) { ixReturn = r; kwIdx = Math.floor(Math.random() * KW_LINES.length); renderKw(); tick(); go('screen-kindwords'); };
+  $('btn-kw-next').addEventListener('click', function () { tick(); kwIdx++; renderKw(); });
+  $('btn-kw-done').addEventListener('click', function () { tick(); go(ixReturn); });
+
+  /* muscle release, timed hold */
+  var MU_PARTS = [
+    { t: 'Hands', b: 'Press your fingertips together gently — not hard, just firm.' },
+    { t: 'Shoulders', b: 'Lift your shoulders a little toward your ears. No straining.' },
+    { t: 'Jaw and face', b: 'Soften your jaw. Let your face go slack.' }
+  ];
+  var muIdx = 0, muHolding = false, muT0 = 0, muRaf = null;
+  function renderMu() {
+    $('mu-count').textContent = (muIdx + 1) + ' of ' + MU_PARTS.length;
+    $('mu-title').textContent = MU_PARTS[muIdx].t;
+    $('mu-body').textContent = MU_PARTS[muIdx].b;
+    $('mu-nav').hidden = true;
+    $('mu-hint').textContent = 'Hold to tense · release to let go. Skip anything uncomfortable.';
+    $('btn-mu-back').style.visibility = muIdx === 0 ? 'hidden' : 'visible';
+    $('btn-mu-next').textContent = muIdx === MU_PARTS.length - 1 ? 'Done' : 'Next';
+  }
+  TOOL_FNS.muscle = function (r) { ixReturn = r; muIdx = 0; renderMu(); tick(); go('screen-muscle'); };
+  (function () {
+    var btn = $('mu-btn'), fill = $('mu-fill');
+    if (!btn || !fill) { return; }
+    function start() {
+      if (muHolding) { return; }
+      muHolding = true; muT0 = performance.now();
+      cancelAnimationFrame(muRaf);
+      var step = function () {
+        var p = Math.min(1, (performance.now() - muT0) / 5000);
+        fill.style.transform = 'scale(' + (0.2 + 0.8 * p) + ')';
+        if (p < 1 && muHolding) { muRaf = requestAnimationFrame(step); }
+      };
+      step();
+    }
+    function end() {
+      if (!muHolding) { return; }
+      muHolding = false; cancelAnimationFrame(muRaf);
+      fill.style.transform = 'scale(0.2)';
+      $('mu-hint').textContent = 'And let go. Notice the softness for a breath or two.';
+      $('mu-nav').hidden = false;
+    }
+    btn.addEventListener('touchstart', start, { passive: true });
+    btn.addEventListener('touchend', end);
+    btn.addEventListener('touchcancel', end);
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('mouseup', end);
+    btn.addEventListener('mouseleave', end);
+  })();
+  $('btn-mu-next').addEventListener('click', function () {
+    tick();
+    if (muIdx < MU_PARTS.length - 1) { muIdx++; renderMu(); }
+    else { go(ixReturn); }
+  });
+  $('btn-mu-back').addEventListener('click', function () { tick(); if (muIdx > 0) { muIdx--; renderMu(); } });
+  $('btn-mu-done').addEventListener('click', function () { tick(); go(ixReturn); });
+
+  /* butterfly taps, bilateral */
+  var flyN = 0, flyExpect = 'L';
+  var FLY_TOTAL = 12;
+  function renderFlyDots() {
+    var host = $('fly-dots');
+    if (!host) { return; }
+    host.innerHTML = '';
+    for (var i = 0; i < FLY_TOTAL; i++) {
+      var d = document.createElement('i');
+      if (i < flyN) { d.className = 'on'; }
+      host.appendChild(d);
+    }
+  }
+  function flyReset() {
+    flyN = 0; flyExpect = 'L';
+    renderFlyDots();
+    var h = $('fly-hint');
+    if (h) { h.textContent = 'Left, right, left, right…'; }
+  }
+  function flyTap(side) {
+    var el = side === 'L' ? $('fly-l') : $('fly-r');
+    if (side !== flyExpect) {
+      $('fly-hint').textContent = side === 'L' ? 'Right side now — nice and slow.' : 'Left side now — nice and slow.';
+      return;
+    }
+    tick();
+    el.classList.add('hit');
+    setTimeout(function () { el.classList.remove('hit'); }, 230);
+    flyN++; flyExpect = flyExpect === 'L' ? 'R' : 'L';
+    renderFlyDots();
+    $('fly-hint').textContent = flyExpect === 'L' ? 'Left…' : 'Right…';
+    if (flyN >= FLY_TOTAL) {
+      $('fly-hint').textContent = 'Steady rhythm. Well done.';
+      setTimeout(function () { go(gestureReturn); }, 1400);
+    }
+  }
+  $('fly-l').addEventListener('click', function () { flyTap('L'); });
+  $('fly-r').addEventListener('click', function () { flyTap('R'); });
+  $('btn-fly-done').addEventListener('click', function () { tick(); go(gestureReturn); });
+
+  /* ---------- boot: onboarding first, then home. Coach marks guide from there. ---------- */
   applyProfileToHome();
+  renderHomePet();
+  petInto($('pet-breathe'), 'sleepy');
   if (!read('iht_onboarded')) { go('screen-ob1'); }
-  else if (!read('iht_toured')) { startTour('screen-home'); }
-  else { updateSosFloat('screen-home'); }
+  else { go('screen-home'); }
 
 })();
