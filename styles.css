@@ -174,13 +174,19 @@ em { font-style: normal; }
 }
 .pchip:active { transform: scale(.96); }
 .pchip[aria-pressed="true"] { border-color: var(--calm); color: var(--ink); }
-.breathcircle {
-  width: 210px; height: 210px; border-radius: 50%; margin: 26px auto 22px;
-  background: radial-gradient(circle at 38% 35%, #1c2331, #12151d);
-  border: 2px solid var(--calm);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; font-weight: 500; color: var(--ink);
+/* breathing bloom — watchOS Breathe style: petals bloom on inhale, fold on exhale */
+.breathbloom { position: relative; width: 244px; height: 244px; margin: 30px auto 14px; }
+.breathbloom .petal {
+  position: absolute; left: 50%; top: 50%; width: 92px; height: 164px; margin: -82px 0 0 -46px;
+  border-radius: 50%; transform: rotate(var(--a)) translateY(-60px);
+  background: radial-gradient(ellipse at 50% 38%, rgba(143,195,168,.55), rgba(143,195,168,.04) 68%);
 }
+.breathbloom .bloomcore {
+  position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px;
+  border-radius: 50%; background: radial-gradient(circle at 42% 36%, #1f2837, #0e1219);
+  box-shadow: inset 0 0 26px rgba(0,0,0,.55);
+}
+.breathword { font-size: 23px; font-weight: 500; min-height: 36px; margin: 0 0 6px; }
 .breathcap { min-height: 56px; color: var(--dim); font-size: 17px; margin: 0 0 8px; transition: opacity .3s ease; }
 .breathcap.swap { opacity: 0; }
 
@@ -259,7 +265,7 @@ em { font-style: normal; }
 @media (prefers-reduced-motion: reduce) {
   .screen.active { animation: none; }
   .screen.active .rise { animation: none; }
-  .breathcircle { transition: none !important; }
+  .breathbloom { transition: none !important; }
   #ground-fill, #walk-fill { transition: none; }
   .counternum.bump { animation: none; }
   * { transition-duration: .01ms !important; }
@@ -315,6 +321,36 @@ em { font-style: normal; }
 .segbtn:active { transform: scale(.95); }
 .segbtn.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .calmemo { font-size: 40px; line-height: 1; display: block; padding: 8px 0; }
+
+/* city themes — brand surfaces only. The sacred flow (panic, breathe, grounding, crisis) stays universal calm dark. */
+body[data-theme="toronto"] #app { background: radial-gradient(110% 44% at 50% 0%, rgba(216,64,44,.10), transparent 62%); }
+body[data-theme="london"] #app { background: radial-gradient(110% 44% at 50% 0%, rgba(208,42,60,.10), transparent 62%); }
+body[data-theme="newyork"] #app { background: radial-gradient(110% 44% at 50% 0%, rgba(232,169,12,.10), transparent 62%); }
+body[data-theme="paris"] #app { background: radial-gradient(110% 44% at 50% 0%, rgba(58,168,143,.10), transparent 62%); }
+body[data-theme="tokyo"] #app { background: radial-gradient(110% 44% at 50% 0%, rgba(255,77,109,.10), transparent 62%); }
+body[data-theme="toronto"] #screen-home, body[data-theme="toronto"] #screen-ob1, body[data-theme="toronto"] #screen-ob2, body[data-theme="toronto"] #screen-ob3, body[data-theme="toronto"] #screen-ob4, body[data-theme="toronto"] #screen-tour, body[data-theme="toronto"] #screen-checkin, body[data-theme="toronto"] #screen-checklist, body[data-theme="toronto"] #screen-setup, body[data-theme="toronto"] #screen-trip, body[data-theme="toronto"] #screen-arrived, body[data-theme="toronto"] #screen-reflect, body[data-theme="toronto"] #screen-comfort, body[data-theme="toronto"] #screen-plan, body[data-theme="toronto"] #screen-history { --calm: #d8402c; --calm-ink: #fff6f2; }
+body[data-theme="london"] #screen-home, body[data-theme="london"] #screen-ob1, body[data-theme="london"] #screen-ob2, body[data-theme="london"] #screen-ob3, body[data-theme="london"] #screen-ob4, body[data-theme="london"] #screen-tour, body[data-theme="london"] #screen-checkin, body[data-theme="london"] #screen-checklist, body[data-theme="london"] #screen-setup, body[data-theme="london"] #screen-trip, body[data-theme="london"] #screen-arrived, body[data-theme="london"] #screen-reflect, body[data-theme="london"] #screen-comfort, body[data-theme="london"] #screen-plan, body[data-theme="london"] #screen-history { --calm: #d02a3c; --calm-ink: #fff6f2; }
+body[data-theme="newyork"] #screen-home, body[data-theme="newyork"] #screen-ob1, body[data-theme="newyork"] #screen-ob2, body[data-theme="newyork"] #screen-ob3, body[data-theme="newyork"] #screen-ob4, body[data-theme="newyork"] #screen-tour, body[data-theme="newyork"] #screen-checkin, body[data-theme="newyork"] #screen-checklist, body[data-theme="newyork"] #screen-setup, body[data-theme="newyork"] #screen-trip, body[data-theme="newyork"] #screen-arrived, body[data-theme="newyork"] #screen-reflect, body[data-theme="newyork"] #screen-comfort, body[data-theme="newyork"] #screen-plan, body[data-theme="newyork"] #screen-history { --calm: #e8a90c; --calm-ink: #231a02; }
+body[data-theme="paris"] #screen-home, body[data-theme="paris"] #screen-ob1, body[data-theme="paris"] #screen-ob2, body[data-theme="paris"] #screen-ob3, body[data-theme="paris"] #screen-ob4, body[data-theme="paris"] #screen-tour, body[data-theme="paris"] #screen-checkin, body[data-theme="paris"] #screen-checklist, body[data-theme="paris"] #screen-setup, body[data-theme="paris"] #screen-trip, body[data-theme="paris"] #screen-arrived, body[data-theme="paris"] #screen-reflect, body[data-theme="paris"] #screen-comfort, body[data-theme="paris"] #screen-plan, body[data-theme="paris"] #screen-history { --calm: #3aa88f; --calm-ink: #06231c; }
+body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, body[data-theme="tokyo"] #screen-ob2, body[data-theme="tokyo"] #screen-ob3, body[data-theme="tokyo"] #screen-ob4, body[data-theme="tokyo"] #screen-tour, body[data-theme="tokyo"] #screen-checkin, body[data-theme="tokyo"] #screen-checklist, body[data-theme="tokyo"] #screen-setup, body[data-theme="tokyo"] #screen-trip, body[data-theme="tokyo"] #screen-arrived, body[data-theme="tokyo"] #screen-reflect, body[data-theme="tokyo"] #screen-comfort, body[data-theme="tokyo"] #screen-plan, body[data-theme="tokyo"] #screen-history { --calm: #ff4d6d; --calm-ink: #2b0713; }
+.cityline { font-size: 12px; text-transform: uppercase; letter-spacing: .22em; color: var(--dim); margin: -10px 0 26px; }
+
+/* sound + theme segmented controls */
+.segsound { max-width: 360px; margin: 0 auto 4px; }
+.segwrap { flex-wrap: wrap; }
+.segwrap .segbtn { flex: 1 1 28%; }
+
+/* gesture tools — big, forgiving zones for a shaking train */
+.swipezone { position: relative; height: 300px; border-radius: 26px; background: var(--surface); border: 1.5px solid var(--line); overflow: hidden; touch-action: none; margin: 18px 0; cursor: pointer; }
+.swipefill { position: absolute; left: 0; right: 0; bottom: 0; height: 0%; background: linear-gradient(to top, rgba(143,195,168,.38), rgba(143,195,168,.06)); }
+.tracewrap { width: min(72vw, 300px); margin: 6px auto; touch-action: none; cursor: pointer; }
+.tracesvg { width: 100%; height: auto; display: block; }
+.trace-bg { fill: none; stroke: var(--line); stroke-width: 10; }
+.trace-fg { fill: none; stroke: var(--calm); stroke-width: 10; stroke-linecap: round; }
+.trace-dot { fill: var(--calm); }
+.holdbtn { position: relative; width: 220px; height: 220px; border-radius: 50%; border: 2px solid var(--calm); background: var(--surface); color: var(--ink); font-size: 20px; font-weight: 600; overflow: hidden; touch-action: none; margin: 18px auto; display: block; cursor: pointer; }
+.holdfill { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, rgba(143,195,168,.4), rgba(143,195,168,.05)); transform: scale(.2); }
+.holdlabel { position: relative; z-index: 1; }
 
 /* generic hide */
 .hidden { display: none !important; }

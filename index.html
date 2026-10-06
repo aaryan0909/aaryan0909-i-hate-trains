@@ -81,12 +81,25 @@
     </div>
   </section>
 
+  <!-- TOUR — first-time walkthrough, shows once, skippable -->
+  <section class="screen" id="screen-tour" aria-label="Quick tour">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">a quick tour</p>
+      <p class="stepcount" id="tour-count">1 of 4</p>
+      <h2 class="serene" id="tour-title">Title</h2>
+      <p class="lede soft" id="tour-body">Body.</p>
+      <button class="btn calm big" id="btn-tour-next">Next</button>
+      <button class="linklike quiet" id="btn-tour-skip">Skip the tour</button>
+    </div>
+  </section>
+
   <!-- HOME — panic-first, Rootd-style -->
   <section class="screen active" id="screen-home" aria-label="Home">
     <div class="wrap">
       <p class="kicker rise d1">a pocket companion for scared riders</p>
       <h1 class="mega rise d2">I hate<br>trains.</h1>
       <p class="lede rise d3" id="home-greet">Same. Let's get through this ride together.</p>
+      <p class="cityline rise d3" id="home-cityline"></p>
       <button class="panicbtn rise d3" data-go="screen-panic">I need help right now</button>
       <div class="ridecard rise d4">
         <p class="body" id="home-ride-line">Your ride</p>
@@ -98,7 +111,7 @@
         <span aria-hidden="true">·</span>
         <button class="linklike" data-go="screen-comfort" id="link-comfort-home">Comfort</button>
         <span aria-hidden="true">·</span>
-        <button class="linklike" data-go="screen-plan">My plan</button>
+        <button class="linklike" data-go="screen-plan" id="link-plan-home">Backup plan</button>
         <span aria-hidden="true">·</span>
         <button class="linklike" data-go="screen-history">History</button>
         <span aria-hidden="true">·</span>
@@ -117,7 +130,9 @@
       <p class="lede soft rise d3">This will pass. Pick what sounds bearable:</p>
       <button class="btn calm big rise d3" id="btn-panic-breathe">Breathe with me</button>
       <button class="btn ghost rise d4" id="btn-panic-ground">Ground me instead</button>
+      <button class="btn ghost rise d4" id="btn-panic-comfort">Show me something cute</button>
       <button class="linklike quiet rise d4" data-go="screen-nonbreath">Breathing and counting don't work for me</button>
+      <button class="linklike quiet rise d4" id="btn-panic-plan">See my backup plan</button>
       <button class="backlink rise d4" data-go="screen-home">← back</button>
     </div>
   </section>
@@ -131,8 +146,25 @@
         <button class="pchip" data-pattern="box" aria-pressed="false">Box</button>
         <button class="pchip" data-pattern="478" aria-pressed="false">4–7–8</button>
       </div>
-      <div class="breathcircle rise d2" id="breath-circle"><span id="breath-word">…</span></div>
-      <p class="breathcap" id="breath-cap">Follow the circle.</p>
+      <div class="seg segsound rise d2" id="breath-sound-seg" role="group" aria-label="Breathing sounds">
+        <button class="segbtn on" data-snd="chimes" aria-pressed="true">Chimes</button>
+        <button class="segbtn" data-snd="ambient" aria-pressed="false">Ambient</button>
+        <button class="segbtn" data-snd="both" aria-pressed="false">Both</button>
+        <button class="segbtn" data-snd="off" aria-pressed="false">Off</button>
+      </div>
+      <div class="breathbloom rise d2" id="breath-circle" aria-hidden="true">
+        <span class="petal" style="--a:0deg"></span>
+        <span class="petal" style="--a:45deg"></span>
+        <span class="petal" style="--a:90deg"></span>
+        <span class="petal" style="--a:135deg"></span>
+        <span class="petal" style="--a:180deg"></span>
+        <span class="petal" style="--a:225deg"></span>
+        <span class="petal" style="--a:270deg"></span>
+        <span class="petal" style="--a:315deg"></span>
+        <span class="bloomcore"></span>
+      </div>
+      <p class="breathword" id="breath-word" aria-live="polite">…</p>
+      <p class="breathcap" id="breath-cap">Follow the bloom.</p>
       <p class="fineprint" id="breath-safety">Breathing exercises are optional coping tools, not treatment. If breathing feels difficult, stop right away and pick a grounding tool instead.</p>
       <button class="linklike quiet" id="btn-breathe-end">I'm feeling steadier</button>
     </div>
@@ -184,6 +216,7 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">before we ride</p>
       <h2 class="serene rise d2">How are you feeling right now?</h2>
+      <p class="body" id="checkin-theme-line" style="margin-top:-6px"></p>
       <div class="feelgrid rise d3">
         <button class="feelbtn" data-feel="steady">Steady</button>
         <button class="feelbtn" data-feel="uneasy">Uneasy</button>
@@ -274,7 +307,7 @@
     <div class="wrap narrow center">
       <p class="kicker rise d1">last stop</p>
       <h2 class="serene rise d2">You made it.</h2>
-      <p class="lede soft rise d3">That took courage.</p>
+      <p class="lede soft rise d3" id="arrived-lede">That took courage.</p>
       <button class="btn calm big rise d3" id="btn-im-home">I'm home</button>
       <p class="fineprint" id="home-note">Your person has your trip card with the ETA.</p>
     </div>
@@ -317,8 +350,8 @@
   <section class="screen" id="screen-plan" aria-label="My ride plan">
     <div class="wrap narrow">
       <p class="kicker rise d1">before boarding</p>
-      <h2 class="serene rise d2">My ride backup plan.</h2>
-      <p class="lede soft rise d3">Make a small plan while you have headspace. No live transit data is used. You are always allowed to reassess — this plan never tells you to stay.</p>
+      <h2 class="serene rise d2">My backup plan.</h2>
+      <p class="lede soft rise d3">Set once, while you're calm. One glance when you're not. This plan never tells you to stay — you can always reassess.</p>
       <label class="field rise d3">A stop where I could step off, if I choose
         <input id="plan-exit" type="text" autocomplete="off" placeholder="e.g. the next big station">
       </label>
@@ -342,7 +375,7 @@
         <input id="plan-c3" type="text" autocomplete="off" placeholder="">
       </label>
       <p class="fineprint" id="plan-saved" aria-live="polite"></p>
-      <button class="backlink" data-go="screen-home">← back</button>
+      <button class="backlink" id="btn-plan-back">← back</button>
     </div>
   </section>
 
@@ -371,16 +404,54 @@
         <input id="one-comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste your one link…" aria-label="One comfort link">
         <button class="btn calm" id="one-comfort-save">Save</button>
       </div>
-      <button class="backlink" data-go="screen-home">← back</button>
-    </div>
-  </section>
-
-  <!-- CALM CARD — a full-screen calm moment -->
+      <h3 class="rise d3">Guided minis</h3>
+      <p class="body rise d3">Short meditations. No audio needed, no counting.</p>
+      <div class="rise d3" id="mini-list" style="display:grid;gap:12px;margin-bottom:8px"></div>
+      <button class="backlink" id="btn-comfort-back">← back</button>
   <section class="screen" id="screen-calm" aria-label="A calm moment">
     <div class="wrap narrow center">
       <div class="calmart rise d1" id="calm-art" aria-hidden="true"></div>
       <p class="serene rise d2" id="calm-note"></p>
       <button class="btn ghost rise d3" id="btn-calm-done">Back</button>
+    </div>
+  </section>
+
+  <!-- SWIPE BREATHING — the gesture is the pacer -->
+  <section class="screen" id="screen-swipebreathe" aria-label="Swipe breathing">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">swipe to breathe</p>
+      <h2 class="serene" id="sb-word">Swipe up, slowly</h2>
+      <div class="swipezone" id="sb-zone" aria-hidden="true"><div class="swipefill" id="sb-fill"></div></div>
+      <p class="fineprint">Up is in. Down is out. Release anytime — or tap to switch.</p>
+      <button class="linklike quiet" id="btn-sb-done">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- TRACE CALM — trace a slow circle with your finger -->
+  <section class="screen" id="screen-trace" aria-label="Trace calm">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">trace calm</p>
+      <h2 class="serene">Trace the circle, slowly</h2>
+      <div class="tracewrap" id="trace-wrap">
+        <svg viewBox="0 0 200 200" class="tracesvg" aria-hidden="true">
+          <circle cx="100" cy="100" r="70" class="trace-bg"/>
+          <circle cx="100" cy="100" r="70" class="trace-fg" id="trace-fg" transform="rotate(-90 100 100)"/>
+          <circle cx="100" cy="30" r="7" class="trace-dot" id="trace-dot"/>
+        </svg>
+      </div>
+      <p class="fineprint" id="trace-hint">One slow loop. Stop anytime — or tap to move along.</p>
+      <button class="linklike quiet" id="btn-trace-done">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- HOLD TO STEADY — press and hold, a soft tone rises with you -->
+  <section class="screen" id="screen-hold" aria-label="Hold to steady">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">hold to steady</p>
+      <h2 class="serene" id="hold-word">Press and hold</h2>
+      <button class="holdbtn" id="hold-btn" aria-label="Press and hold to steady"><span class="holdfill" id="hold-fill"></span><span class="holdlabel">hold</span></button>
+      <p class="fineprint">Let go anytime. Nothing punishes letting go.</p>
+      <button class="linklike quiet" id="btn-hold-done">I'm feeling steadier</button>
     </div>
   </section>
 
@@ -412,7 +483,13 @@
         <button class="check" id="set-haptics" aria-pressed="true"><span class="box" aria-hidden="true"></span><span><strong>Gentle vibrations</strong><em>Soft pulses during breathing. Android only — iPhones use sound cues instead.</em></span></button>
       </div>
       <div class="setrow rise d3">
-        <button class="check" id="set-sound" aria-pressed="true"><span class="box" aria-hidden="true"></span><span><strong>Breathing sound cues</strong><em>A soft chime marks each breath phase. Works on iPhone and Android.</em></span></button>
+        <p class="body" style="margin:0 0 10px"><strong>Breathing sounds</strong><br><span style="color:var(--dim)">Chimes mark each breath phase; ambient is a soft generative pad. Both work offline.</span></p>
+        <div class="seg" id="privacy-sound-seg" role="group" aria-label="Breathing sounds">
+          <button class="segbtn on" data-snd="chimes" aria-pressed="true">Chimes</button>
+          <button class="segbtn" data-snd="ambient" aria-pressed="false">Ambient</button>
+          <button class="segbtn" data-snd="both" aria-pressed="false">Both</button>
+          <button class="segbtn" data-snd="off" aria-pressed="false">Off</button>
+        </div>
       </div>
       <p class="fineprint rise d3">The app respects your system's reduced-motion and large-text settings automatically.</p>
       <button class="btn ghost rise d4" id="btn-erase-2">Erase everything on this phone</button>
@@ -436,7 +513,19 @@
         <li>Anywhere in an emergency: call your local emergency number</li>
       </ul>
       <p class="fineprint rise d4">Made for everyone who holds their breath between stations.</p>
-      <p class="fineprint rise d4" id="app-version">version 8</p>
+      <h3 class="rise d4">City theme</h3>
+      <p class="body rise d4">The app dresses for the city you're riding in. The calm screens never change.</p>
+      <div class="seg segwrap rise d4" id="theme-seg" role="group" aria-label="City theme">
+        <button class="segbtn on" data-theme="auto" aria-pressed="true">Auto</button>
+        <button class="segbtn" data-theme="toronto" aria-pressed="false">Toronto</button>
+        <button class="segbtn" data-theme="london" aria-pressed="false">London</button>
+        <button class="segbtn" data-theme="newyork" aria-pressed="false">NYC</button>
+        <button class="segbtn" data-theme="paris" aria-pressed="false">Paris</button>
+        <button class="segbtn" data-theme="tokyo" aria-pressed="false">Tokyo</button>
+        <button class="segbtn" data-theme="night" aria-pressed="false">Night</button>
+      </div>
+      <button class="linklike quiet rise d4" id="btn-replay-tour">Replay the quick tour</button>
+      <p class="fineprint rise d4" id="app-version">version 9</p>
     </div>
   </section>
 

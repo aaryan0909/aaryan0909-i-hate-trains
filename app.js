@@ -1,19 +1,43 @@
-/* I Hate Trains — v8. Free forever. Feel-first, quality over quantity. Offline-first: no network in core flows. */
+/* I Hate Trains — v9. Free forever. Feel-first, quality over quantity. Offline-first: no network in core flows. */
 (function () {
   'use strict';
 
   /* ---------- tiny helpers ---------- */
   function $(id) { return document.getElementById(id); }
   function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
-  function go(id) {
+  function currentScreen() { var a = document.querySelector('.screen.active'); return a ? a.id : null; }
+  var navBack = [], navFwd = [];
+  function go(id, opts) {
+    opts = opts || {};
+    var cur = currentScreen();
+    if (!opts.keep && cur && cur !== id) { navBack.push(cur); if (navBack.length > 30) { navBack.shift(); } navFwd = []; }
     $all('.screen').forEach(function (s) { s.classList.remove('active'); });
     var el = $(id);
     if (el) { el.classList.add('active'); window.scrollTo(0, 0); }
     if (id !== 'screen-breathe') { stopBreathe(); } // leaving the exercise always stops it cleanly
     updateSosFloat(id);
   }
+  function navGoBack() { var p = navBack.pop(); if (!p) { return; } navFwd.push(currentScreen()); tick(); go(p, { keep: true }); }
+  function navGoFwd() { var n = navFwd.pop(); if (!n) { return; } var c = currentScreen(); if (c) { navBack.push(c); } tick(); go(n, { keep: true }); }
+  /* swipe navigation: right = back, left = forward. Gesture zones are namespaced — swipes starting
+     inside interactive tool zones, inputs, or buttons never navigate. */
+  var swipeStart = null;
+  document.addEventListener('touchstart', function (e) {
+    if (e.touches.length !== 1) { swipeStart = null; return; }
+    var t = e.target;
+    if (t && t.closest && t.closest('.swipezone, .tracewrap, .holdbtn, input, textarea, select, button, a')) { swipeStart = null; return; }
+    swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, { passive: true });
+  document.addEventListener('touchend', function (e) {
+    if (!swipeStart) { return; }
+    var t = e.changedTouches[0];
+    var dx = t.clientX - swipeStart.x, dy = t.clientY - swipeStart.y;
+    swipeStart = null;
+    if (Math.abs(dx) < 80 || Math.abs(dx) < Math.abs(dy) * 1.4) { return; } // needs a real horizontal swipe
+    if (dx > 0) { navGoBack(); } else { navGoFwd(); }
+  }, { passive: true });
   /* SOS stays one tap away on every screen except home (has the big button), the panic flow itself, and onboarding */
-  var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-ob1': 1, 'screen-ob2': 1, 'screen-ob3': 1, 'screen-ob4': 1 };
+  var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-ob1': 1, 'screen-ob2': 1, 'screen-ob3': 1, 'screen-ob4': 1, 'screen-tour': 1 };
   function updateSosFloat(id) {
     var f = $('sos-float');
     if (f) { f.hidden = !!SOS_HIDDEN[id]; }
@@ -25,7 +49,11 @@
   /* ---------- prefs ---------- */
   var prefs = readJSON('iht_prefs', null) || {};
   if (typeof prefs.haptics !== 'boolean') { prefs.haptics = true; }
-  if (typeof prefs.sound !== 'boolean') { prefs.sound = true; } // breathing phase chimes, default on
+  if (typeof prefs.breathSound !== 'string') { // chimes | ambient | both | off — default keeps v8 behavior
+    prefs.breathSound = (prefs.sound === false) ? 'off' : 'chimes';
+    try { delete prefs.sound; } catch (e) {}
+  }
+  if (typeof prefs.theme !== 'string') { prefs.theme = 'auto'; } // auto | toronto | london | newyork | paris | tokyo | night
   if (!prefs.locale && navigator.language) { prefs.locale = navigator.language; } // locale hook: per-country copy variants later
   function savePrefs() { store('iht_prefs', JSON.stringify(prefs)); }
   savePrefs();
@@ -33,6 +61,78 @@
   /* ---------- profile (from onboarding, on-device) ---------- */
   var profile = readJSON('iht_profile', null) || {};
   function saveProfile() { store('iht_profile', JSON.stringify(profile)); }
+
+  /* ---------- city themes: the app dresses for the city you're riding in.
+     Brand surfaces only. The sacred flow (panic, breathe, grounding, crisis) stays universal calm dark. Ever. ---------- */
+  var THEMES = {
+    toronto: { nick: 'The 6ix', match: ['toronto'],
+      lede: 'Same. The TTC is doing TTC things. Let\u2019s get through this ride together.',
+      checkin: 'The TTC can wait a minute.',
+      arrived: 'That took courage — not even a short-turn could stop you.' },
+    london: { nick: 'Mind the gap', match: ['london'],
+      lede: 'Same. The Tube sends its regards — and its delays.',
+      checkin: 'Signal failures can wait.',
+      arrived: 'That took courage. Mind the gap — you cleared it.' },
+    newyork: { nick: 'The city that never sleeps', match: ['new york', 'nyc'],
+      lede: 'Same. The MTA said \u201Cgood service\u201D. Sure.',
+      checkin: 'The MTA can wait.',
+      arrived: 'That took courage. Showtime\u2019s over — you made it.' },
+    paris: { nick: 'Métro life', match: ['paris'],
+      lede: 'Same. The m\u00E9tro smells like it always does. On y va.',
+      checkin: 'The m\u00E9tro can wait.',
+      arrived: 'That took courage. Arriv\u00E9 — the m\u00E9tro didn\u2019t win today.' },
+    tokyo: { nick: 'Sardine car', match: ['tokyo'],
+      lede: 'Same. One with the rush-hour crowd. Breathe anyway.',
+      checkin: 'Rush hour can wait.',
+      arrived: 'That took courage. Otsukaresama — you rode it out.' },
+    night: { nick: 'Somewhere underground', match: [],
+      lede: 'Same. Let\u2019s get through this ride together.',
+      checkin: '',
+      arrived: 'That took courage.' }
+  };
+  var tripActive = false;
+  function themeCity() {
+    if (tripActive && trip.city) { return trip.city; }
+    return profile.city || '';
+  }
+  function detectTheme() {
+    if (prefs.theme && prefs.theme !== 'auto') { return prefs.theme; }
+    var city = themeCity().toLowerCase();
+    var keys = Object.keys(THEMES);
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      if (k === 'night') { continue; }
+      var m = THEMES[k].match;
+      for (var j = 0; j < m.length; j++) { if (city.indexOf(m[j]) !== -1) { return k; } }
+    }
+    return 'night';
+  }
+  function renderThemeSeg() {
+    var cur = prefs.theme || 'auto';
+    $all('#theme-seg .segbtn').forEach(function (b) {
+      var on = b.getAttribute('data-theme') === cur;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  function applyTheme() {
+    var key = detectTheme();
+    var th = THEMES[key] || THEMES.night;
+    document.body.setAttribute('data-theme', key);
+    var nm = (profile.name || '').trim();
+    $('home-greet').textContent = (nm ? 'Hey ' + nm + '. ' : '') + th.lede;
+    var cl = $('home-cityline'); if (cl) { cl.textContent = th.nick; }
+    var sl = $('checkin-theme-line'); if (sl) { sl.textContent = th.checkin; sl.style.display = th.checkin ? '' : 'none'; }
+    var al = $('arrived-lede'); if (al) { al.textContent = th.arrived; }
+    renderThemeSeg();
+  }
+  $all('#theme-seg .segbtn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      tick();
+      prefs.theme = b.getAttribute('data-theme');
+      savePrefs(); applyTheme();
+    });
+  });
 
   /* ---------- haptics: Android-only (iOS Safari has no Vibration API), feature-detected, user toggle ---------- */
   var canBuzz = ('vibrate' in navigator);
@@ -53,7 +153,7 @@
   });
 
   /* ---------- the coping library (ported from the Manus native build, steps + safety notes intact) ---------- */
-  var CAT_LABEL = { ground: 'Ground', breath: 'Breathe', understand: 'Understand', distract: 'Distract', plan: 'Plan', reflect: 'Reflect' };
+  var CAT_LABEL = { ground: 'Ground', touch: 'Touch', breath: 'Breathe', understand: 'Understand', distract: 'Distract', plan: 'Plan', reflect: 'Reflect' };
   var TOOLS = [
     { id: 'five-senses', title: '5–4–3–2–1 senses', cat: 'ground', time: 'A few minutes',
       summary: 'Let the carriage around you be the place you are, one sense at a time.',
@@ -67,6 +167,24 @@
     { id: 'safe-place', title: 'A familiar safe place', cat: 'ground', time: 'About a minute',
       summary: 'Picture somewhere familiar or imagined that feels comforting enough.',
       steps: ['Bring to mind a real or imagined place you like.', 'Notice one color, one sound, and one texture from that place.', 'You do not need to feel calm or finish the image. Return to the carriage whenever you want.'] },
+    { id: 'med-body-scan', title: 'One-minute body scan', cat: 'ground', time: 'About a minute',
+      summary: 'Move attention slowly through the body. Notice — don\u2019t fix.',
+      steps: ['Rest your attention on the top of your head. Notice any sensation, or none at all.', 'Let it drift down to your shoulders. If they\u2019re tight, you don\u2019t have to change it — just notice.', 'Move to your hands. Feel their weight, warmth, or stillness.', 'Down to your feet on the floor. Notice the support under you.', 'That\u2019s it. You can stop here, or run it again.'],
+      safety: 'This is a coping tool, not treatment. Stop any time.' },
+    { id: 'med-kind-wishes', title: 'Warm wishes', cat: 'ground', time: 'About a minute',
+      summary: 'Three quiet phrases — first for you, then for someone you love.',
+      steps: ['Silently, to yourself: \u201CMay I be steady.\u201D', 'Again, gently: \u201CMay I be safe.\u201D', 'Now picture someone you love: \u201CMay you be steady. May you be safe.\u201D', 'That\u2019s enough. Warmth counts, even if you don\u2019t feel it yet.'],
+      safety: 'This is a coping tool, not treatment. Stop any time.' },
+    { id: 'med-sounds', title: 'Sounds around you', cat: 'ground', time: 'About a minute',
+      summary: 'Let the train\u2019s noise become the object — not the enemy.',
+      steps: ['Notice the nearest sound to you. Just name it silently.', 'Now find the farthest sound you can hear.', 'Pick one sound in between and rest your attention there.', 'The noise isn\u2019t the enemy here. It\u2019s just sound, passing through.'],
+      safety: 'This is a coping tool, not treatment. Stop any time.' },
+    { id: 'swipe-breathe', title: 'Swipe breathing', cat: 'touch', time: 'As long as you like', screen: 'screen-swipebreathe',
+      summary: 'The gesture is the pacer: swipe up slowly to breathe in, down to breathe out.' },
+    { id: 'trace-calm', title: 'Trace calm', cat: 'touch', time: 'About a minute', screen: 'screen-trace',
+      summary: 'Trace a slow circle with your finger. A ring fills as you go.' },
+    { id: 'hold-steady', title: 'Hold to steady', cat: 'touch', time: 'As long as you like', screen: 'screen-hold',
+      summary: 'Press and hold. A soft tone rises with you. Let go anytime.' },
     { id: 'muscle-release', title: 'Progressive muscle release', cat: 'ground', time: '30 seconds',
       summary: 'A gentle, seated tighten-and-release sequence. Skip any movement that does not feel comfortable.',
       steps: ['Let your hands rest. If comfortable, press your fingertips together gently for a moment, then release.', 'If it feels okay, lift your shoulders just a little without straining, then let them drop.', 'Optionally soften your jaw or face; skip this if it is uncomfortable.', 'Notice the support beneath you. Keep breathing however it happens naturally — this tool does not ask you to change your breath.'],
@@ -110,14 +228,16 @@
       summary: 'Notice what happened and what helped, without judging how the ride went.', steps: [] }
   ];
   function getTool(id) { for (var i = 0; i < TOOLS.length; i++) { if (TOOLS[i].id === id) { return TOOLS[i]; } } return null; }
-  var NONBREATH_IDS = ['object-detail', 'comfort-cue', 'muscle-release', 'safe-place', 'kind-words', 'categories'];
+  var NONBREATH_IDS = ['object-detail', 'comfort-cue', 'muscle-release', 'safe-place', 'kind-words', 'categories', 'trace-calm', 'hold-steady', 'med-body-scan', 'med-kind-wishes', 'med-sounds'];
 
   /* ---------- tool walkthrough (generic, paced, calm) ---------- */
   var walkReturn = 'screen-home', walkTool = null, walkIdx = 0;
+  var gestureReturn = 'screen-home';
   function openTool(id, returnTo) {
     var t = getTool(id);
     if (!t) { return; }
-    if (t.goto) { tick(); go(t.goto); return; }
+    if (t.screen) { gestureReturn = returnTo || 'screen-home'; tick(); go(t.screen); return; }
+    if (t.goto) { if (t.goto === 'screen-plan') { planReturn = returnTo || 'screen-home'; } tick(); go(t.goto); return; }
     walkTool = t; walkReturn = returnTo || 'screen-home'; walkIdx = 0;
     renderWalk(); tick(); go('screen-walk');
   }
@@ -164,7 +284,7 @@
   }
   (function renderToolkit() {
     var host = $('toolkit-groups');
-    var order = ['ground', 'breath', 'distract', 'understand', 'plan', 'reflect'];
+    var order = ['ground', 'touch', 'breath', 'distract', 'understand', 'plan', 'reflect'];
     order.forEach(function (cat) {
       var items = TOOLS.filter(function (t) { return t.cat === cat; });
       if (!items.length) { return; }
@@ -182,6 +302,36 @@
       if (t) { host.appendChild(toolCard(t, 'screen-nonbreath')); }
     });
   })();
+  /* comfort as a toolkit solution card: no feature that requires discovery */
+  (function renderToolkitComfort() {
+    var host = $('toolkit-groups');
+    if (!host) { return; }
+    var b = document.createElement('button'); b.className = 'toolcard';
+    var title = document.createElement('strong'); title.textContent = 'Something cute';
+    var meta = document.createElement('div'); meta.className = 'tmeta'; meta.textContent = 'COMFORT \u00B7 Always here';
+    var sum = document.createElement('p'); sum.textContent = 'Calm cards, cute animals, your one comfort — no searching, no homework.';
+    b.appendChild(title); b.appendChild(meta); b.appendChild(sum);
+    b.addEventListener('click', function () { comfortReturn = 'screen-toolkit'; tick(); go('screen-comfort'); });
+    host.insertBefore(b, host.firstChild);
+  })();
+  /* guided minis inside the comfort solution view */
+  (function renderMinis() {
+    var host = $('mini-list');
+    if (!host) { return; }
+    ['med-body-scan', 'med-kind-wishes', 'med-sounds'].forEach(function (id) {
+      var t = getTool(id);
+      if (!t) { return; }
+      var b = document.createElement('button'); b.className = 'linkcard';
+      var label = document.createElement('span');
+      var st = document.createElement('strong'); st.textContent = t.title;
+      var em = document.createElement('span'); em.className = 'body'; em.textContent = t.time;
+      label.appendChild(st); label.appendChild(document.createElement('br')); label.appendChild(em);
+      var go2 = document.createElement('span'); go2.className = 'go'; go2.textContent = '\u2192';
+      b.appendChild(label); b.appendChild(go2);
+      b.addEventListener('click', function () { openTool(id, 'screen-comfort'); });
+      host.appendChild(b);
+    });
+  })();
 
   /* ---------- audio cues: soft chimes marking breath phases (iOS-safe: context created on first user gesture) ---------- */
   var cueCtx = null;
@@ -194,7 +344,7 @@
   }
   function chime(freq, secs, vol) {
     var ctx = cueCtx;
-    if (!ctx || !prefs.sound) { return; }
+    if (!ctx) { return; }
     try {
       var t = ctx.currentTime;
       var o = ctx.createOscillator(), g = ctx.createGain();
@@ -207,9 +357,53 @@
     } catch (e) {}
   }
   function phaseCue(k) {
+    var mode = prefs.breathSound || 'chimes';
+    if (mode !== 'chimes' && mode !== 'both') { return; } // ambient/off: no chimes
     if (k === 'in') { chime(523.25, 1.1, 0.10); }      // soft high chime: breathe in
     else if (k === 'out') { chime(392.0, 1.4, 0.08); } // lower, softer: breathe out
     else { chime(440, 0.5, 0.035); }                  // hold/rest: barely-there tick
+  }
+
+  /* ---------- generative ambient pad: soft detuned oscillators through a lowpass, slow-evolving warm chord.
+     Synthesized live with Web Audio — zero files, works fully offline, iOS-safe after the tap gesture. ---------- */
+  var ambState = null;
+  function ambientStart() {
+    var ctx = ensureAudio();
+    if (!ctx) { return; }
+    ambientStop();
+    try {
+      var master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, ctx.currentTime);
+      master.gain.exponentialRampToValueAtTime(0.055, ctx.currentTime + 4); // fade in slowly, never startling
+      var filt = ctx.createBiquadFilter();
+      filt.type = 'lowpass'; filt.frequency.value = 460; filt.Q.value = 0.5;
+      filt.connect(master); master.connect(ctx.destination);
+      var freqs = [110, 164.81, 220, 277.18]; // warm A-major-ish stack
+      var oscs = [];
+      freqs.forEach(function (f, i) {
+        var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        o.detune.value = (i % 2 === 0 ? -6 : 6); // gentle detune = warmth
+        var g = ctx.createGain(); g.gain.value = i < 2 ? 0.5 : 0.26;
+        o.connect(g); g.connect(filt); o.start(); oscs.push(o);
+      });
+      var lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.06; // ~17s evolution cycle
+      var lfoG = ctx.createGain(); lfoG.gain.value = 200;
+      lfo.connect(lfoG); lfoG.connect(filt.frequency); lfo.start();
+      ambState = { ctx: ctx, oscs: oscs, lfo: lfo, master: master };
+    } catch (e) { ambState = null; }
+  }
+  function ambientStop() {
+    var s = ambState; ambState = null;
+    if (!s) { return; }
+    try {
+      var ctx = s.ctx, t = ctx.currentTime;
+      s.master.gain.cancelScheduledValues(t);
+      s.master.gain.setValueAtTime(Math.max(s.master.gain.value, 0.0001), t);
+      s.master.gain.exponentialRampToValueAtTime(0.0001, t + 1.4); // fade out, never a hard cut
+      setTimeout(function () {
+        try { s.oscs.forEach(function (o) { o.stop(); }); s.lfo.stop(); } catch (e) {}
+      }, 1600);
+    } catch (e) {}
   }
 
   /* ---------- breathing engine (patterns + haptics + audio, minimal mode for the panic flow) ---------- */
@@ -254,10 +448,9 @@
     }, 200);
     var c = $('breath-circle');
     var grow = (p.k === 'in');
-    c.style.transition = 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1), box-shadow ' + p.secs + 's ease';
+    c.style.transition = 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
     void c.offsetWidth;
-    c.style.transform = 'scale(' + (grow ? 1.28 : 1) + ')';
-    c.style.boxShadow = grow ? '0 0 72px rgba(143,195,168,.38)' : '0 0 26px rgba(143,195,168,.12)';
+    c.style.transform = 'scale(' + (grow ? 1.32 : 1) + ')'; // the bloom opens and folds with the breath
     breathHaptic(p.k);
     phaseCue(p.k);
     breathTimer = setTimeout(function () { runPhase(phases, i + 1); }, p.secs * 1000);
@@ -271,16 +464,30 @@
     var c = $('breath-circle');
     c.style.transition = 'none';
     c.style.transform = 'scale(1)';
-    c.style.boxShadow = '0 0 26px rgba(143,195,168,.12)';
     tick(); go('screen-breathe');
+    var mode = prefs.breathSound || 'chimes';
+    if (mode === 'ambient' || mode === 'both') { ambientStart(); }
     runPhase(PATTERNS[breathPattern].phases, 0); // no gate: the exercise starts NOW
   }
-  function stopBreathe() { if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; } }
+  function stopBreathe() { if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; } ambientStop(); }
   $('btn-breathe-end').addEventListener('click', function () { tick(); stopBreathe(); go(breatheReturn); });
 
   /* panic entry: minimal sacred flow */
   $('btn-panic-breathe').addEventListener('click', function () { startBreathe('gentle', 'screen-panic', true); });
   $('btn-panic-ground').addEventListener('click', function () { openTool('five-senses', 'screen-panic'); });
+
+  /* comfort is a solution, not a silo: reachable from the panic flow, the toolkit, home, and mid-trip */
+  var comfortReturn = 'screen-home';
+  $('btn-panic-comfort').addEventListener('click', function () { comfortReturn = 'screen-panic'; tick(); go('screen-comfort'); });
+  $('btn-comfort-back').addEventListener('click', function () { tick(); go(comfortReturn); });
+  $('link-comfort-home').addEventListener('click', function () { comfortReturn = 'screen-home'; });
+  $('tool-comfort').addEventListener('click', function () { comfortReturn = 'screen-trip'; });
+
+  /* the backup plan, one glance away from the panic flow */
+  var planReturn = 'screen-home';
+  $('btn-panic-plan').addEventListener('click', function () { planReturn = 'screen-panic'; tick(); go('screen-plan'); });
+  $('btn-plan-back').addEventListener('click', function () { tick(); go(planReturn); });
+  $('link-plan-home').addEventListener('click', function () { planReturn = 'screen-home'; });
 
   /* trip tools */
   $('tool-breathe').addEventListener('click', function () { startBreathe('gentle', 'screen-trip', false); });
@@ -435,6 +642,8 @@
     trip.total = setupStops;
     trip.left = setupStops;
     tripCardSent = false;
+    tripActive = true;
+    applyTheme(); // ride city can differ from home base (hello, Italy)
     var route = (trip.city ? trip.city + ' · ' : '') + (trip.line ? trip.line + ' \u2192 ' : '') + (trip.dest ? trip.dest : 'On your way');
     $('trip-route').textContent = route;
     var nm = (profile.name || '').trim();
@@ -524,6 +733,8 @@
     } catch (e) {}
     try { store('iht_trips', String((parseInt(read('iht_trips') || '0', 10) || 0) + 1)); } catch (e) {}
     checkinFeel = null; reflectAfter = null; reflectTools = [];
+    tripActive = false;
+    applyTheme();
     go('screen-home');
   });
 
@@ -779,6 +990,7 @@
     profile.city = $('ob-city').value.trim().slice(0, 60);
     profile.line = $('ob-line').value.trim().slice(0, 60);
     saveProfile();
+    applyTheme(); // the app dresses for the city as soon as it knows it
     go('screen-ob3');
   });
   $('btn-ob2-back').addEventListener('click', function () { tick(); go('screen-ob1'); });
@@ -808,20 +1020,18 @@
     if (v && /^https?:\/\//i.test(v)) { store('iht_comfort_one', v); }
     try { localStorage.setItem('iht_onboarded', '1'); } catch (e) {}
     applyProfileToHome();
-    go('screen-home');
+    if (!read('iht_toured')) { startTour('screen-home'); }
+    else { go('screen-home'); }
   });
   $('btn-ob4-back').addEventListener('click', function () { tick(); go('screen-ob3'); });
 
-  /* ---------- home: greet by name, show the rider's usual ride ---------- */
+  /* ---------- home: greet by name, show the rider's usual ride, dress for the city ---------- */
   function applyProfileToHome() {
-    var name = (profile.name || '').trim();
-    $('home-greet').textContent = name
-      ? ('Hey ' + name + '. Same. Let\u2019s get through this ride together.')
-      : 'Same. Let\u2019s get through this ride together.';
     var bits = [];
     if (profile.city) { bits.push(profile.city); }
     if (profile.line) { bits.push(profile.line); }
     $('home-ride-line').textContent = bits.length ? bits.join(' · ') : 'Your usual ride';
+    applyTheme();
   }
 
   /* ---------- privacy: haptics + sound toggles, erase everything ---------- */
@@ -835,17 +1045,27 @@
     savePrefs(); renderHaptics(); tick();
   });
   renderHaptics();
-  function renderSound() {
-    var b = $('set-sound');
-    b.classList.toggle('done', prefs.sound);
-    b.setAttribute('aria-pressed', prefs.sound ? 'true' : 'false');
+  /* ---------- privacy: breathing sound picker (mirrors the one on the breathing screen) ---------- */
+  function renderSoundSegs() {
+    var cur = prefs.breathSound || 'chimes';
+    $all('#breath-sound-seg .segbtn, #privacy-sound-seg .segbtn').forEach(function (b) {
+      var on = b.getAttribute('data-snd') === cur;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
   }
-  $('set-sound').addEventListener('click', function () {
-    prefs.sound = !prefs.sound;
-    savePrefs(); renderSound(); tick();
-    if (prefs.sound) { ensureAudio(); chime(523.25, 0.6, 0.08); } // confirm the chimes are on
+  $all('#breath-sound-seg .segbtn, #privacy-sound-seg .segbtn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      tick();
+      prefs.breathSound = b.getAttribute('data-snd');
+      savePrefs(); renderSoundSegs();
+      var mode = prefs.breathSound;
+      if (mode === 'chimes' || mode === 'both') { ensureAudio(); chime(523.25, 0.6, 0.08); } // confirm the chimes are on
+      if ((mode === 'ambient' || mode === 'both') && $('screen-breathe').classList.contains('active')) { ambientStart(); }
+      else { ambientStop(); }
+    });
   });
-  renderSound();
+  renderSoundSegs();
   function eraseAll() {
     if (!window.confirm('Erase everything I Hate Trains stored on this phone? This can\u2019t be undone.')) { return; }
     try {
@@ -858,9 +1078,193 @@
   $('btn-erase').addEventListener('click', eraseAll);
   $('btn-erase-2').addEventListener('click', eraseAll);
 
-  /* ---------- boot: onboarding first, home after ---------- */
+  /* ---------- gesture calming tools: pure touchmove math, zero dependencies, offline.
+     Big forgiving zones for a shaking train. Every tool has a tap fallback for reduced motion. ---------- */
+  function gestureDone(id) { $(id).addEventListener('click', function () { tick(); go(gestureReturn); }); }
+  gestureDone('btn-sb-done'); gestureDone('btn-trace-done'); gestureDone('btn-hold-done');
+
+  /* swipe breathing: the gesture IS the pacer */
+  (function () {
+    var zone = $('sb-zone'), fill = $('sb-fill'), word = $('sb-word');
+    if (!zone) { return; }
+    var lastY = null, fillP = 0, phase = '', tapUp = true, swiped = false;
+    function setPhase(p) {
+      if (p === phase) { return; }
+      phase = p;
+      word.textContent = p === 'in' ? 'Breathe in' : 'Breathe out';
+      var mode = prefs.breathSound || 'chimes';
+      if (mode === 'chimes' || mode === 'both') { ensureAudio(); phaseCue(p); }
+    }
+    function setFill(p) { fillP = Math.max(0, Math.min(1, p)); fill.style.height = (fillP * 100) + '%'; }
+    zone.addEventListener('touchstart', function (e) {
+      if (e.touches.length === 1) { lastY = e.touches[0].clientY; swiped = false; }
+    }, { passive: true });
+    zone.addEventListener('touchmove', function (e) {
+      if (lastY === null || e.touches.length !== 1) { return; }
+      var y = e.touches[0].clientY;
+      var dy = lastY - y; // up = positive
+      lastY = y;
+      if (Math.abs(dy) > 6) { swiped = true; }
+      if (Math.abs(dy) < 2) { return; }
+      if (dy > 0) { setPhase('in'); setFill(fillP + 0.025); }
+      else { setPhase('out'); setFill(fillP - 0.02); }
+    }, { passive: true });
+    zone.addEventListener('touchend', function () { lastY = null; });
+    zone.addEventListener('click', function () { // tap fallback: alternate a slow in/out
+      if (swiped) { swiped = false; return; }
+      setPhase(tapUp ? 'in' : 'out');
+      fill.style.transition = 'height ' + (tapUp ? 4 : 6) + 's ease';
+      setFill(tapUp ? 1 : 0);
+      tapUp = !tapUp;
+      setTimeout(function () { fill.style.transition = 'height .12s linear'; }, 6500);
+    });
+  })();
+
+  /* trace calm: trace a slow circle; a ring fills as you go */
+  (function () {
+    var wrap = $('trace-wrap'), fg = $('trace-fg'), dot = $('trace-dot'), hint = $('trace-hint');
+    if (!wrap || !fg) { return; }
+    var C = 2 * Math.PI * 70;
+    fg.style.strokeDasharray = String(C);
+    var total = 0, prevA = null, done = false, moved = false;
+    function setProgress(p) {
+      p = Math.max(0, Math.min(1, p));
+      fg.style.strokeDashoffset = String(C * (1 - p));
+      var ang = (-90 + p * 360) * Math.PI / 180;
+      dot.setAttribute('cx', String(100 + 70 * Math.cos(ang)));
+      dot.setAttribute('cy', String(100 + 70 * Math.sin(ang)));
+    }
+    setProgress(0);
+    function angleOf(t) {
+      var r = wrap.getBoundingClientRect();
+      var dx = t.clientX - (r.left + r.width / 2), dy = t.clientY - (r.top + r.height / 2);
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 28 || dist > r.width * 0.78) { return null; } // forgiving ring band
+      return (Math.atan2(dy, dx) * 180 / Math.PI + 450) % 360; // 0 = top
+    }
+    function complete() {
+      done = true;
+      hint.textContent = 'Nice. Again, or rest.';
+      setTimeout(function () {
+        total = 0; done = false; setProgress(0);
+        hint.textContent = 'One slow loop. Stop anytime — or tap to move along.';
+      }, 2600);
+    }
+    wrap.addEventListener('touchstart', function (e) {
+      if (e.touches.length === 1) { prevA = angleOf(e.touches[0]); moved = false; }
+    }, { passive: true });
+    wrap.addEventListener('touchmove', function (e) {
+      if (e.touches.length !== 1) { return; }
+      moved = true;
+      var a = angleOf(e.touches[0]);
+      if (a === null || prevA === null) { prevA = a; return; }
+      var d = Math.abs(a - prevA);
+      d = d > 180 ? 360 - d : d; // forgiving: either direction counts
+      total += d; prevA = a;
+      setProgress(total / 360);
+      if (total >= 360 && !done) { complete(); }
+    }, { passive: true });
+    wrap.addEventListener('touchend', function () { prevA = null; });
+    wrap.addEventListener('click', function () { // tap fallback: quarter loops
+      if (moved) { moved = false; return; }
+      if (done) { return; }
+      total += 90; setProgress(total / 360);
+      if (total >= 360) { complete(); }
+    });
+  })();
+
+  /* hold to steady: press and hold; a soft tone rises with you; let go anytime */
+  (function () {
+    var btn = $('hold-btn'), fillEl = $('hold-fill'), word = $('hold-word');
+    if (!btn) { return; }
+    var raf = null, t0 = 0, tone = null, holding = false;
+    function toneStart() {
+      if ((prefs.breathSound || 'chimes') === 'off') { return; }
+      var ctx = ensureAudio(); if (!ctx) { return; }
+      try {
+        var o = ctx.createOscillator(); o.type = 'sine';
+        o.frequency.setValueAtTime(196, ctx.currentTime);
+        o.frequency.linearRampToValueAtTime(392, ctx.currentTime + 8); // rises with you
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.07, ctx.currentTime + 1.5);
+        o.connect(g); g.connect(ctx.destination); o.start();
+        tone = { o: o, g: g, ctx: ctx };
+      } catch (e) {}
+    }
+    function toneStop() {
+      var h = tone; tone = null;
+      if (!h) { return; }
+      try {
+        h.g.gain.cancelScheduledValues(h.ctx.currentTime);
+        h.g.gain.setValueAtTime(Math.max(h.g.gain.value, 0.0001), h.ctx.currentTime);
+        h.g.gain.exponentialRampToValueAtTime(0.0001, h.ctx.currentTime + 0.4);
+        setTimeout(function () { try { h.o.stop(); } catch (e) {} }, 500);
+      } catch (e) {}
+    }
+    function start() {
+      if (holding) { return; }
+      holding = true;
+      t0 = performance.now();
+      toneStart();
+      cancelAnimationFrame(raf);
+      var step = function () {
+        var p = Math.min(1, (performance.now() - t0) / 8000);
+        fillEl.style.transform = 'scale(' + (0.2 + 0.8 * p) + ')';
+        word.textContent = p >= 1 ? 'Steady. Let go whenever.' : 'Keep holding…';
+        if (p < 1 && holding) { raf = requestAnimationFrame(step); }
+      };
+      step();
+    }
+    function end() {
+      if (!holding) { return; }
+      holding = false;
+      cancelAnimationFrame(raf);
+      toneStop();
+      fillEl.style.transform = 'scale(0.2)';
+      word.textContent = 'Press and hold';
+    }
+    btn.addEventListener('touchstart', start, { passive: true });
+    btn.addEventListener('touchend', end);
+    btn.addEventListener('touchcancel', end);
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('mouseup', end);
+    btn.addEventListener('mouseleave', end);
+  })();
+
+  /* ---------- first-time walkthrough: 3-4 steps, skippable, shows once.
+     Assume the rider knows nothing. This is the "nobody else will understand" fix. ---------- */
+  var TOUR_STEPS = [
+    { title: 'SOS is always one tap away.', body: 'The red SOS button follows you on every screen. Tap it any time you need help — no setup, no questions first.' },
+    { title: 'Start a ride when you board.', body: 'Say how you feel, run the 30-second prep, then tap once per stop. That\u2019s the whole job.' },
+    { title: 'The toolkit is your calm shelf.', body: 'Breathing, grounding, touch tools, comfort — everything works offline, even in a tunnel.' },
+    { title: 'Set your backup plan once.', body: 'Exits, people to reach, things that help. Set it while you\u2019re calm — it\u2019s there when you\u2019re not.' }
+  ];
+  var tourIdx = 0, tourReturn = 'screen-home';
+  function startTour(returnTo) {
+    tourReturn = returnTo || 'screen-home';
+    tourIdx = 0;
+    renderTour(); tick(); go('screen-tour');
+  }
+  function renderTour() {
+    var n = TOUR_STEPS.length;
+    $('tour-count').textContent = (tourIdx + 1) + ' of ' + n;
+    $('tour-title').textContent = TOUR_STEPS[tourIdx].title;
+    $('tour-body').textContent = TOUR_STEPS[tourIdx].body;
+    $('btn-tour-next').textContent = tourIdx === n - 1 ? 'Got it — take me in' : 'Next';
+  }
+  function endTour() { try { localStorage.setItem('iht_toured', '1'); } catch (e) {} tick(); go(tourReturn); }
+  $('btn-tour-next').addEventListener('click', function () {
+    if (tourIdx < TOUR_STEPS.length - 1) { tourIdx++; renderTour(); tick(); }
+    else { endTour(); }
+  });
+  $('btn-tour-skip').addEventListener('click', endTour);
+  $('btn-replay-tour').addEventListener('click', function () { startTour('screen-about'); });
+
+  /* ---------- boot: onboarding first, then the tour, then home ---------- */
   applyProfileToHome();
   if (!read('iht_onboarded')) { go('screen-ob1'); }
+  else if (!read('iht_toured')) { startTour('screen-home'); }
   else { updateSosFloat('screen-home'); }
 
 })();
