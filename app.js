@@ -1,4 +1,4 @@
-/* I Hate Trains — v10. Free forever. Feel-first, quality over quantity. Offline-first: no network in core flows. */
+/* I Hate Trains — v12. Free forever. Feel-first, quality over quantity. Offline-first: no network in core flows. */
 (function () {
   'use strict';
 
@@ -28,7 +28,7 @@
   document.addEventListener('touchstart', function (e) {
     if (e.touches.length !== 1) { swipeStart = null; return; }
     var t = e.target;
-    if (t && t.closest && t.closest('.swipezone, .tracewrap, .holdbtn, input, textarea, select, button, a')) { swipeStart = null; return; }
+    if (t && t.closest && t.closest('.swipezone, .tracewrap, .holdbtn, .petsheet, input, textarea, select, button, a')) { swipeStart = null; return; }
     swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   }, { passive: true });
   document.addEventListener('touchend', function (e) {
@@ -484,6 +484,11 @@
     c.style.transition = 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
     void c.offsetWidth;
     c.style.transform = 'scale(' + (grow ? 1.32 : 1) + ')'; // the bloom opens and folds with the breath
+    var pb = $('pet-breathe'); // v12: the co-rider breathes with you, in sync
+    if (pb) {
+      pb.style.transition = 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
+      pb.style.transform = 'scale(' + (grow ? 1.14 : 1) + ')';
+    }
     breathHaptic(p.k);
     phaseCue(p.k);
     breathTimer = setTimeout(function () { runPhase(phases, i + 1); }, p.secs * 1000);
@@ -498,6 +503,8 @@
     var c = $('breath-circle');
     c.style.transition = 'none';
     c.style.transform = 'scale(1)';
+    var pb0 = $('pet-breathe');
+    if (pb0) { pb0.style.transition = 'none'; pb0.style.transform = 'scale(1)'; }
     tick(); go('screen-breathe');
     var mode = prefs.breathSound || 'chimes';
     if (mode === 'ambient' || mode === 'both') { ambientStart(); }
@@ -580,6 +587,8 @@
       $('checkin-actions').hidden = false;
       $('btn-checkin-breathe').hidden = checkinFeel !== 'spiraling';
       $('btn-checkin-continue').textContent = checkinFeel === 'spiraling' ? 'Start the ride anyway' : 'Continue';
+      petMood = checkinFeel === 'spiraling' ? 'soft' : null; // v12: the co-rider notices how you feel
+      renderHomePet();
     });
   });
   $('btn-checkin-breathe').addEventListener('click', function () { startBreathe('gentle', 'screen-checkin', true); });
@@ -762,6 +771,7 @@
   })();
   $('btn-reflect-done').addEventListener('click', function () {
     tick();
+    var wasCalmer = reflectAfter === 'calmer';
     try {
       var log = readJSON('iht_journal', []);
       log.push({ t: new Date().toISOString(), before: checkinFeel, after: reflectAfter, tools: reflectTools.slice(), note: $('in-reflect').value.trim().slice(0, 280) });
@@ -770,7 +780,9 @@
     try { store('iht_trips', String((parseInt(read('iht_trips') || '0', 10) || 0) + 1)); } catch (e) {}
     checkinFeel = null; reflectAfter = null; reflectTools = [];
     tripActive = false;
+    if (wasCalmer) { petMood = 'proud'; } // v12: the co-rider is proud of you
     applyTheme();
+    renderHomePet();
     go('screen-home');
   });
 
@@ -1309,7 +1321,7 @@
   function petInto(el, mode, forceType) {
     if (!el) { return; }
     el.innerHTML = petSVG(forceType || pet.type);
-    var wrap = (el.closest && el.closest('.pethome,.petstage,.pettrip,.petbreathe,.petarrived,.petprev')) || el;
+    var wrap = (el.closest && el.closest('.pethome,.petstage,.pettrip,.petbreathe,.petarrived,.petprev,.petcomfort,.ps-pet')) || el;
     wrap.classList.remove('pet-idle', 'pet-happy', 'pet-celebrate', 'pet-sleepy');
     wrap.classList.add(mode === 'sleepy' ? 'pet-sleepy' : mode === 'celebrate' ? 'pet-celebrate' : 'pet-idle');
   }
@@ -1329,7 +1341,7 @@
   }
   function petTap(el) {
     tick();
-    var wrap = (el.closest && el.closest('.pethome,.petstage')) || el;
+    var wrap = (el.closest && el.closest('.pethome,.petstage,.ps-pet')) || el;
     wrap.classList.remove('pet-happy'); void wrap.offsetWidth; wrap.classList.add('pet-happy');
     petHearts(wrap, 3);
     try { ensureAudio(); chime(880, 0.5, 0.045); } catch (e) {}
@@ -1337,8 +1349,29 @@
   }
   function renderHomePet() {
     if (!$('pet-home-svg')) { return; }
-    petInto($('pet-home-svg'), 'idle');
-    $('pet-home-name').textContent = pet.name || 'Mochi';
+    var nm = pet.name || 'Mochi';
+    $('pet-home-name').textContent = nm;
+    var cap = document.querySelector('#pet-home .petcap em');
+    if (petMood === 'proud') {
+      petInto($('pet-home-svg'), 'celebrate');
+      if (cap) { cap.textContent = nm + ' is proud of you'; }
+      setTimeout(function () {
+        petMood = null;
+        if (currentScreen() === 'screen-home') { renderHomePet(); }
+      }, 2400);
+    } else {
+      petInto($('pet-home-svg'), 'idle');
+      if (cap) { cap.textContent = petMood === 'soft' ? nm + ' is right here with you' : 'is riding with you'; }
+    }
+  }
+  /* v12: every pet mount, refreshed together after any pet change */
+  function renderPetEverywhere() {
+    renderHomePet();
+    petInto($('pet-trip'), 'idle');
+    petInto($('pet-breathe'), 'sleepy');
+    petInto($('pet-arrived'), 'celebrate');
+    mountComfortPet();
+    renderPetSeg();
   }
   /* pet play */
   var petPlayReturn = 'screen-home';
@@ -1403,20 +1436,13 @@
     if (inp && document.activeElement !== inp) { inp.value = pet.name || ''; }
   }
   $all('#pet-seg .segbtn').forEach(function (b) {
-    b.addEventListener('click', function () {
-      tick();
-      pet.type = b.getAttribute('data-pet');
-      savePet(); renderPetSeg(); renderHomePet();
-      petInto($('pet-trip'), 'idle'); petInto($('pet-breathe'), 'sleepy'); petInto($('pet-arrived'), 'celebrate');
-    });
+    b.addEventListener('click', function () { tick(); setPetType(b.getAttribute('data-pet')); });
   });
-  $('in-pet-name').addEventListener('change', function () {
-    var v = $('in-pet-name').value.trim().slice(0, 24);
-    if (v) { pet.name = v; savePet(); renderHomePet(); }
-  });
+  $('in-pet-name').addEventListener('change', function () { setPetName($('in-pet-name').value); });
   $all('[data-go="screen-about"]').forEach(function (b) { b.addEventListener('click', renderPetSeg); });
-  /* pet mounts across the app */
-  $('pet-home').addEventListener('click', function () { petTap($('pet-home')); });
+  /* tap the co-rider anywhere it appears → the pet sheet (no more buried About controls) */
+  $('pet-home').addEventListener('click', function () { openPetSheet(); });
+  $('pet-trip').addEventListener('click', function () { openPetSheet(); });
   $('petplay-stage').addEventListener('click', petPat);
   $('petplay-stage').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); petPat(); } });
   var ppb = $('btn-pet-pat');
@@ -1435,6 +1461,86 @@
     b.addEventListener('click', function () { openPetPlay('screen-comfort'); });
     host.appendChild(b);
   })();
+
+  /* ============ v12: the pet sheet — tap the co-rider anywhere, get play / rename / change in one place.
+     Zero-maintenance rule stands: no meters, no hunger, no death, no guilt. Ever. ============ */
+  var petSheetReturn = 'screen-home';
+  var petMood = null; // 'soft' after a spiraling check-in, 'proud' after a calmer ride — warmth only, never a meter
+  function mountComfortPet() { petInto($('pet-comfort'), 'idle'); }
+  ['link-comfort-home', 'tool-comfort'].forEach(function (id) {
+    var el = $(id);
+    if (el) { el.addEventListener('click', mountComfortPet); }
+  });
+  function openPetSheet() {
+    petSheetReturn = currentScreen() || 'screen-home';
+    var nm = pet.name || 'Mochi';
+    $('pet-sheet-name').textContent = nm;
+    $('ps-play-name').textContent = nm;
+    petInto($('pet-sheet-svg'), 'idle');
+    var inp = $('ps-name');
+    if (inp && document.activeElement !== inp) { inp.value = pet.name || ''; }
+    renderPsPetSeg();
+    $('pet-sheet-line').textContent = 'Tap ' + nm + ' for some love.';
+    $('pet-sheet-back').classList.remove('hidden');
+    var sh = $('pet-sheet');
+    sh.classList.remove('hidden');
+    requestAnimationFrame(function () { requestAnimationFrame(function () { sh.classList.add('open'); }); });
+    petTap($('pet-sheet-svg')); // a little hello
+  }
+  function closePetSheet() {
+    var sh = $('pet-sheet');
+    sh.classList.remove('open');
+    setTimeout(function () { sh.classList.add('hidden'); $('pet-sheet-back').classList.add('hidden'); }, 330);
+    tick();
+  }
+  function renderPsPetSeg() {
+    $all('#ps-pet-seg .segbtn').forEach(function (b) {
+      var on = b.getAttribute('data-pet') === pet.type;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  function setPetType(t) {
+    if (!t) { return; }
+    pet.type = t;
+    savePet();
+    renderPsPetSeg();
+    renderPetEverywhere();
+  }
+  function setPetName(v) {
+    v = (v || '').trim().slice(0, 24);
+    if (!v) { return; }
+    pet.name = v;
+    savePet();
+    renderPetEverywhere();
+    $('pet-sheet-name').textContent = v;
+    $('ps-play-name').textContent = v;
+  }
+  /* Mochi picks for you: a random calming tool — cute AND functional */
+  var PET_PICKS = TOOLS.filter(function (t) {
+    return ['ground', 'touch', 'breath', 'distract', 'understand'].indexOf(t.cat) !== -1;
+  });
+  function petPicks() {
+    var pool = PET_PICKS.length ? PET_PICKS : TOOLS;
+    var t = pool[Math.floor(Math.random() * pool.length)];
+    tick();
+    if (t.pattern) { startBreathe(t.pattern, petSheetReturn, false); }
+    else { openTool(t.id, petSheetReturn); }
+  }
+  $('pet-sheet-svg').addEventListener('click', function () {
+    petTap($('pet-sheet-svg'));
+    var nm = pet.name || 'Mochi';
+    $('pet-sheet-line').textContent = nm + ' ' + PET_LINES[Math.floor(Math.random() * PET_LINES.length)];
+  });
+  $('ps-play').addEventListener('click', function () { closePetSheet(); setTimeout(function () { openPetPlay(petSheetReturn); }, 140); });
+  $('ps-pick').addEventListener('click', function () { closePetSheet(); setTimeout(petPicks, 140); });
+  $('ps-name').addEventListener('change', function () { setPetName($('ps-name').value); });
+  $all('#ps-pet-seg .segbtn').forEach(function (b) {
+    b.addEventListener('click', function () { tick(); setPetType(b.getAttribute('data-pet')); });
+  });
+  $('ps-close').addEventListener('click', closePetSheet);
+  $('pet-sheet-back').addEventListener('click', closePetSheet);
+  $('pet-comfort').addEventListener('click', function () { openPetSheet(); });
 
   /* ============ v10: contextual coach marks — video-game tutorial style ============ */
   var COACH_DEFS = {
