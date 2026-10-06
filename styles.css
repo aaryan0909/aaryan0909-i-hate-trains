@@ -1,4 +1,4 @@
-/* I Hate Trains — v10. Apple-AOTY bar: rich, crafted, calm. Zero jokes in crisis flows. */
+/* I Hate Trains — v12. Apple-AOTY bar: rich, crafted, calm. Zero jokes in crisis flows. */
 :root {
   --bg: #090b10;
   --bg2: #0d1119;
@@ -103,7 +103,9 @@ em { font-style: normal; }
 .linklike.quiet { color: var(--dim); text-decoration: underline; text-underline-offset: 4px; display: block; margin: 6px auto; }
 .linklike:active { transform: scale(.97); }
 .backlink { background: none; border: 0; color: var(--dim); font-size: 16px; padding: 12px 0; cursor: pointer; margin: 14px 0 4px; display: block; }
-.homelinks { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+/* v12: unified home nav — same card language as the ride flow */
+.homenav { margin-top: 26px; }
+.homenav .tool { min-height: 96px; }
 
 /* feelings / reflection */
 .feelgrid { display: grid; gap: 12px; margin: 8px 0 18px; }
@@ -429,7 +431,28 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 .petcap { text-align: left; }
 .petcap strong { display: block; font-size: 17px; color: var(--ink); }
 .petcap em { display: block; font-style: normal; font-size: 13px; color: var(--dim); }
-.pettrip { width: 52px; margin: 2px auto 0; opacity: .95; }
+.pettrip { width: 52px; margin: 2px auto 0; opacity: .95; background: none; border: 0; padding: 0; cursor: pointer; display: block; }
+.pettrip:active { transform: scale(.92); }
+.petcomfort { width: 64px; margin: 2px auto 18px; background: none; border: 0; padding: 0; cursor: pointer; display: block; position: relative; }
+.petcomfort:active { transform: scale(.92); }
+/* v12: pet sheet — tap the co-rider anywhere, get play/rename/change in one place */
+.petsheet-backdrop { position: fixed; inset: 0; z-index: 290; background: rgba(4,6,10,.6); }
+.petsheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 291;
+  max-width: 520px; margin: 0 auto;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 30%), #141a26;
+  border: 1px solid var(--line); border-bottom: 0; border-radius: 28px 28px 0 0;
+  padding: 12px 26px calc(env(safe-area-inset-bottom, 0px) + 28px);
+  transform: translateY(102%); transition: transform .32s cubic-bezier(.22,.61,.36,1);
+  max-height: 88dvh; overflow-y: auto;
+}
+.petsheet.open { transform: translateY(0); }
+.ps-grab { width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 14px; }
+.ps-pet { background: none; border: 0; padding: 0; cursor: pointer; display: block; width: min(40vw, 140px); margin: 0 auto; position: relative; }
+.ps-pet:active { transform: scale(.95); }
+#petsheet .serene { margin-bottom: 4px; }
+#petsheet .field { margin-top: 18px; }
+#petsheet .toolgroup { margin-top: 20px; }
 .petbreathe { width: 44px; margin: -8px auto 0; opacity: .9; }
 .petarrived { width: 84px; margin: 0 auto 6px; }
 .petstage { width: min(58vw, 190px); margin: 8px auto; position: relative; cursor: pointer; }
