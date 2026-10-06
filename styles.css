@@ -577,5 +577,92 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 @keyframes tvfloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .pet-idle .petsvg, .pet-sleepy .petsvg, .coach-ring, .tvis i { animation: none !important; }
+  .pet-idle .petsvg, .pet-sleepy .petsvg, .coach-ring, .tvis i, .po-ic i, .tool-ic i, .mv i { animation: none !important; }
 }
+
+/* ============ v13: icon-card language everywhere ============ */
+/* Every tool card gets a living mini-visual. New tvis classes for the full library. */
+.tvis-333 i { top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: var(--line); animation: tvdot 2.2s ease-in-out infinite; }
+.tvis-333 i:nth-child(1) { left: 24%; } .tvis-333 i:nth-child(2) { left: 47%; animation-delay: .3s; } .tvis-333 i:nth-child(3) { left: 70%; animation-delay: .6s; }
+.tvis-object i { left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border: 2px solid var(--amber); border-radius: 8px; animation: tvzoom 4s ease-in-out infinite; }
+@keyframes tvzoom { 0%,100% { transform: scale(.85); opacity: .7; } 50% { transform: scale(1.1); opacity: 1; } }
+.tvis-safe i { left: 50%; top: 56%; width: 66px; height: 34px; margin: -17px 0 0 -33px; border-radius: 34px 34px 0 0; background: radial-gradient(ellipse at 50% 100%, rgba(147,211,171,.55), transparent 70%); transform-origin: 50% 100%; animation: tvbreathe 4.5s ease-in-out infinite; }
+@keyframes tvbreathe { 0%,100% { transform: scaleY(.85); opacity: .7; } 50% { transform: scaleY(1.12); opacity: 1; } }
+.tvis-breath i { left: 50%; bottom: 12px; width: 26px; margin-left: -13px; border-radius: 6px; background: linear-gradient(to top, var(--calm), transparent); animation: tvbox 8s ease-in-out infinite; }
+@keyframes tvbox { 0% { height: 8px; } 25% { height: 50px; } 50% { height: 50px; } 75% { height: 8px; } 100% { height: 8px; } }
+.tvis-478 i { left: 50%; top: 50%; height: 14px; width: 22px; margin: -7px 0 0 -11px; border-radius: 7px; background: var(--lav); animation: tv478 9s ease-in-out infinite; }
+@keyframes tv478 { 0% { transform: scaleX(1); opacity: .6; } 35% { transform: scaleX(2.4); opacity: 1; } 100% { transform: scaleX(.7); opacity: .6; } }
+.tvis-sigh i { top: 50%; border-radius: 50%; background: var(--calm); animation: tvsigh1 3.6s ease-in-out infinite; }
+.tvis-sigh i:nth-child(1) { left: 32%; width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+.tvis-sigh i:nth-child(2) { left: 62%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; animation-delay: .9s; }
+@keyframes tvsigh1 { 0%,100% { transform: translateY(0); opacity: .6; } 30% { transform: translateY(-10px); opacity: 1; } 60% { transform: translateY(6px); opacity: .8; } }
+.tvis-facts i { left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--amber); animation: tvring 2.8s ease-out infinite; }
+@keyframes tvring { 0% { box-shadow: 0 0 0 0 rgba(232,184,111,.5); } 100% { box-shadow: 0 0 0 22px rgba(232,184,111,0); } }
+.tvis-thought i { top: 50%; width: 14px; height: 14px; margin-top: -7px; border-radius: 50%; background: var(--lav); }
+.tvis-thought i:nth-child(1) { left: 32%; animation: tvswap 3s ease-in-out infinite; }
+.tvis-thought i:nth-child(2) { left: 60%; animation: tvswap 3s ease-in-out -1.5s infinite; }
+@keyframes tvswap { 0%,100% { transform: translateY(-8px); opacity: .9; } 50% { transform: translateY(8px); opacity: .5; } }
+.tvis-count i { bottom: 14px; width: 12px; border-radius: 4px; background: var(--line); animation: tvshimmer 2.4s ease-in-out infinite; }
+.tvis-count i:nth-child(1) { left: 26%; height: 40px; } .tvis-count i:nth-child(2) { left: 46%; height: 28px; animation-delay: .2s; } .tvis-count i:nth-child(3) { left: 66%; height: 16px; animation-delay: .4s; }
+@keyframes tvshimmer { 0%,100% { opacity: .45; } 50% { opacity: 1; background: var(--calm); } }
+.tvis-plan i { left: 24%; width: 52%; height: 8px; border-radius: 4px; background: var(--line); animation: tvshimmer 3s ease-in-out infinite; }
+.tvis-plan i:nth-child(1) { top: 22%; } .tvis-plan i:nth-child(2) { top: 45%; animation-delay: .5s; } .tvis-plan i:nth-child(3) { top: 68%; animation-delay: 1s; }
+.tvis-ladder i { bottom: 14px; width: 24px; border-radius: 4px; background: var(--line); animation: tvstep 3s ease-in-out infinite; }
+.tvis-ladder i:nth-child(1) { left: 18%; height: 14px; } .tvis-ladder i:nth-child(2) { left: 41%; height: 26px; animation-delay: .4s; } .tvis-ladder i:nth-child(3) { left: 64%; height: 38px; animation-delay: .8s; }
+@keyframes tvstep { 0%,100% { background: var(--line); } 50% { background: var(--amber); box-shadow: 0 0 10px rgba(232,184,111,.7); } }
+.tvis-reflect i { left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; border: 3px dashed var(--amber); animation: tvspin 7s linear infinite; }
+.tvis-muscle i { top: 50%; width: 16px; height: 34px; margin-top: -17px; border-radius: 8px; background: var(--rose); }
+.tvis-muscle i:nth-child(1) { left: 34%; animation: tvsqueeze 2.6s ease-in-out infinite; }
+.tvis-muscle i:nth-child(2) { right: 34%; animation: tvsqueeze2 2.6s ease-in-out infinite; }
+@keyframes tvsqueeze { 0%,100% { transform: translateX(0); } 50% { transform: translateX(7px); } }
+@keyframes tvsqueeze2 { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-7px); } }
+.tvis-words i { left: 50%; top: 50%; width: 44px; height: 26px; margin: -13px 0 0 -22px; border-radius: 6px; border: 1.5px solid var(--lav); }
+.tvis-words i:nth-child(1) { transform: rotate(-7deg) translateY(-3px); } .tvis-words i:nth-child(2) { transform: rotate(3deg); } .tvis-words i:nth-child(3) { transform: rotate(-2deg) translateY(3px); opacity: .7; }
+.tvis-words { animation: tvfloat 3.4s ease-in-out infinite; }
+.tvis-scan::before { content: ""; position: absolute; left: 50%; top: 10px; bottom: 10px; width: 2px; margin-left: -1px; background: var(--line); opacity: .6; }
+.tvis-scan i { left: 50%; top: 12px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--calm); box-shadow: 0 0 10px rgba(147,211,171,.8); animation: tvscan 3.2s ease-in-out infinite; }
+@keyframes tvscan { 0% { top: 12px; } 50% { top: 50px; } 100% { top: 12px; } }
+.tvis-wish i { top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: rgba(232,184,111,.75); }
+.tvis-wish i:nth-child(1) { left: 30%; animation: tvmerge 3s ease-in-out infinite; }
+.tvis-wish i:nth-child(2) { left: 56%; animation: tvmerge 3s ease-in-out infinite reverse; }
+@keyframes tvmerge { 0%,100% { transform: translateX(0) scale(1); } 50% { transform: translateX(7px) scale(1.15); } }
+.tvis-sound i { left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; border: 2px solid var(--calm); animation: tvrings 3s ease-out infinite; }
+.tvis-sound i:nth-child(2) { animation-delay: 1s; } .tvis-sound i:nth-child(3) { animation-delay: 2s; }
+@keyframes tvrings { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(2.6); opacity: 0; } }
+.tvis-cute i { border-radius: 50%; background: var(--amber); animation: tvpulse 2.6s ease-in-out infinite; }
+.tvis-cute i:nth-child(1) { left: 50%; top: 60%; width: 26px; height: 26px; margin: -13px 0 0 -13px; }
+.tvis-cute i:nth-child(2) { left: 33%; top: 28%; width: 11px; height: 11px; animation-delay: .2s; }
+.tvis-cute i:nth-child(3) { left: 50%; top: 22%; width: 11px; height: 11px; margin-left: -5.5px; animation-delay: .4s; }
+.tvis-cute i:nth-child(4) { left: 61%; top: 28%; width: 11px; height: 11px; animation-delay: .6s; }
+
+/* panic options: living icons, same language */
+.po-ic { position: relative; overflow: hidden; }
+.po-ic i { position: absolute; }
+.pov-breathe i { left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; border: 3px solid currentColor; animation: tvrings 3.2s ease-out infinite; }
+.pov-ground i { top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; background: currentColor; animation: tvdot 2.2s ease-in-out infinite; }
+.pov-ground i:nth-child(1) { left: 14px; } .pov-ground i:nth-child(2) { left: 24px; animation-delay: .3s; } .pov-ground i:nth-child(3) { left: 34px; animation-delay: .6s; }
+.pov-cute i { top: 50%; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: currentColor; opacity: .85; }
+.pov-cute i:nth-child(1) { left: 15px; animation: tvmerge 2.8s ease-in-out infinite; }
+.pov-cute i:nth-child(2) { left: 27px; animation: tvmerge 2.8s ease-in-out infinite reverse; }
+
+/* home nav cards: mini living icons in the same language */
+.tool-ic { width: 44px; height: 44px; border-radius: 14px; background: rgba(0,0,0,.25); border: 1px solid var(--line); position: relative; overflow: hidden; flex: none; }
+.tool-ic i { position: absolute; }
+.tic-toolkit i { top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: var(--calm); animation: tvdot 2.4s ease-in-out infinite; }
+.tic-toolkit i:nth-child(1) { left: 10px; } .tic-toolkit i:nth-child(2) { left: 19px; animation-delay: .4s; } .tic-toolkit i:nth-child(3) { left: 28px; animation-delay: .8s; }
+.tic-comfort i { left: 50%; top: 50%; width: 26px; height: 18px; margin: -9px 0 0 -13px; border-radius: 10px; background: rgba(232,184,111,.7); animation: tvbreathe 4s ease-in-out infinite; transform-origin: 50% 50%; }
+.tic-plan i { left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border: 2px solid var(--lav); transform: rotate(45deg); animation: tvzoom 4s ease-in-out infinite; }
+.tic-history i { left: 50%; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--dim); animation: tvspin 6s linear infinite; }
+.tic-privacy i { left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--calm); animation: tvring 2.8s ease-out infinite; }
+.tic-about i { left: 50%; top: 50%; width: 4px; height: 18px; margin: -9px 0 0 -2px; border-radius: 2px; background: var(--dim); animation: tvshimmer 3s ease-in-out infinite; }
+
+/* guided-minis cards: small living icons */
+.mv { width: 44px; height: 44px; border-radius: 12px; background: rgba(0,0,0,.28); border: 1px solid var(--line); position: relative; overflow: hidden; flex: none; }
+.mv i { position: absolute; }
+.mv-scan i { left: 50%; top: 6px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: var(--calm); box-shadow: 0 0 8px rgba(147,211,171,.8); animation: mvscan 3s ease-in-out infinite; }
+@keyframes mvscan { 0% { top: 6px; } 50% { top: 30px; } 100% { top: 6px; } }
+.mv-wish i { top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: rgba(232,184,111,.8); }
+.mv-wish i:nth-child(1) { left: 9px; animation: tvpulse 2.6s ease-in-out infinite; }
+.mv-wish i:nth-child(2) { right: 9px; animation: tvpulse 2.6s ease-in-out infinite; }
+.mv-sound i { left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; border: 2px solid var(--calm); animation: tvrings 3s ease-out infinite; }
+.mv-sound i:nth-child(2) { animation-delay: 1s; } .mv-sound i:nth-child(3) { animation-delay: 2s; }
