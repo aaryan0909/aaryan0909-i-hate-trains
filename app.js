@@ -16,6 +16,7 @@
     var el = $(id);
     if (el) { el.classList.add('active'); window.scrollTo(0, 0); }
     if (id !== 'screen-breathe') { stopBreathe(); } // leaving the exercise always stops it cleanly
+    stopHold(); stopMuscleHold(); // never leave a hold tone or rAF loop running on a hidden screen
     if (id === 'screen-butterfly') { flyReset(); }
     updateSosFloat(id);
     maybeCoach(id);
@@ -158,75 +159,75 @@
   /* ---------- the coping library (ported from the Manus native build, steps + safety notes intact) ---------- */
   var CAT_LABEL = { ground: 'Ground', touch: 'Touch', breath: 'Breathe', understand: 'Understand', distract: 'Distract', plan: 'Plan', reflect: 'Reflect' };
   var TOOLS = [
-    { id: 'five-senses', title: '5–4–3–2–1 senses', cat: 'ground', time: 'A few minutes', fn: 'senses',
+    { id: 'five-senses', vis: 'tvis-senses', title: '5–4–3–2–1 senses', cat: 'ground', time: 'A few minutes', fn: 'senses',
       summary: 'Tap a dot for each thing you notice — see, feel, hear, smell, taste.',
       steps: ['Name five things you can see, noticing color or shape.', 'Notice four things you can feel: your feet, fabric, a cool surface, or your hands.', 'Listen for three sounds. They can be quiet or ordinary.', 'Notice two smells, or two neutral details if smells are hard to notice.', 'Notice one taste, or the feeling of your mouth. You can skip any sense.'] },
-    { id: 'three-three-three', title: '3–3–3 noticing', cat: 'ground', time: 'About a minute',
+    { id: 'three-three-three', vis: 'tvis-333', title: '3–3–3 noticing', cat: 'ground', time: 'About a minute',
       summary: 'A shorter sensory route that does not ask you to change your breathing.',
       steps: ['Find three things you can see.', 'Find three things you can hear.', 'Notice three physical sensations where your body meets the seat, floor, or clothing.'] },
-    { id: 'object-detail', title: 'One-object details', cat: 'ground', time: '30 seconds or more',
+    { id: 'object-detail', vis: 'tvis-object', title: 'One-object details', cat: 'ground', time: '30 seconds or more',
       summary: 'Pick one nearby object and let its details hold your attention.',
       steps: ['Choose an object you can see, such as a sign, shoe, or window edge.', 'Notice its outline, colors, texture, and the way light falls on it.', 'If your mind wanders, simply return to one detail. Nothing to get right.'] },
-    { id: 'safe-place', title: 'A familiar safe place', cat: 'ground', time: 'About a minute',
+    { id: 'safe-place', vis: 'tvis-safe', title: 'A familiar safe place', cat: 'ground', time: 'About a minute',
       summary: 'Picture somewhere familiar or imagined that feels comforting enough.',
       steps: ['Bring to mind a real or imagined place you like.', 'Notice one color, one sound, and one texture from that place.', 'You do not need to feel calm or finish the image. Return to the carriage whenever you want.'] },
-    { id: 'med-body-scan', title: 'One-minute body scan', cat: 'ground', time: 'About a minute',
+    { id: 'med-body-scan', vis: 'tvis-scan', title: 'One-minute body scan', cat: 'ground', time: 'About a minute',
       summary: 'Move attention slowly through the body. Notice — don\u2019t fix.',
       steps: ['Rest your attention on the top of your head. Notice any sensation, or none at all.', 'Let it drift down to your shoulders. If they\u2019re tight, you don\u2019t have to change it — just notice.', 'Move to your hands. Feel their weight, warmth, or stillness.', 'Down to your feet on the floor. Notice the support under you.', 'That\u2019s it. You can stop here, or run it again.'],
       safety: 'This is a coping tool, not treatment. Stop any time.' },
-    { id: 'med-kind-wishes', title: 'Warm wishes', cat: 'ground', time: 'About a minute',
+    { id: 'med-kind-wishes', vis: 'tvis-wish', title: 'Warm wishes', cat: 'ground', time: 'About a minute',
       summary: 'Three quiet phrases — first for you, then for someone you love.',
       steps: ['Silently, to yourself: \u201CMay I be steady.\u201D', 'Again, gently: \u201CMay I be safe.\u201D', 'Now picture someone you love: \u201CMay you be steady. May you be safe.\u201D', 'That\u2019s enough. Warmth counts, even if you don\u2019t feel it yet.'],
       safety: 'This is a coping tool, not treatment. Stop any time.' },
-    { id: 'med-sounds', title: 'Sounds around you', cat: 'ground', time: 'About a minute',
+    { id: 'med-sounds', vis: 'tvis-sound', title: 'Sounds around you', cat: 'ground', time: 'About a minute',
       summary: 'Let the train\u2019s noise become the object — not the enemy.',
       steps: ['Notice the nearest sound to you. Just name it silently.', 'Now find the farthest sound you can hear.', 'Pick one sound in between and rest your attention there.', 'The noise isn\u2019t the enemy here. It\u2019s just sound, passing through.'],
       safety: 'This is a coping tool, not treatment. Stop any time.' },
-    { id: 'swipe-breathe', title: 'Swipe breathing', cat: 'touch', time: 'As long as you like', screen: 'screen-swipebreathe',
+    { id: 'swipe-breathe', vis: 'tvis-swipe', title: 'Swipe breathing', cat: 'touch', time: 'As long as you like', screen: 'screen-swipebreathe',
       summary: 'The gesture is the pacer: swipe up slowly to breathe in, down to breathe out.' },
-    { id: 'trace-calm', title: 'Trace calm', cat: 'touch', time: 'About a minute', screen: 'screen-trace',
+    { id: 'trace-calm', vis: 'tvis-trace', title: 'Trace calm', cat: 'touch', time: 'About a minute', screen: 'screen-trace',
       summary: 'Trace a slow circle with your finger. A ring fills as you go.' },
-    { id: 'hold-steady', title: 'Hold to steady', cat: 'touch', time: 'As long as you like', screen: 'screen-hold',
+    { id: 'hold-steady', vis: 'tvis-hold', title: 'Hold to steady', cat: 'touch', time: 'As long as you like', screen: 'screen-hold',
       summary: 'Press and hold. A soft tone rises with you. Let go anytime.' },
-    { id: 'muscle-release', title: 'Progressive muscle release', cat: 'ground', time: 'About a minute', fn: 'muscle',
+    { id: 'muscle-release', vis: 'tvis-muscle', title: 'Progressive muscle release', cat: 'ground', time: 'About a minute', fn: 'muscle',
       summary: 'Hold to tense, release to let go — hands, shoulders, jaw. Skip anything uncomfortable.',
       steps: ['Let your hands rest. If comfortable, press your fingertips together gently for a moment, then release.', 'If it feels okay, lift your shoulders just a little without straining, then let them drop.', 'Optionally soften your jaw or face; skip this if it is uncomfortable.', 'Notice the support beneath you. Keep breathing however it happens naturally — this tool does not ask you to change your breath.'],
       safety: 'Do not tense around an injury or painful area. Stop any movement that hurts or feels unsafe; you can skip the movement and simply notice the chair supporting you.' },
-    { id: 'kind-words', title: 'Kind, factual words', cat: 'ground', time: 'A few seconds', fn: 'kindwords',
+    { id: 'kind-words', vis: 'tvis-words', title: 'Kind, factual words', cat: 'ground', time: 'A few seconds', fn: 'kindwords',
       summary: 'A deck of believable lines — tap through, keep what lands.',
       steps: ['Try: This is a hard moment, and I can choose one small next step.', 'Or: I am allowed to ask someone for support.', 'Or use your own words. You do not have to feel reassured for this to count.'] },
-    { id: 'breath-box', title: 'Even square breathing', cat: 'breath', time: 'Three gentle cycles', pattern: 'box',
+    { id: 'breath-box', vis: 'tvis-breath', title: 'Even square breathing', cat: 'breath', time: 'Three gentle cycles', pattern: 'box',
       summary: 'An optional paced-breathing exercise with even sides.',
       steps: ['Choose this only if paying attention to breathing feels okay.', 'Let the cues guide a gentle in-breath, a comfortable pause, a gentle out-breath, and a comfortable rest.', 'You can stop or switch to grounding at any point.'],
       safety: 'Breathing practices are optional coping tools, not treatment. Stop immediately if breathing feels difficult or uncomfortable; switch to a non-breath grounding tool.' },
-    { id: 'breath-478', title: '4–7–8 breathing', cat: 'breath', time: 'Two gentle cycles', pattern: '478',
+    { id: 'breath-478', vis: 'tvis-478', title: '4–7–8 breathing', cat: 'breath', time: 'Two gentle cycles', pattern: '478',
       summary: 'A longer, unhurried out-breath. The pause is optional.',
       steps: ['Choose this only if it feels comfortable to focus on breathing.', 'Breathe in gently for about four seconds. Pause for up to seven only if comfortable.', 'Breathe out gently for about eight seconds; do not force the breath or hold it if that feels wrong.'],
       safety: 'Stop immediately if breathing feels difficult or uncomfortable. Switch to grounding or another non-breath option.' },
-    { id: 'breath-sigh', title: 'Cyclic sigh (optional)', cat: 'breath', time: 'One comfortable round',
+    { id: 'breath-sigh', vis: 'tvis-sigh', title: 'Cyclic sigh (optional)', cat: 'breath', time: 'One comfortable round',
       summary: 'A comfortable inhale, a smaller second inhale, then a slow, easy out-breath. Untimed — go at your pace.',
       steps: ['Let a comfortable inhale happen through your nose if possible.', 'At the top, add a small second inhale only if that feels okay.', 'Let the air out slowly without forcing it. No breath hold or fixed pace is required. Repeat only if you want.'],
       safety: 'A 2023 study found mood and breathing-rate effects with daily cyclic sigh practice, but this is not evidence that it treats panic attacks. Stop if it feels uncomfortable and switch tools.' },
-    { id: 'panic-facts', title: 'What panic can feel like', cat: 'understand', time: 'A short read',
+    { id: 'panic-facts', vis: 'tvis-facts', title: 'What panic can feel like', cat: 'understand', time: 'A short read',
       summary: 'A calm, factual reminder. This cannot tell you what is causing your symptoms.',
       steps: ['Panic can bring intense fear and physical sensations such as a pounding heart, dizziness, trembling, tingling, or breathing discomfort.', 'These sensations can be frightening. A panic response can rise and change over time; you do not have to solve it all at once.', 'An app cannot diagnose you. If symptoms are new, severe, or medically concerning, seek urgent medical help.'] },
-    { id: 'thought-check', title: 'A gentle thought check', cat: 'understand', time: 'A minute or two', fn: 'thought',
+    { id: 'thought-check', vis: 'tvis-thought', title: 'A gentle thought check', cat: 'understand', time: 'A minute or two', fn: 'thought',
       summary: 'Write the scary thought out, then meet it with facts. Stays on your phone.',
       steps: ['Name the scary thought in a few words, without arguing with yourself.', 'Ask: what do I know for sure right now, and what is my fear predicting?', 'Offer one kinder, more balanced possibility: I can take one step and reassess.', 'This is a self-help prompt, not a substitute for CBT or professional care.'] },
-    { id: 'categories', title: 'Quiet category game', cat: 'distract', time: 'As long as you like', fn: 'categories',
+    { id: 'categories', vis: 'tvis-cats', title: 'Quiet category game', cat: 'distract', time: 'As long as you like', fn: 'categories',
       summary: 'Pick a category, name things, watch the list grow. No scoring, no rush.',
       steps: ['Choose a category you enjoy: foods, films, animals, plants, or places.', 'Think of one item at a time, at your own pace.', 'Change categories whenever you want. You can stop without finishing.'] },
-    { id: 'backwards-count', title: 'Count backward', cat: 'distract', time: 'As long as you like', fn: 'countdown',
+    { id: 'backwards-count', vis: 'tvis-count', title: 'Count backward', cat: 'distract', time: 'As long as you like', fn: 'countdown',
       summary: 'Pick a number, tap it down. A silent attention exercise.',
       steps: ['Start anywhere that feels easy, such as 20 or 10.', 'Count backward by ones, or skip this and pick another option.', 'No need to be exact; switch tools if this starts to feel frustrating.'] },
-    { id: 'butterfly-hug', title: 'Butterfly taps', cat: 'touch', time: 'About a minute', screen: 'screen-butterfly',
+    { id: 'butterfly-hug', vis: 'tvis-flap', title: 'Butterfly taps', cat: 'touch', time: 'About a minute', screen: 'screen-butterfly',
       summary: 'Alternate left-right taps, slow and steady — a phone-friendly take on a classic calming technique.' },
-    { id: 'ride-plan', title: 'My ride backup plan', cat: 'plan', time: 'Before boarding', goto: 'screen-plan',
+    { id: 'ride-plan', vis: 'tvis-plan', title: 'My ride backup plan', cat: 'plan', time: 'Before boarding', goto: 'screen-plan',
       summary: 'Make a small plan while you have more headspace; no live transit data is used.', steps: [] },
-    { id: 'confidence-ladder', title: 'Gentle confidence practice', cat: 'plan', time: 'Only when ready, before a ride', goto: 'screen-plan',
+    { id: 'confidence-ladder', vis: 'tvis-ladder', title: 'Gentle confidence practice', cat: 'plan', time: 'Only when ready, before a ride', goto: 'screen-plan',
       summary: 'A private, gradual practice planner inspired by exposure principles — not a challenge.',
       steps: ['Choose a small practice that feels manageable and safe to you, or decide with a clinician.', 'You may pause, change plans, or leave at any time. No streak, score, or penalty.', 'Exposure-based CBT is treatment delivered with appropriate guidance; this planner is not therapy.'] },
-    { id: 'post-ride', title: 'After-ride reflection', cat: 'reflect', time: 'Optional, about 30 seconds', goto: 'screen-reflect',
+    { id: 'post-ride', vis: 'tvis-reflect', title: 'After-ride reflection', cat: 'reflect', time: 'Optional, about 30 seconds', goto: 'screen-reflect',
       summary: 'Notice what happened and what helped, without judging how the ride went.', steps: [] }
   ];
   function getTool(id) { for (var i = 0; i < TOOLS.length; i++) { if (TOOLS[i].id === id) { return TOOLS[i]; } } return null; }
@@ -272,11 +273,31 @@
   $('btn-walk-close').addEventListener('click', function () { tick(); go(walkReturn); });
 
   /* ---------- toolkit + non-breath lists ---------- */
+  /* living mini-visual per tool: the icon-card language. Every card gets one. */
+  var VIS_N = { 'tvis-swipe': 1, 'tvis-trace': 1, 'tvis-hold': 1, 'tvis-flap': 2, 'tvis-senses': 5, 'tvis-cats': 3,
+    'tvis-333': 3, 'tvis-object': 1, 'tvis-safe': 1, 'tvis-breath': 1, 'tvis-478': 1, 'tvis-sigh': 2, 'tvis-facts': 1,
+    'tvis-thought': 2, 'tvis-count': 3, 'tvis-plan': 3, 'tvis-ladder': 3, 'tvis-reflect': 1, 'tvis-muscle': 2,
+    'tvis-words': 3, 'tvis-scan': 1, 'tvis-wish': 2, 'tvis-sound': 3, 'tvis-cute': 4 };
+  function toolVisual(t) {
+    if (!t.vis) { return null; }
+    var vis = document.createElement('span');
+    vis.className = 'tvis ' + t.vis;
+    vis.setAttribute('aria-hidden', 'true');
+    var n = VIS_N[t.vis] || 1;
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement('i');
+      if (t.vis === 'tvis-flap') { d.className = i === 0 ? 'l' : 'r'; }
+      vis.appendChild(d);
+    }
+    return vis;
+  }
   function toolCard(t, returnTo) {
     var b = document.createElement('button');
     b.className = 'toolcard';
-    var meta = document.createElement('div'); meta.className = 'tmeta'; meta.textContent = (CAT_LABEL[t.cat] || '') + ' · ' + t.time;
+    var v = toolVisual(t);
+    if (v) { b.appendChild(v); }
     var title = document.createElement('strong'); title.textContent = t.title;
+    var meta = document.createElement('div'); meta.className = 'tmeta'; meta.textContent = (CAT_LABEL[t.cat] || '') + ' · ' + t.time;
     var sum = document.createElement('p'); sum.textContent = t.summary;
     b.appendChild(title); b.appendChild(meta); b.appendChild(sum);
     b.addEventListener('click', function () {
@@ -285,32 +306,21 @@
     });
     return b;
   }
-  /* featured hands-on row: the most experiential tools, with living mini-visuals. No more buried categories. */
-  var FEATURED = [
-    { id: 'swipe-breathe', vis: 'tvis-swipe', n: 1 },
-    { id: 'trace-calm', vis: 'tvis-trace', n: 1 },
-    { id: 'hold-steady', vis: 'tvis-hold', n: 1 },
-    { id: 'butterfly-hug', vis: 'tvis-flap', n: 2 },
-    { id: 'five-senses', vis: 'tvis-senses', n: 5 },
-    { id: 'categories', vis: 'tvis-cats', n: 3 }
-  ];
-  var FEATURED_IDS = FEATURED.map(function (f) { return f.id; });
+  /* featured hands-on row: the most experiential tools. Visuals come from each tool's own vis. */
+  var FEATURED = ['swipe-breathe', 'trace-calm', 'hold-steady', 'butterfly-hug', 'five-senses', 'categories'];
+  var FEATURED_IDS = FEATURED.slice();
   (function renderFeatured() {
     var host = $('toolkit-featured');
     if (!host) { return; }
-    FEATURED.forEach(function (f) {
-      var t = getTool(f.id);
+    FEATURED.forEach(function (id) {
+      var t = getTool(id);
       if (!t) { return; }
       var b = document.createElement('button'); b.className = 'toolcard feat';
-      var vis = document.createElement('span'); vis.className = 'tvis ' + f.vis; vis.setAttribute('aria-hidden', 'true');
-      for (var i = 0; i < f.n; i++) {
-        var dot = document.createElement('i');
-        if (f.vis === 'tvis-flap') { dot.className = i === 0 ? 'l' : 'r'; }
-        vis.appendChild(dot);
-      }
+      var v = toolVisual(t);
+      if (v) { b.appendChild(v); }
       var title = document.createElement('strong'); title.textContent = t.title;
       var sum = document.createElement('p'); sum.textContent = t.summary;
-      b.appendChild(vis); b.appendChild(title); b.appendChild(sum);
+      b.appendChild(title); b.appendChild(sum);
       b.addEventListener('click', function () { openTool(t.id, 'screen-toolkit'); });
       host.appendChild(b);
     });
@@ -340,6 +350,8 @@
     var host = $('toolkit-groups');
     if (!host) { return; }
     var b = document.createElement('button'); b.className = 'toolcard';
+    var v = toolVisual({ vis: 'tvis-cute' });
+    if (v) { b.appendChild(v); }
     var title = document.createElement('strong'); title.textContent = 'Something cute';
     var meta = document.createElement('div'); meta.className = 'tmeta'; meta.textContent = 'COMFORT \u00B7 Always here';
     var sum = document.createElement('p'); sum.textContent = 'Calm cards, cute animals, your one comfort — no searching, no homework.';
@@ -351,16 +363,20 @@
   (function renderMinis() {
     var host = $('mini-list');
     if (!host) { return; }
+    var MINI_VIS = { 'med-body-scan': 'mv-scan', 'med-kind-wishes': 'mv-wish', 'med-sounds': 'mv-sound' };
+    var MINI_N = { 'mv-scan': 1, 'mv-wish': 2, 'mv-sound': 3 };
     ['med-body-scan', 'med-kind-wishes', 'med-sounds'].forEach(function (id) {
       var t = getTool(id);
       if (!t) { return; }
       var b = document.createElement('button'); b.className = 'linkcard';
+      var mv = document.createElement('span'); mv.className = 'mv ' + MINI_VIS[id]; mv.setAttribute('aria-hidden', 'true');
+      for (var i = 0; i < MINI_N[MINI_VIS[id]]; i++) { mv.appendChild(document.createElement('i')); }
       var label = document.createElement('span');
       var st = document.createElement('strong'); st.textContent = t.title;
       var em = document.createElement('span'); em.className = 'body'; em.textContent = t.time;
       label.appendChild(st); label.appendChild(document.createElement('br')); label.appendChild(em);
       var go2 = document.createElement('span'); go2.className = 'go'; go2.textContent = '\u2192';
-      b.appendChild(label); b.appendChild(go2);
+      b.appendChild(mv); b.appendChild(label); b.appendChild(go2);
       b.addEventListener('click', function () { openTool(id, 'screen-comfort'); });
       host.appendChild(b);
     });
@@ -440,7 +456,7 @@
   }
 
   /* ---------- breathing engine (patterns + haptics + audio, minimal mode for the panic flow) ---------- */
-  var breathTimer = null, breatheReturn = 'screen-home';
+  var breathTimer = null, breathSwap = null, breatheReturn = 'screen-home';
   var PATTERNS = {
     gentle: { label: 'Gentle', phases: [
       { k: 'in', secs: 4, word: 'Breathe in', cap: 'Slowly, through your nose.' },
@@ -474,7 +490,9 @@
     var p = phases[i % phases.length];
     var word = $('breath-word'), cap = $('breath-cap');
     cap.classList.add('swap');
-    setTimeout(function () {
+    if (breathSwap) { clearTimeout(breathSwap); }
+    breathSwap = setTimeout(function () {
+      breathSwap = null;
       word.textContent = p.word;
       cap.textContent = p.cap;
       cap.classList.remove('swap');
@@ -510,7 +528,9 @@
     if (mode === 'ambient' || mode === 'both') { ambientStart(); }
     runPhase(PATTERNS[breathPattern].phases, 0); // no gate: the exercise starts NOW
   }
-  function stopBreathe() { if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; } ambientStop(); }
+  function stopBreathe() { if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; } if (breathSwap) { clearTimeout(breathSwap); breathSwap = null; } ambientStop(); }
+  var stopHold = function () {}; // replaced by the hold-to-steady tool below; go() calls it so a mid-hold navigation never leaves the tone droning
+  var stopMuscleHold = function () {}; // replaced by the muscle-release hold ring below (same reason: never leave a rAF loop running on a hidden screen)
   $('btn-breathe-end').addEventListener('click', function () { tick(); stopBreathe(); go(breatheReturn); });
 
   /* panic entry: minimal sacred flow */
@@ -656,9 +676,19 @@
       var lat = pos.coords.latitude.toFixed(3), lon = pos.coords.longitude.toFixed(3);
       if (navigator.onLine) { reverseGeocode(lat, lon, o); }
       else { st.textContent = 'Got your location (' + lat + ', ' + lon + ') but you\u2019re offline, so no city name. Fill it in below.'; }
-    }, function () {
+    }, function (err) {
       clearTimeout(timer);
-      fail('No GPS fix — totally normal underground. Tell us your ride below.');
+      var code = err && err.code;
+      if (code === 1) {
+        /* PERMISSION_DENIED: she said no, or Location Services are off. Never blame; guide. */
+        fail('Location permission is off. Turn it on in Settings \u2192 Privacy & Security \u2192 Location Services \u2192 Safari Websites — or just fill in below, no pressure.');
+      } else if (code === 2) {
+        /* POSITION_UNAVAILABLE */
+        fail('Couldn\u2019t get a location fix. Enter it below — takes a few seconds.');
+      } else {
+        /* TIMEOUT (3) or unknown: the underground case */
+        fail('No GPS fix — totally normal underground. Tell us your ride below.');
+      }
     }, { timeout: 7900, maximumAge: 600000 });
   }
   /* ride setup: prefill from profile, then attempt location once per session */
@@ -908,13 +938,19 @@
   }
   $('btn-calm-done').addEventListener('click', function () { tick(); go(calmReturn); });
   /* cute things, one tap: curated categories, pick a platform once */
-  var SOCIAL_PLAT = 'yt';
+  /* YouTube is the default AND the recommended platform: works logged-out, most reliable. */
+  var SOCIAL_PLAT = read('iht_social_plat') || 'yt';
+  var SOCIAL_CAP = {
+    yt: 'YouTube recommended — works without logging in.',
+    tt: 'TikTok search — usually fine without logging in.',
+    ig: 'Opens Instagram Explore. (Instagram needs a login for more.)'
+  };
   var SOCIAL_CATS = [
-    { id: 'puppies', title: 'Puppies', emoji: '\uD83D\uDC36', q: 'cute puppies' },
-    { id: 'kittens', title: 'Kittens', emoji: '\uD83D\uDC31', q: 'cute kittens' },
-    { id: 'babies', title: 'Baby animals', emoji: '\uD83D\uDC23', q: 'cute baby animals' },
-    { id: 'funny', title: 'Something funny', emoji: '\uD83D\uDE02', q: 'funny animals' },
-    { id: 'nature', title: 'Calm nature', emoji: '\uD83C\uDF3F', q: 'relaxing nature' }
+    { id: 'puppies', title: 'Puppies', emoji: '\uD83D\uDC36', q: 'cute puppies compilation' },
+    { id: 'kittens', title: 'Kittens', emoji: '\uD83D\uDC31', q: 'cute kittens compilation' },
+    { id: 'babies', title: 'Baby animals', emoji: '\uD83D\uDC23', q: 'cute baby animals compilation' },
+    { id: 'funny', title: 'Something funny', emoji: '\uD83D\uDE02', q: 'funny animal videos' },
+    { id: 'nature', title: 'Calm nature', emoji: '\uD83C\uDF3F', q: 'relaxing nature 4k' }
   ];
   function socialUrl(cat) {
     if (SOCIAL_PLAT === 'tt') { return 'https://www.tiktok.com/search?q=' + encodeURIComponent(cat.q); }
@@ -935,17 +971,24 @@
       host.appendChild(b);
     });
   }
+  function renderSocialSeg() {
+    $all('#social-seg .segbtn').forEach(function (x) {
+      var on = x.getAttribute('data-plat') === SOCIAL_PLAT;
+      x.classList.toggle('on', on);
+      x.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    var cap = $('social-cap');
+    if (cap) { cap.textContent = SOCIAL_CAP[SOCIAL_PLAT] || SOCIAL_CAP.yt; }
+  }
   $all('#social-seg .segbtn').forEach(function (b) {
     b.addEventListener('click', function () {
       tick();
       SOCIAL_PLAT = b.getAttribute('data-plat');
-      $all('#social-seg .segbtn').forEach(function (x) {
-        var on = x === b;
-        x.classList.toggle('on', on);
-        x.setAttribute('aria-pressed', on ? 'true' : 'false');
-      });
+      store('iht_social_plat', SOCIAL_PLAT);
+      renderSocialSeg();
     });
   });
+  renderSocialSeg();
   /* one comfort: a single favorite link, online only */
   function getOneComfort() { return (read('iht_comfort_one') || '').trim(); }
   function setOneComfort(url) {
@@ -1276,6 +1319,7 @@
     btn.addEventListener('mousedown', start);
     btn.addEventListener('mouseup', end);
     btn.addEventListener('mouseleave', end);
+    stopHold = end; // navigating away mid-hold stops the tone + animation (see go())
   })();
 
   /* ---------- the old full-screen tour is gone: contextual coach marks replace it (see boot block) ---------- */
@@ -1852,6 +1896,7 @@
     btn.addEventListener('mousedown', start);
     btn.addEventListener('mouseup', end);
     btn.addEventListener('mouseleave', end);
+    stopMuscleHold = end;
   })();
   $('btn-mu-next').addEventListener('click', function () {
     tick();
