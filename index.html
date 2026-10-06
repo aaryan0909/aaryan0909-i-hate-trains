@@ -119,19 +119,14 @@
         <button class="btn calm big" id="btn-start-ride" data-go="screen-checkin" style="margin-bottom:0">Start a ride</button>
       </div>
       <p class="fineprint rise d4">Free forever. Works offline. Always. Even in a tunnel.</p>
-      <nav class="homelinks rise d4">
-        <button class="linklike" data-go="screen-toolkit">Toolkit</button>
-        <span aria-hidden="true">·</span>
-        <button class="linklike" data-go="screen-comfort" id="link-comfort-home">Comfort</button>
-        <span aria-hidden="true">·</span>
-        <button class="linklike" data-go="screen-plan" id="link-plan-home">Backup plan</button>
-        <span aria-hidden="true">·</span>
-        <button class="linklike" data-go="screen-history">History</button>
-        <span aria-hidden="true">·</span>
-        <button class="linklike" data-go="screen-privacy">Privacy</button>
-        <span aria-hidden="true">·</span>
-        <button class="linklike" data-go="screen-about">About</button>
-      </nav>
+      <div class="tools homenav rise d4">
+        <button class="tool" data-go="screen-toolkit"><span class="tool-ic" aria-hidden="true">✦</span>Toolkit</button>
+        <button class="tool" data-go="screen-comfort" id="link-comfort-home"><span class="tool-ic" aria-hidden="true">☁</span>Comfort</button>
+        <button class="tool" data-go="screen-plan" id="link-plan-home"><span class="tool-ic" aria-hidden="true">◈</span>Backup plan</button>
+        <button class="tool" data-go="screen-history"><span class="tool-ic" aria-hidden="true">◔</span>History</button>
+        <button class="tool" data-go="screen-privacy"><span class="tool-ic" aria-hidden="true">◌</span>Privacy</button>
+        <button class="tool" data-go="screen-about"><span class="tool-ic" aria-hidden="true">ⓘ</span>About</button>
+      </div>
     </div>
   </section>
 
@@ -311,7 +306,7 @@
         <div class="counternum" id="stops-left" aria-live="polite">5</div>
         <div class="counterlabel" id="stops-word">stops to go</div>
       </div>
-      <div class="pettrip" id="pet-trip" aria-hidden="true"></div>
+      <button class="pettrip" id="pet-trip" aria-label="Your co-rider is riding with you"></button>
       <button class="tapbtn rise d3" id="btn-stop-tap">Tap at each stop</button>
       <p class="fineprint" id="trip-fine">One tap per stop. That's all you have to do.</p>
       <div class="tools rise d3">
@@ -412,8 +407,9 @@
       <p class="kicker rise d1">a breather</p>
       <h2 class="serene rise d2">Comfort corner.</h2>
       <p class="lede soft rise d3">Small calm things. They work even in a tunnel.</p>
+      <button class="petcomfort rise d3" id="pet-comfort" aria-label="Your co-rider"></button>
       <div class="calmgrid rise d3" id="calm-grid"></div>
-      <h3 class="rise d3">Cute things, one tap</h3>
+      <p class="toolgroup rise d3">Cute things, one tap</p>
       <p class="body rise d3">Pick a platform, then a mood. Zero searching.</p>
       <div class="seg rise d3" id="social-seg" role="group" aria-label="Platform">
         <button class="segbtn on" data-plat="yt" aria-pressed="true">YouTube</button>
@@ -422,7 +418,7 @@
       </div>
       <div class="calmgrid rise d3" id="social-grid"></div>
       <p class="fineprint rise d3">Needs internet — the calm cards above work offline.</p>
-      <h3 class="rise d3">My one comfort</h3>
+      <p class="toolgroup rise d3">My one comfort</p>
       <p class="body rise d3">One favorite — a reel, a playlist, whatever steadies you.</p>
       <button class="btn calm big rise d3" id="btn-one-comfort">Show me something good</button>
       <p class="fineprint rise d3" id="one-comfort-note"></p>
@@ -431,7 +427,7 @@
         <input id="one-comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste your one link…" aria-label="One comfort link">
         <button class="btn calm" id="one-comfort-save">Save</button>
       </div>
-      <h3 class="rise d3">Guided minis</h3>
+      <p class="toolgroup rise d3">Guided minis</p>
       <p class="body rise d3">Short meditations. No audio needed, no counting.</p>
       <div class="rise d3" id="mini-list" style="display:grid;gap:12px;margin-bottom:8px"></div>
       <button class="backlink" id="btn-comfort-back">← back</button>
@@ -636,9 +632,10 @@
       <div class="setrow rise d3">
         <button class="check" id="set-haptics" aria-pressed="true"><span class="box" aria-hidden="true"></span><span><strong>Gentle vibrations</strong><em>Soft pulses during breathing. Android only — iPhones use sound cues instead.</em></span></button>
       </div>
-      <div class="setrow rise d3">
-        <p class="body" style="margin:0 0 10px"><strong>Breathing sounds</strong><br><span style="color:var(--dim)">Chimes mark each breath phase; ambient is a soft generative pad. Both work offline.</span></p>
-        <div class="seg" id="privacy-sound-seg" role="group" aria-label="Breathing sounds">
+      <p class="toolgroup rise d3">Breathing sounds</p>
+      <div class="loccard rise d3">
+        <p class="body">Chimes mark each breath phase; ambient is a soft generative pad. Both work offline.</p>
+        <div class="seg" id="privacy-sound-seg" role="group" aria-label="Breathing sounds" style="margin-bottom:0">
           <button class="segbtn on" data-snd="chimes" aria-pressed="true">Chimes</button>
           <button class="segbtn" data-snd="ambient" aria-pressed="false">Ambient</button>
           <button class="segbtn" data-snd="both" aria-pressed="false">Both</button>
@@ -658,42 +655,65 @@
       <p class="kicker rise d1">about</p>
       <h2 class="serene rise d2">What is this?</h2>
       <p class="lede soft rise d3">A free pocket companion for people who get scared on trains. Built for the ride itself. It works fully offline, in any metro in the world.</p>
-      <h3 class="rise d3">The not-medical-advice part</h3>
+      <p class="toolgroup rise d3">The not-medical-advice part</p>
       <p class="body rise d3">I Hate Trains is a comfort tool, not a medical device. It doesn't diagnose, treat, or replace professional help. These are coping tools, not treatment. If anxiety is running your life, please talk to a clinician you trust.</p>
-      <h3 class="rise d3">If it gets really bad</h3>
+      <p class="toolgroup rise d3">If it gets really bad</p>
       <ul class="bodylist rise d3">
         <li>US or Canada: call or text <strong>988</strong></li>
         <li>UK: call Samaritans at <strong>116 123</strong></li>
         <li>Anywhere in an emergency: call your local emergency number</li>
       </ul>
       <p class="fineprint rise d4">Made for everyone who holds their breath between stations.</p>
-      <h3 class="rise d4">City theme</h3>
-      <p class="body rise d4">The app dresses for the city you're riding in. The calm screens never change.</p>
-      <div class="seg segwrap rise d4" id="theme-seg" role="group" aria-label="City theme">
-        <button class="segbtn on" data-theme="auto" aria-pressed="true">Auto</button>
-        <button class="segbtn" data-theme="toronto" aria-pressed="false">Toronto</button>
-        <button class="segbtn" data-theme="london" aria-pressed="false">London</button>
-        <button class="segbtn" data-theme="newyork" aria-pressed="false">NYC</button>
-        <button class="segbtn" data-theme="paris" aria-pressed="false">Paris</button>
-        <button class="segbtn" data-theme="tokyo" aria-pressed="false">Tokyo</button>
-        <button class="segbtn" data-theme="night" aria-pressed="false">Night</button>
+      <p class="toolgroup rise d4">City theme</p>
+      <div class="loccard rise d4">
+        <p class="body">The app dresses for the city you're riding in. The calm screens never change.</p>
+        <div class="seg segwrap" id="theme-seg" role="group" aria-label="City theme" style="margin-bottom:0">
+          <button class="segbtn on" data-theme="auto" aria-pressed="true">Auto</button>
+          <button class="segbtn" data-theme="toronto" aria-pressed="false">Toronto</button>
+          <button class="segbtn" data-theme="london" aria-pressed="false">London</button>
+          <button class="segbtn" data-theme="newyork" aria-pressed="false">NYC</button>
+          <button class="segbtn" data-theme="paris" aria-pressed="false">Paris</button>
+          <button class="segbtn" data-theme="tokyo" aria-pressed="false">Tokyo</button>
+          <button class="segbtn" data-theme="night" aria-pressed="false">Night</button>
+        </div>
       </div>
-      <h3 class="rise d4">Your co-rider</h3>
-      <p class="body rise d4">No feeding, no meters. Just company.</p>
-      <div class="seg segwrap rise d4" id="pet-seg" role="group" aria-label="Co-rider">
-        <button class="segbtn on" data-pet="blob" aria-pressed="true">Blob</button>
-        <button class="segbtn" data-pet="bird" aria-pressed="false">Bird</button>
-        <button class="segbtn" data-pet="cat" aria-pressed="false">Cat</button>
+      <p class="toolgroup rise d4">Your co-rider</p>
+      <div class="loccard rise d4">
+        <p class="body">No feeding, no meters. Just company. You can also tap your co-rider anywhere they appear.</p>
+        <div class="seg segwrap" id="pet-seg" role="group" aria-label="Co-rider">
+          <button class="segbtn on" data-pet="blob" aria-pressed="true">Blob</button>
+          <button class="segbtn" data-pet="bird" aria-pressed="false">Bird</button>
+          <button class="segbtn" data-pet="cat" aria-pressed="false">Cat</button>
+        </div>
+        <label class="field" style="margin:14px 0 0">Their name
+          <input id="in-pet-name" type="text" autocomplete="off" maxlength="24" aria-label="Co-rider name">
+        </label>
       </div>
-      <label class="field rise d4">Their name
-        <input id="in-pet-name" type="text" autocomplete="off" maxlength="24" aria-label="Co-rider name">
-      </label>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 11</p>
+      <p class="fineprint rise d4" id="app-version">version 12</p>
     </div>
   </section>
 
 </main>
+<div class="petsheet-backdrop hidden" id="pet-sheet-back"></div>
+<section class="petsheet hidden" id="pet-sheet" aria-label="Your co-rider">
+  <div class="ps-grab" aria-hidden="true"></div>
+  <button class="ps-pet" id="pet-sheet-svg" aria-label="Pet your co-rider"></button>
+  <h2 class="serene" id="pet-sheet-name">Mochi</h2>
+  <p class="body" id="pet-sheet-line" aria-live="polite">Tap for some love.</p>
+  <button class="btn calm" id="ps-play">Play with <span id="ps-play-name">Mochi</span></button>
+  <button class="btn ghost" id="ps-pick">Mochi picks for me</button>
+  <label class="field">Their name
+    <input id="ps-name" type="text" autocomplete="off" maxlength="24" aria-label="Co-rider name">
+  </label>
+  <p class="toolgroup">Change co-rider</p>
+  <div class="seg segwrap" id="ps-pet-seg" role="group" aria-label="Change co-rider">
+    <button class="segbtn" data-pet="blob">Blob</button>
+    <button class="segbtn" data-pet="bird">Bird</button>
+    <button class="segbtn" data-pet="cat">Cat</button>
+  </div>
+  <button class="linklike quiet" id="ps-close">Close</button>
+</section>
 <button id="sos-float" class="sosfloat" data-go="screen-panic" aria-label="Get help right now" hidden>SOS</button>
 <script src="app.js"></script>
 <script>
