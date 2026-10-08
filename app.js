@@ -40,7 +40,7 @@
     if (Math.abs(dx) < 80 || Math.abs(dx) < Math.abs(dy) * 1.4) { return; } // needs a real horizontal swipe
     if (dx > 0) { navGoBack(); } else { navGoFwd(); }
   }, { passive: true });
-  /* SOS stays one tap away on every screen except home (has the big button), the panic flow itself, and onboarding */
+  /* SOS stays one tap away on every screen except home (has the big button), the panic flow itself, and onboarding (each onboarding screen carries its own "I need help right now" escape straight to help) */
   var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-ob1': 1, 'screen-ob2': 1, 'screen-ob3': 1, 'screen-ob4': 1, 'screen-ob5': 1 };
   function updateSosFloat(id) {
     var f = $('sos-float');
@@ -1063,6 +1063,14 @@
     });
   });
 
+  /* onboarding: persistent crisis escape — one tap skips setup (defaults kept) and opens help */
+  $all('[data-ob-escape]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      tick();
+      try { localStorage.setItem('iht_onboarded', '1'); } catch (e) {}
+      go('screen-panic');
+    });
+  });
   /* ---------- onboarding (first launch only): name → location → feeling → comforts ---------- */
   var obFeel = null;
   function enterOb2() {
