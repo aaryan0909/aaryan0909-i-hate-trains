@@ -301,6 +301,9 @@ em { font-style: normal; }
 
 /* onboarding */
 .obstep { font-size: 13px; color: var(--dim); letter-spacing: .14em; margin: -14px 0 22px; }
+/* onboarding crisis escape: one quiet tap skips setup and opens the panic screen */
+.ob-escape { display: block; width: 100%; background: none; border: 1.5px solid var(--line); border-radius: var(--radius); color: var(--calm); font-size: 16px; font-weight: 600; padding: 15px 16px; margin: 2px 0 20px; cursor: pointer; }
+.ob-escape:active { transform: scale(.98); }
 .ridecard {
   background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius);
   padding: 18px; margin: 6px 0 4px;
