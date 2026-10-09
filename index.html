@@ -141,6 +141,11 @@
       <p class="kicker rise d1">right now</p>
       <h2 class="serene rise d2">You're safe.</h2>
       <p class="lede soft rise d3">This will pass. Pick what sounds bearable:</p>
+      <div class="calmcard rise d3" id="panic-lasthelp" hidden>
+        <p class="kicker small">from your own notes</p>
+        <p class="calmcard-tx" id="lasthelp-text"></p>
+        <button class="btn calm calmcard-go" id="btn-lasthelp" type="button"></button>
+      </div>
       <button class="panicopt rise d3 po-breathe" id="btn-panic-breathe">
         <span class="po-ic pov-breathe" aria-hidden="true"><i></i></span>
         <span class="po-tx"><strong>Breathe with me</strong><em>Slow your breath, slow your heart.</em></span>
@@ -164,6 +169,7 @@
     <div class="wrap narrow center">
       <p class="kicker rise d1">breathe with me</p>
       <div class="petbreathe" id="pet-breathe" aria-hidden="true"></div>
+      <p class="petbreathecap" id="pet-breathe-cap" aria-hidden="true">Mochi breathes with you</p>
       <div class="patternchips rise d2" id="breath-patterns" role="group" aria-label="Breathing pattern">
         <button class="pchip" data-pattern="gentle" aria-pressed="true">Gentle</button>
         <button class="pchip" data-pattern="box" aria-pressed="false">Box</button>

@@ -88,6 +88,19 @@ em { font-style: normal; }
 .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
 .btn.ghost:active { border-color: var(--calm); }
 
+/* calmcard — the quiet "what helped last time" read-back. Stoic, never loud: it
+   must sit on the panic screen without competing with the panic options. */
+.calmcard {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px 18px;
+  margin: 12px 0;
+}
+.calmcard .kicker.small { margin: 0 0 6px; font-size: 10px; }
+.calmcard-tx { margin: 0 0 10px; font-size: 17px; line-height: 1.55; color: var(--ink); }
+.calmcard-go { margin: 0; font-size: 17px; padding: 14px 18px; min-height: 60px; }
+
 .panicbtn {
   display: block; width: 100%; min-height: 104px;
   border: 0; border-radius: 26px;
@@ -456,7 +469,8 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 #petsheet .serene { margin-bottom: 4px; }
 #petsheet .field { margin-top: 18px; }
 #petsheet .toolgroup { margin-top: 20px; }
-.petbreathe { width: 44px; margin: -8px auto 0; opacity: .9; }
+.petbreathe { width: 72px; margin: 2px auto 0; opacity: .95; }
+.petbreathecap { margin: 2px 0 0; font-size: 13px; letter-spacing: .04em; color: var(--dim); }
 .petarrived { width: 84px; margin: 0 auto 6px; }
 .petstage { width: min(58vw, 190px); margin: 8px auto; position: relative; cursor: pointer; }
 .pet-idle .petsvg { animation: petbob 3.4s ease-in-out infinite; }
