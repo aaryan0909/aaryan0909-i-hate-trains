@@ -20,6 +20,7 @@
     if (id === 'screen-butterfly') { flyReset(); }
     updateSosFloat(id);
     maybeCoach(id);
+    if (id === 'screen-panic') { renderLastHelped(); } // journal read-back, one card, calm
   }
   function navGoBack() { var p = navBack.pop(); if (!p) { return; } navFwd.push(currentScreen()); tick(); go(p, { keep: true }); }
   function navGoFwd() { var n = navFwd.pop(); if (!n) { return; } var c = currentScreen(); if (c) { navBack.push(c); } tick(); go(n, { keep: true }); }
@@ -511,11 +512,17 @@
     phaseCue(p.k);
     breathTimer = setTimeout(function () { runPhase(phases, i + 1); }, p.secs * 1000);
   }
+  /* the co-rider breathes with you: caption names the companion so the moment is unmistakable */
+  function renderBreatheCap() {
+    var cap = $('pet-breathe-cap');
+    if (cap) { cap.textContent = (pet.name || 'Mochi') + ' breathes with you'; }
+  }
   function startBreathe(pattern, returnTo, minimal) {
     breatheReturn = returnTo || 'screen-home';
     stopBreathe();
     ensureAudio(); // first user gesture: safe to init audio on iOS
     petInto($('pet-breathe'), 'sleepy'); // the co-rider gets sleepy too
+    renderBreatheCap();
     setBreathPattern(pattern || 'gentle');
     $('breath-patterns').classList.toggle('hidden', !!minimal);
     var c = $('breath-circle');
@@ -536,6 +543,39 @@
   /* panic entry: minimal sacred flow */
   $('btn-panic-breathe').addEventListener('click', function () { startBreathe('gentle', 'screen-panic', true); });
   $('btn-panic-ground').addEventListener('click', function () { openTool('five-senses', 'screen-panic'); });
+
+  /* "what helped last time": the reflection journal (iht_journal, on-device, capped
+     at 100) is write-only today; read the most recent entry back on the panic
+     screen as one calm, personal suggestion. Nothing leaves the phone. Wrapped so
+     a corrupt journal can never break the sacred flow. */
+  var lastHelpTool = null;
+  function toolByTitle(title) {
+    for (var i = 0; i < TOOLS.length; i++) { if (TOOLS[i].title === title) { return TOOLS[i]; } }
+    return null;
+  }
+  function renderLastHelped() {
+    var card = $('panic-lasthelp');
+    if (!card) { return; }
+    lastHelpTool = null;
+    try {
+      var log = readJSON('iht_journal', []);
+      for (var i = log.length - 1; i >= 0; i--) {
+        var e = log[i] || {};
+        if (e.tools && e.tools.length) {
+          var t = toolByTitle(e.tools[0]);
+          if (t) { lastHelpTool = t; break; }
+        }
+      }
+    } catch (err) { lastHelpTool = null; }
+    if (!lastHelpTool) { card.hidden = true; return; }
+    $('lasthelp-text').textContent = 'Last ride, ' + lastHelpTool.title + ' helped. Want to start there?';
+    $('btn-lasthelp').textContent = 'Start ' + lastHelpTool.title;
+    card.hidden = false;
+  }
+  $('btn-lasthelp').addEventListener('click', function () {
+    tick();
+    if (lastHelpTool) { openTool(lastHelpTool.id, 'screen-panic'); }
+  });
 
   /* comfort is a solution, not a silo: reachable from the panic flow, the toolkit, home, and mid-trip */
   var comfortReturn = 'screen-home';
@@ -1422,8 +1462,11 @@
     petInto($('pet-trip'), 'idle');
     petInto($('pet-breathe'), 'sleepy');
     petInto($('pet-arrived'), 'celebrate');
+    petInto($('pet-sheet-svg'), 'idle'); // the sheet's own preview, refreshed on type change
     mountComfortPet();
     renderPetSeg();
+    renderPetComfortCard();
+    renderBreatheCap();
   }
   /* pet play */
   var petPlayReturn = 'screen-home';
@@ -1472,7 +1515,7 @@
     savePet();
     try { localStorage.setItem('iht_onboarded', '1'); } catch (e) {}
     applyProfileToHome();
-    renderHomePet();
+    renderPetEverywhere(); // every mount, not just home — the chosen pet must appear everywhere
     go('screen-home');
   }
   $('btn-ob5-done').addEventListener('click', function () { tick(); finishOnboarding(); });
@@ -1500,7 +1543,9 @@
   var ppb = $('btn-pet-pat');
   if (ppb) { ppb.addEventListener('click', petPat); }
   $('btn-petplay-done').addEventListener('click', function () { tick(); go(petPlayReturn); });
-  (function renderPetComfortCard() {
+  /* comfort card: created once, label refreshed on every pet change */
+  var petComfortLabel = null;
+  (function mountPetComfortCard() {
     var host = $('mini-list');
     if (!host) { return; }
     var b = document.createElement('button'); b.className = 'linkcard';
@@ -1512,7 +1557,11 @@
     b.appendChild(label); b.appendChild(go2);
     b.addEventListener('click', function () { openPetPlay('screen-comfort'); });
     host.appendChild(b);
+    petComfortLabel = st;
   })();
+  function renderPetComfortCard() {
+    if (petComfortLabel) { petComfortLabel.textContent = 'Play with ' + (pet.name || 'Mochi'); }
+  }
 
   /* ============ v12: the pet sheet — tap the co-rider anywhere, get play / rename / change in one place.
      Zero-maintenance rule stands: no meters, no hunger, no death, no guilt. Ever. ============ */
@@ -1528,6 +1577,7 @@
     var nm = pet.name || 'Mochi';
     $('pet-sheet-name').textContent = nm;
     $('ps-play-name').textContent = nm;
+    $('ps-pick').textContent = nm + ' picks for me';
     petInto($('pet-sheet-svg'), 'idle');
     var inp = $('ps-name');
     if (inp && document.activeElement !== inp) { inp.value = pet.name || ''; }
@@ -1567,6 +1617,8 @@
     renderPetEverywhere();
     $('pet-sheet-name').textContent = v;
     $('ps-play-name').textContent = v;
+    $('ps-pick').textContent = v + ' picks for me';
+    $('pet-sheet-line').textContent = 'Tap ' + v + ' for some love.';
   }
   /* Mochi picks for you: a random calming tool — cute AND functional */
   var PET_PICKS = TOOLS.filter(function (t) {
