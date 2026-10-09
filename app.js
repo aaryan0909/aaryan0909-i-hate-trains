@@ -2010,6 +2010,7 @@
   applyProfileToHome();
   renderHomePet();
   petInto($('pet-breathe'), 'sleepy');
+  renderBreatheCap();
   if (!read('iht_onboarded')) { go('screen-ob1'); }
   else { go('screen-home'); }
 
