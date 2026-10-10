@@ -655,6 +655,21 @@
         </div>
       </div>
       <p class="fineprint rise d3">The app respects your system's reduced-motion and large-text settings automatically.</p>
+      <p class="toolgroup rise d4">Move to another browser</p>
+      <div class="loccard rise d4">
+        <p class="body">Your setup can travel with you. Export makes a code with your co-rider, name, preferences, reflections, trips, and saved links. Import it on the other browser — the code never leaves your hands.</p>
+        <div class="io-btnrow">
+          <button class="btn calm" id="btn-export">Export my setup</button>
+          <button class="btn ghost" id="btn-import">Import a setup</button>
+        </div>
+        <textarea id="io-code" class="hidden iocode" rows="5" aria-label="Setup code" placeholder="Your setup code appears here — or paste one to import."></textarea>
+        <div class="io-btnrow hidden" id="io-actions">
+          <button class="btn calm hidden" id="btn-copy-code">Copy code</button>
+          <button class="btn ghost hidden" id="btn-download-code">Download file</button>
+          <button class="btn calm hidden" id="btn-restore-code">Restore from this code</button>
+        </div>
+        <p class="fineprint hidden" id="io-msg" aria-live="polite"></p>
+      </div>
       <button class="btn ghost rise d4" id="btn-erase-2">Erase everything on this phone</button>
       <button class="backlink" data-go="screen-home">← back</button>
     </div>
@@ -702,7 +717,7 @@
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 13</p>
+      <p class="fineprint rise d4" id="app-version">version 18</p>
     </div>
   </section>
 
@@ -727,13 +742,10 @@
   <button class="linklike quiet" id="ps-close">Close</button>
 </section>
 <button id="sos-float" class="sosfloat" data-go="screen-panic" aria-label="Get help right now" hidden>SOS</button>
+<div class="update-banner hidden" id="update-banner" role="status" aria-live="polite">
+  <p>A fresh version is ready. Take it whenever you like — nothing of yours is lost.</p>
+  <button class="btn calm" id="btn-update-now">Update when you're ready</button>
+</div>
 <script src="app.js"></script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () { /* offline-first: never block the app on SW failure */ });
-  });
-}
-</script>
 </body>
 </html>
