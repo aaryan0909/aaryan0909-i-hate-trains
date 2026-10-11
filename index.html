@@ -292,6 +292,7 @@
       <label class="field rise d3">Line / train
         <input id="in-line" type="text" inputmode="text" autocomplete="off" placeholder="Line 1">
       </label>
+      <div id="linepick-mount"></div>
       <label class="field rise d3">Destination
         <input id="in-dest" type="text" inputmode="text" autocomplete="off" placeholder="Your stop">
       </label>
@@ -320,6 +321,7 @@
       <button class="pettrip" id="pet-trip" aria-label="Your co-rider is riding with you"></button>
       <button class="tapbtn rise d3" id="btn-stop-tap">Tap at each stop</button>
       <p class="fineprint" id="trip-fine">One tap per stop. That's all you have to do.</p>
+      <button class="linklike quiet rise d3" id="btn-show-map" hidden>Show the map</button>
       <div class="tools rise d3">
         <button class="tool" id="tool-breathe"><span class="tool-ic" aria-hidden="true">◯</span>Breathe</button>
         <button class="tool" id="tool-ground"><span class="tool-ic" aria-hidden="true">◎</span>Ground</button>
@@ -331,6 +333,13 @@
         <button class="tool" data-go="screen-crisis"><span class="tool-ic" aria-hidden="true">✆</span>Reach out</button>
       </div>
       <button class="linklike quiet" id="btn-end-trip">End trip</button>
+    </div>
+  </section>
+
+  <!-- TRIMAP — live transit map (online enhancement; core loop stays offline) -->
+  <section class="screen" id="screen-trimap" aria-label="Trip map">
+    <div class="wrap narrow">
+      <div id="trimap-mount"></div>
     </div>
   </section>
 
@@ -717,7 +726,7 @@
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 18</p>
+      <p class="fineprint rise d4" id="app-version">version 19</p>
     </div>
   </section>
 
@@ -746,6 +755,8 @@
   <p>A fresh version is ready. Take it whenever you like — nothing of yours is lost.</p>
   <button class="btn calm" id="btn-update-now">Update when you're ready</button>
 </div>
+<script src="drift.js"></script>
+<script src="trimap.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

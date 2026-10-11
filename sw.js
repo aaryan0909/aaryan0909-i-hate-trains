@@ -1,14 +1,18 @@
 /* I Hate Trains service worker — offline law: the core calming loop must work with zero network.
    Delivery fix (v18): network-first for navigations and core versioned assets so updates reach
    the phone; cache fallback keeps everything alive offline (tunnels, dead zones).
+   v19: precaches drift.js (generative ambient music), trimap.js + ttc.json (TTC map module).
    NOTE: install does NOT skipWaiting — the app shows a calm "update ready" prompt on safe
    screens and only then asks the waiting worker to activate. */
-var CACHE = 'iht-v18';
+var CACHE = 'iht-v19';
 var ASSETS = [
   './',
   'index.html',
   'styles.css',
   'app.js',
+  'drift.js',
+  'trimap.js',
+  'ttc.json',
   'manifest.webmanifest',
   'icon.svg'
 ];
