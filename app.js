@@ -20,6 +20,7 @@
     if (id === 'screen-butterfly') { flyReset(); }
     updateSosFloat(id);
     maybeCoach(id);
+    maybeShowUpdateBanner(); // update prompt only ever appears on calm, non-crisis screens
     if (id === 'screen-panic') { renderLastHelped(); } // journal read-back, one card, calm
   }
   function navGoBack() { var p = navBack.pop(); if (!p) { return; } navFwd.push(currentScreen()); tick(); go(p, { keep: true }); }
@@ -50,6 +51,19 @@
   function store(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function readJSON(k, fb) { try { var v = JSON.parse(read(k)); return v == null ? fb : v; } catch (e) { return fb; } }
+
+  /* ---------- storage migration (v18): stamp a schema version, never delete.
+     Runs before any iht_* key is read. Existing data is already current-shaped, so v0→v1
+     only stamps. Unknown iht_* keys pass through untouched (forward-compat). The only
+     code that ever removes iht_* keys is the user-initiated "erase everything". ---------- */
+  var IHT_SCHEMA_VERSION = 1;
+  function migrateStorage() {
+    var raw = read('iht_schema_version');
+    var v = raw === null ? 0 : (parseInt(raw, 10) || 0);
+    if (v < 1) { store('iht_schema_version', '1'); }
+    /* future: if (v < 2) { ...shape changes...; store('iht_schema_version', '2'); } */
+  }
+  migrateStorage();
 
   /* ---------- prefs ---------- */
   var prefs = readJSON('iht_prefs', null) || {};
@@ -421,6 +435,10 @@
     var ctx = ensureAudio();
     if (!ctx) { return; }
     ambientStop();
+    if (window.Drift && typeof window.Drift.start === 'function') {
+      try { window.Drift.start(ctx); return; } // "Drift": composed generative piece (drift.js); falls through to the legacy pad on any failure
+      catch (e) {}
+    }
     try {
       var master = ctx.createGain();
       master.gain.setValueAtTime(0.0001, ctx.currentTime);
@@ -443,6 +461,7 @@
     } catch (e) { ambState = null; }
   }
   function ambientStop() {
+    try { if (window.Drift && typeof window.Drift.stop === 'function') { window.Drift.stop(); } } catch (e) {}
     var s = ambState; ambState = null;
     if (!s) { return; }
     try {
@@ -666,6 +685,10 @@
   /* ---------- ride setup + location: try first, ask only if needed ---------- */
   var setupStops = 5;
   function renderSetupStops() { $('stops-count').textContent = setupStops; }
+  /* TriMap bridge: the chooser sets the computed stop count; the map reads
+     the live shared counter. Both go through the existing state. */
+  window.__ihtSetStops = function (n) { setupStops = n; renderSetupStops(); };
+  window.__ihtTripLeft = function () { return trip.left; };
   $('stops-minus').addEventListener('click', function () { tick(); if (setupStops > 1) { setupStops--; renderSetupStops(); } });
   $('stops-plus').addEventListener('click', function () { tick(); if (setupStops < 40) { setupStops++; renderSetupStops(); } });
   renderSetupStops();
@@ -736,8 +759,33 @@
     b.addEventListener('click', function () {
       if (!$('in-city').value && profile.city) { $('in-city').value = profile.city; }
       if (!$('in-line').value && profile.line) { $('in-line').value = profile.line; }
+      if (window.TriMap && $('linepick-mount')) {
+        TriMap.mountChooser($('linepick-mount'), {
+          cityEl: $('in-city'),
+          profile: profile,
+          onDone: function (sel) {
+            TriMap.current = sel;
+            $('in-line').value = sel.lineName;
+            $('in-dest').value = sel.dest;
+            window.__ihtSetStops(sel.stopsToGo);
+          }
+        });
+      }
       setTimeout(function () { tryLocate({ status: $('loc-status'), city: $('in-city'), onceKey: 'setup' }); }, 350);
     });
+  });
+  /* TriMap: a manual edit after a chooser pick invalidates the pick, so
+     the map button never offers a map for a trip it doesn't describe. */
+  ['in-line', 'in-dest', 'in-city'].forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      if (window.TriMap) { TriMap.current = null; }
+    });
+  });
+  $('stops-minus').addEventListener('click', function () {
+    if (window.TriMap) { TriMap.current = null; }
+  });
+  $('stops-plus').addEventListener('click', function () {
+    if (window.TriMap) { TriMap.current = null; }
   });
 
   var trip = { city: '', line: '', dest: '', left: 0, total: 0 };
@@ -766,6 +814,8 @@
       ? ('One tap per stop, ' + nm + '. That\u2019s all you have to do.')
       : 'One tap per stop. That\u2019s all you have to do.';
     renderStops();
+    var showMap = !!(window.TriMap && TriMap.current && TriMap.current.useMap && navigator.onLine);
+    $('btn-show-map').hidden = !showMap;
     go('screen-trip');
   });
 
@@ -774,14 +824,37 @@
     $('stops-left').textContent = trip.left;
     $('stops-word').textContent = trip.left === 1 ? 'stop to go' : 'stops to go';
   }
-  $('btn-stop-tap').addEventListener('click', function () {
+  /* The ONE stop counter. Manual taps and the map's auto-advance both
+     come through here — never a parallel counter. */
+  function advanceStop() {
     buzz(25);
     var n = $('stops-left');
     n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump');
     if (trip.left > 0) { trip.left--; renderStops(); }
-    if (trip.left === 0) { setTimeout(function () { arrivedNote(); go('screen-arrived'); }, 600); }
+    if (trip.left === 0) {
+      if (window.TriMap) { TriMap.closeMap(); }
+      setTimeout(function () { arrivedNote(); go('screen-arrived'); }, 600); }
+  }
+  $('btn-stop-tap').addEventListener('click', function () { advanceStop(); });
+  $('btn-show-map').addEventListener('click', function () {
+    tick();
+    var s = window.TriMap && TriMap.current;
+    if (!s || !s.useMap) { return; }
+    TriMap.openMap($('trimap-mount'), {
+      line: s.line,
+      originIdx: s.originIdx,
+      destIdx: s.destIdx,
+      stopsToGo: s.stopsToGo,
+      getRemaining: window.__ihtTripLeft,
+      onAdvance: function () { advanceStop(); },
+      onClose: function () { go('screen-trip'); }
+    });
+    go('screen-trimap');
   });
-  $('btn-end-trip').addEventListener('click', function () { tick(); arrivedNote(); go('screen-arrived'); });
+  $('btn-end-trip').addEventListener('click', function () {
+    tick();
+    if (window.TriMap) { TriMap.closeMap(); }
+    arrivedNote(); go('screen-arrived'); });
 
   /* ---------- trip card share (online-enhanced, never a dead end) ---------- */
   $('btn-share-card').addEventListener('click', function () {
@@ -1214,6 +1287,86 @@
   }
   $('btn-erase').addEventListener('click', eraseAll);
   $('btn-erase-2').addEventListener('click', eraseAll);
+
+  /* ---------- privacy: move my setup to another browser (v18). Export writes a compact,
+     copyable code (and an optional file) with co-rider, name, prefs, reflections, trips,
+     plans, and saved links. Import restores it with a confirmation. Everything stays
+     on-device; the code never leaves the user's hands. ---------- */
+  function collectExport() {
+    var data = {};
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf('iht_') === 0) { data[k] = localStorage.getItem(k); }
+      }
+    } catch (e) {}
+    return { app: 'i-hate-trains', v: 1, exported: new Date().toISOString(), data: data };
+  }
+  function ioShow(mode) {
+    var ta = $('io-code'), acts = $('io-actions'), msg = $('io-msg');
+    if (!ta || !acts || !msg) { return; }
+    ta.classList.remove('hidden'); acts.classList.remove('hidden'); msg.classList.remove('hidden');
+    $('btn-copy-code').classList.toggle('hidden', mode !== 'export');
+    $('btn-download-code').classList.toggle('hidden', mode !== 'export');
+    $('btn-restore-code').classList.toggle('hidden', mode !== 'import');
+    if (mode === 'export') {
+      var code = JSON.stringify(collectExport());
+      ta.value = code; ta.focus(); ta.select();
+      msg.textContent = 'This is your setup as a code. Copy it or download the file, then import it in your other browser.';
+    } else {
+      ta.value = ''; ta.focus();
+      msg.textContent = 'Paste a setup code above, then tap "Restore from this code".';
+    }
+  }
+  function ioCopy() {
+    var ta = $('io-code'), msg = $('io-msg');
+    function done(ok) { msg.textContent = ok ? 'Copied. Paste it into the other browser\u2019s import box.' : 'Copy didn\u2019t work — long-press the code and copy it by hand.'; }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ta.value).then(function () { done(true); }, function () { done(false); });
+      } else { ta.focus(); ta.select(); done(document.execCommand('copy')); }
+    } catch (e) { done(false); }
+  }
+  function ioDownload() {
+    var ta = $('io-code'), msg = $('io-msg');
+    try {
+      var blob = new Blob([ta.value], { type: 'text/plain' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'i-hate-trains-setup.txt';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { try { document.body.removeChild(a); URL.revokeObjectURL(a.href); } catch (e) {} }, 600);
+      msg.textContent = 'File downloaded. Open it on your other browser and import the code inside.';
+    } catch (e) { msg.textContent = 'Download didn\u2019t work on this browser — copy the code instead.'; }
+  }
+  function ioRestore() {
+    var ta = $('io-code'), msg = $('io-msg');
+    var payload;
+    try { payload = JSON.parse(ta.value); } catch (e) { payload = null; }
+    if (!payload || payload.app !== 'i-hate-trains' || !payload.data || typeof payload.data !== 'object') {
+      msg.textContent = 'That doesn\u2019t look like an I Hate Trains setup code. Check you pasted the whole thing.';
+      return;
+    }
+    if (!window.confirm('Replace everything on this phone with the imported setup? This can\u2019t be undone.')) { return; }
+    try {
+      var wrote = 0;
+      Object.keys(payload.data).forEach(function (k) {
+        if (k.indexOf('iht_') === 0 && typeof payload.data[k] === 'string') {
+          localStorage.setItem(k, payload.data[k]); wrote++;
+        }
+      });
+      if (!wrote) { msg.textContent = 'The code held no setup data — nothing was changed.'; return; }
+      store('iht_schema_version', String(IHT_SCHEMA_VERSION));
+    } catch (e) { msg.textContent = 'Import didn\u2019t work on this browser — nothing was changed.'; return; }
+    window.location.reload();
+  }
+  if ($('btn-export')) { $('btn-export').addEventListener('click', function () { tick(); ioShow('export'); }); }
+  if ($('btn-import')) { $('btn-import').addEventListener('click', function () { tick(); ioShow('import'); }); }
+  if ($('btn-copy-code')) { $('btn-copy-code').addEventListener('click', function () { tick(); ioCopy(); }); }
+  if ($('btn-download-code')) { $('btn-download-code').addEventListener('click', function () { tick(); ioDownload(); }); }
+  if ($('btn-restore-code')) { $('btn-restore-code').addEventListener('click', function () { tick(); ioRestore(); }); }
+  /* hook so automated checks can exercise export/import without the DOM buttons */
+  window.__ihtPortable = { collect: collectExport, restoreText: function (t) { $('io-code').value = t; ioRestore(); } };
 
   /* ---------- gesture calming tools: pure touchmove math, zero dependencies, offline.
      Big forgiving zones for a shaking train. Every tool has a tap fallback for reduced motion. ---------- */
@@ -2005,6 +2158,53 @@
   $('fly-l').addEventListener('click', function () { flyTap('L'); });
   $('fly-r').addEventListener('click', function () { flyTap('R'); });
   $('btn-fly-done').addEventListener('click', function () { tick(); go(gestureReturn); });
+
+  /* ---------- app updates (v18): the phone must actually receive new versions.
+     The service worker installs in the background and waits; we show one calm banner on
+     safe screens only (home, settings, about, history, plan) — never on breathing, panic,
+     trip, or any tool screen. Tapping "Update when you're ready" activates the new worker
+     and reloads. If the SW never updates (offline), the banner simply never appears. ---------- */
+  var UPDATE_SAFE_SCREENS = { 'screen-home': 1, 'screen-privacy': 1, 'screen-about': 1, 'screen-history': 1, 'screen-plan': 1 };
+  var pendingUpdateApply = null;
+  function maybeShowUpdateBanner() {
+    var b = $('update-banner');
+    if (!b) { return; }
+    var show = !!pendingUpdateApply && !!UPDATE_SAFE_SCREENS[currentScreen()];
+    b.classList.toggle('hidden', !show);
+  }
+  function armUpdatePrompt(applyFn) {
+    pendingUpdateApply = applyFn;
+    maybeShowUpdateBanner();
+  }
+  (function watchForUpdates() {
+    if (!('serviceWorker' in navigator)) { return; }
+    function onWaiting(reg) {
+      if (!reg.waiting) { return; }
+      armUpdatePrompt(function () { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); });
+    }
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        if (reg.waiting) { onWaiting(reg); return; }
+        reg.addEventListener('updatefound', function () {
+          var nw = reg.installing;
+          if (!nw) { return; }
+          nw.addEventListener('statechange', function () {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) { onWaiting(reg); }
+          });
+        });
+      }).catch(function () { /* offline-first: a failed registration never blocks the app */ });
+    });
+    var reloadedForUpdate = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (reloadedForUpdate) { return; }
+      reloadedForUpdate = true;
+      window.location.reload();
+    });
+  })();
+  var _btnUpdateNow = $('btn-update-now');
+  if (_btnUpdateNow) { _btnUpdateNow.addEventListener('click', function () { tick(); if (pendingUpdateApply) { pendingUpdateApply(); } }); }
+  /* tiny hook so automated checks can verify the update wiring without a real service worker */
+  window.__ihtUpdate = { arm: armUpdatePrompt, refresh: maybeShowUpdateBanner, safe: UPDATE_SAFE_SCREENS, go: go };
 
   /* ---------- boot: onboarding first, then home. Coach marks guide from there. ---------- */
   applyProfileToHome();
