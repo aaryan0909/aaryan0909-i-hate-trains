@@ -429,37 +429,58 @@
     else { chime(440, 0.5, 0.035); }                  // hold/rest: barely-there tick
   }
 
-  /* ---------- "a voice in the dark" (v21, hardened v22): opt-in calm count-ins via on-device speechSynthesis.
+  /* ---------- "a voice in the dark" (v21, hardened v22, humanized v23): opt-in calm voice-over via on-device speechSynthesis.
      Off by default, toggled in calm-time settings (breathe screen + Privacy), never auto-plays,
-     count-ins only, zero jokes. Fully offline — no audio files, no network. Pref is the opt-in:
+     soft guiding cues only, zero jokes. Fully offline — no audio files, no network. Pref is the opt-in:
      speech only ever starts inside the breathing exercise the user already chose to run.
      v22 iOS hardening: (1) warm the engine inside the toggle-on gesture — the user hears
      "Voice on." immediately, which is instant proof it works and the gesture unlocks iOS speech;
      (2) never cancel()+speak() in the same tick (iOS Safari swallows the utterance);
      (3) resume() a paused engine before speaking. The iPhone silent switch still mutes
-     speech — the hint under the toggle says so honestly. ---------- */
-  var NUMW = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+     speech — the hint under the toggle says so honestly.
+     v23 humanization: the voice picker scores for the most human on-device voice
+     (enhanced/premium/natural/neural/Siri; compact robot voices rank last), prosody is
+     rate 0.75 / pitch 0.9, and the script is soft cues ("breathe in…", "and out…") —
+     the pet's visible breathing carries the timing, the voice just guides. ---------- */
+  var NUMW = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']; // v21 legacy, kept for reference; v23 speaks soft cues, never counts
   function voiceLineFor(p) {
-    var lead = p.k === 'in' ? 'Breathe in' : p.k === 'out' ? 'Breathe out' : p.k === 'hold' ? 'Hold' : 'Rest';
-    var n = Math.max(1, Math.min(8, Math.round(p.secs))); // count to the phase length, capped so the line stays short
-    var counts = [];
-    for (var i = 0; i < n; i++) { counts.push(NUMW[i]); }
-    return lead + ' \u2014 ' + counts.join(', ');
+    // v23: the pet's voice guides, softly — a whisper of a cue, never a counting
+    // machine. The pet's visible breathing carries the timing; the voice just
+    // tells you, gently, what to do.
+    if (p.k === 'in') { return 'breathe in\u2026'; }
+    if (p.k === 'out') { return 'and out\u2026'; }
+    if (p.k === 'hold') { return 'hold\u2026'; }
+    return 'rest\u2026';
   }
   var calmVoiceCache = null, calmVoiceTried = false;
+  function scoreCalmVoice(v) {
+    // v23: never the stock robot. Prefer the most human on-device voice available.
+    var score = 0;
+    try {
+      var name = (v.name || '').toLowerCase();
+      var l = (v.lang || '').toLowerCase();
+      var loc = (prefs.locale || (navigator.language || 'en')).toLowerCase();
+      if (l === loc) { score += 3; }
+      else if (l.indexOf('en') === 0) { score += 1; }
+      if (/enhanced|premium|natural|neural/.test(name)) { score += 5; } // the human ones
+      if (/samantha|siri/.test(name)) { score += 4; } // iOS enhanced Siri voices
+      if (/compact/.test(name)) { score -= 4; } // the stock robot — last resort only
+      if (v.localService) { score += 2; } // on-device: offline law, zero network
+      if (v.default) { score += 1; }
+    } catch (e) {}
+    return score;
+  }
   function pickCalmVoice() {
     if (calmVoiceTried) { return calmVoiceCache; }
     calmVoiceTried = true;
     try {
       var vs = window.speechSynthesis.getVoices() || [];
-      var loc = (prefs.locale || (navigator.language || 'en')).toLowerCase();
-      var best = null, enBest = null;
+      var best = null, bestScore = -999;
       vs.forEach(function (v) {
-        var l = (v.lang || '').toLowerCase();
-        if (!best && l === loc) { best = v; }
-        if (!enBest && l.indexOf('en') === 0) { enBest = v; }
+        var s = scoreCalmVoice(v);
+        if (s > bestScore) { bestScore = s; best = v; }
       });
-      calmVoiceCache = best || enBest || null;
+      calmVoiceCache = best || null; // graceful fallback: whatever the phone has
     } catch (e) { calmVoiceCache = null; }
     return calmVoiceCache;
   }
@@ -480,7 +501,7 @@
       var busy = false;
       try { busy = !!(synth.speaking || synth.pending); } catch (e) {}
       var u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.85; u.pitch = 0.9; u.volume = 0.9; // calm, unhurried
+      u.rate = 0.75; u.pitch = 0.9; u.volume = 0.9; // v23: calm, unhurried, warm — never robotic
       try { if (prefs.locale) { u.lang = prefs.locale; } } catch (e) {}
       var v = pickCalmVoice();
       if (v) { u.voice = v; }
@@ -610,7 +631,7 @@
     }
     breathHaptic(p.k);
     phaseCue(p.k);
-    speakPhase(p); // v22: the pet's voice counts along only when the user opted in
+    speakPhase(p); // v23: the pet's voice guides softly, only when the user opted in
     breathTimer = setTimeout(function () { runPhase(phases, i + 1); }, p.secs * 1000);
   }
   /* the co-rider breathes with you: caption names the companion so the moment is unmistakable */
