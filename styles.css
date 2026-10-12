@@ -215,18 +215,6 @@ em { font-style: normal; }
 }
 .pchip:active { transform: scale(.96); }
 .pchip[aria-pressed="true"] { border-color: var(--calm); color: var(--ink); }
-/* breathing bloom — watchOS Breathe style: petals bloom on inhale, fold on exhale */
-.breathbloom { position: relative; width: 244px; height: 244px; margin: 30px auto 14px; }
-.breathbloom .petal {
-  position: absolute; left: 50%; top: 50%; width: 92px; height: 164px; margin: -82px 0 0 -46px;
-  border-radius: 50%; transform: rotate(var(--a)) translateY(-60px);
-  background: radial-gradient(ellipse at 50% 38%, rgba(143,195,168,.55), rgba(143,195,168,.04) 68%);
-}
-.breathbloom .bloomcore {
-  position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px;
-  border-radius: 50%; background: radial-gradient(circle at 42% 36%, #1f2837, #0e1219);
-  box-shadow: inset 0 0 26px rgba(0,0,0,.55);
-}
 .breathword { font-size: 23px; font-weight: 500; min-height: 36px; margin: 0 0 6px; }
 .breathcap { min-height: 56px; color: var(--dim); font-size: 17px; margin: 0 0 8px; transition: opacity .3s ease; }
 .breathcap.swap { opacity: 0; }
@@ -306,7 +294,7 @@ em { font-style: normal; }
 @media (prefers-reduced-motion: reduce) {
   .screen.active { animation: none; }
   .screen.active .rise { animation: none; }
-  .breathbloom { transition: none !important; }
+  #screen-breathe .petbreathe { transition: none !important; }
   #ground-fill, #walk-fill { transition: none; }
   .counternum.bump { animation: none; }
   * { transition-duration: .01ms !important; }
@@ -484,8 +472,8 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 #petsheet .serene { margin-bottom: 4px; }
 #petsheet .field { margin-top: 18px; }
 #petsheet .toolgroup { margin-top: 20px; }
-.petbreathe { width: 72px; margin: 2px auto 0; opacity: .95; }
-.petbreathecap { margin: 2px 0 0; font-size: 13px; letter-spacing: .04em; color: var(--dim); }
+.petbreathe { width: 172px; margin: 26px auto 8px; opacity: .98; } /* v22: the pet is the breathing guide — big, centered, unmissable */
+.petbreathecap { margin: 2px 0 0; font-size: 14px; letter-spacing: .04em; color: var(--dim); }
 .petarrived { width: 84px; margin: 0 auto 6px; }
 .petstage { width: min(58vw, 190px); margin: 8px auto; position: relative; cursor: pointer; }
 .pet-idle .petsvg { animation: petbob 3.4s ease-in-out infinite; }

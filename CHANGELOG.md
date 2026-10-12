@@ -2,6 +2,14 @@
 
 All changes are local in `~/workspace/i-hate-trains/`. Nothing pushed to GitHub (Aaryan away; push approvals time out). Push when he's back.
 
+## v22 (2026-10-12 — pet-led breathing + voice fix, Aaryan's go)
+
+- **Mochi is the breathing guide.** Aaryan's verdict on the flower bloom: "not very impactful, eye catching, or even helpful." The bloom is gone; the pet now sits large and centered (172px) where it was, and visibly inhales/exhales in sync with each phase (scale 1.0 → 1.4 on the phase timing). The caption under the exercise reads "Follow Mochi." (pet name respected). Extends Div's 2026-10-09 ask — the pet is the guide now, not a bystander. Sacred flow untouched: calm only, zero jokes.
+- **"A calm voice" becomes the pet's voice.** Both toggles (breathe screen + Privacy) now read "[Pet]'s voice" with the pet's name, e.g. "Mochi's voice". The spoken count-ins are unchanged — they are the pet telling you when to breathe.
+- **iOS voice fix.** Aaryan heard nothing on his iPhone with the toggle on. Hardened: (1) flipping the toggle ON now warms the speech engine inside the gesture and speaks "Voice on." — instant audible proof it works (and the gesture unlocks iOS speech); (2) never cancel()+speak() in the same tick (iOS Safari swallows the utterance — cancel only when the engine is busy, then speak 120ms later); (3) resume() a paused engine before speaking. Honest hint under the toggle: "If you hear nothing, check the silent switch and volume." (iOS gives no API to detect or override the silent switch.)
+- Storage: additive only — no new keys, no schema change (`iht_schema_version` stays 1, `iht_prefs.breathVoice` reused). Div's setup survives.
+- SW bumped to `iht-v22`; About reads "version 22".
+
 ## v21 (2026-10-12 — "a voice in the dark", opt-in calm count-ins)
 
 - **A calm voice for breathing, off by default.** New opt-in toggle ("A calm voice", on the breathe screen and in Privacy settings): when on, the device's own speech engine quietly counts each breath phase ("Breathe in — one, two, three, four") at a calm 0.85 rate. No audio files, no network, nothing leaves the phone; enabling the toggle never plays a sound — the voice only starts when the user begins a breathing session they chose. Ending the exercise or leaving the screen stops it immediately.

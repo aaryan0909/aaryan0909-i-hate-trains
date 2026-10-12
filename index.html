@@ -169,8 +169,6 @@
   <section class="screen" id="screen-breathe" aria-label="Breathing exercise">
     <div class="wrap narrow center">
       <p class="kicker rise d1">breathe with me</p>
-      <div class="petbreathe" id="pet-breathe" aria-hidden="true"></div>
-      <p class="petbreathecap" id="pet-breathe-cap" aria-hidden="true">Mochi breathes with you</p>
       <div class="patternchips rise d2" id="breath-patterns" role="group" aria-label="Breathing pattern">
         <button class="pchip" data-pattern="gentle" aria-pressed="true">Gentle</button>
         <button class="pchip" data-pattern="box" aria-pressed="false">Box</button>
@@ -183,21 +181,13 @@
         <button class="segbtn" data-snd="off" aria-pressed="false">Off</button>
       </div>
       <div class="setrow rise d2">
-        <button class="check" id="set-voice" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>A calm voice</strong><em>Quiet count-ins during breathing, spoken on this phone only. Off by default.</em></span></button>
+        <button class="check" id="set-voice" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Mochi's voice</strong><em>Quiet count-ins during breathing, spoken on this phone only.</em></span></button>
       </div>
-      <div class="breathbloom rise d2" id="breath-circle" aria-hidden="true">
-        <span class="petal" style="--a:0deg"></span>
-        <span class="petal" style="--a:45deg"></span>
-        <span class="petal" style="--a:90deg"></span>
-        <span class="petal" style="--a:135deg"></span>
-        <span class="petal" style="--a:180deg"></span>
-        <span class="petal" style="--a:225deg"></span>
-        <span class="petal" style="--a:270deg"></span>
-        <span class="petal" style="--a:315deg"></span>
-        <span class="bloomcore"></span>
-      </div>
+      <p class="fineprint" id="voice-hint">Spoken on this phone only. If you hear nothing, check the silent switch and volume.</p>
+      <div class="petbreathe rise d2" id="pet-breathe" aria-hidden="true"></div>
+      <p class="petbreathecap" id="pet-breathe-cap" aria-hidden="true">Mochi breathes with you</p>
       <p class="breathword" id="breath-word" aria-live="polite">…</p>
-      <p class="breathcap" id="breath-cap">Follow the bloom.</p>
+      <p class="breathcap" id="breath-cap">Follow Mochi.</p>
       <p class="fineprint" id="breath-safety">Breathing exercises are optional coping tools, not treatment. If breathing feels difficult, stop right away and pick a grounding tool instead.</p>
       <button class="linklike quiet" id="btn-breathe-end">I'm feeling steadier</button>
     </div>
@@ -668,7 +658,7 @@
         </div>
       </div>
       <div class="setrow rise d3">
-        <button class="check" id="set-voice-2" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>A calm voice</strong><em>Quiet count-ins during breathing, spoken on this phone only. Off by default.</em></span></button>
+        <button class="check" id="set-voice-2" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Mochi's voice</strong><em>Quiet count-ins during breathing, spoken on this phone only.</em></span></button>
       </div>
       <p class="fineprint rise d3">The app respects your system's reduced-motion and large-text settings automatically.</p>
       <p class="toolgroup rise d4">Move to another browser</p>
@@ -733,7 +723,7 @@
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 21</p>
+      <p class="fineprint rise d4" id="app-version">version 22</p>
     </div>
   </section>
 
