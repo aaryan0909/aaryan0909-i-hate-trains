@@ -115,6 +115,11 @@ em { font-style: normal; }
 .linklike { background: none; border: 0; color: var(--calm); font-size: 16px; padding: 16px 8px; cursor: pointer; }
 .linklike.quiet { color: var(--dim); text-decoration: underline; text-underline-offset: 4px; display: block; margin: 6px auto; }
 .linklike:active { transform: scale(.97); }
+/* Quiet crisis line on the panic screen: safety, never alarm. Thumb-sized
+   target, calm ink, sits below the secondary exits. */
+.q988 { display: block; margin: 12px auto 0; padding: 4px 12px; color: var(--dim); font-size: 15px; line-height: 1.5; text-align: center; }
+.q988 a { display: inline-block; min-height: 44px; line-height: 44px; padding: 0 16px; color: var(--calm); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.q988 a:active { transform: scale(.97); }
 .backlink { background: none; border: 0; color: var(--dim); font-size: 16px; padding: 12px 0; cursor: pointer; margin: 14px 0 4px; display: block; }
 /* v12: unified home nav — same card language as the ride flow */
 .homenav { margin-top: 26px; }
