@@ -72,6 +72,7 @@
     prefs.breathSound = (prefs.sound === false) ? 'off' : 'chimes';
     try { delete prefs.sound; } catch (e) {}
   }
+  if (typeof prefs.breathVoice !== 'boolean') { prefs.breathVoice = false; } // v21: calm count-ins, off by default, opt-in only
   if (typeof prefs.theme !== 'string') { prefs.theme = 'auto'; } // auto | toronto | london | newyork | paris | tokyo | night
   if (!prefs.locale && navigator.language) { prefs.locale = navigator.language; } // locale hook: per-country copy variants later
   function savePrefs() { store('iht_prefs', JSON.stringify(prefs)); }
@@ -428,6 +429,58 @@
     else { chime(440, 0.5, 0.035); }                  // hold/rest: barely-there tick
   }
 
+  /* ---------- "a voice in the dark" (v21): opt-in calm count-ins via on-device speechSynthesis.
+     Off by default, toggled in calm-time settings (breathe screen + Privacy), never auto-plays,
+     count-ins only, zero jokes. Fully offline — no audio files, no network. Pref is the opt-in:
+     speech only ever starts inside the breathing exercise the user already chose to run. ---------- */
+  var NUMW = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+  function voiceLineFor(p) {
+    var lead = p.k === 'in' ? 'Breathe in' : p.k === 'out' ? 'Breathe out' : p.k === 'hold' ? 'Hold' : 'Rest';
+    var n = Math.max(1, Math.min(8, Math.round(p.secs))); // count to the phase length, capped so the line stays short
+    var counts = [];
+    for (var i = 0; i < n; i++) { counts.push(NUMW[i]); }
+    return lead + ' \u2014 ' + counts.join(', ');
+  }
+  var calmVoiceCache = null, calmVoiceTried = false;
+  function pickCalmVoice() {
+    if (calmVoiceTried) { return calmVoiceCache; }
+    calmVoiceTried = true;
+    try {
+      var vs = window.speechSynthesis.getVoices() || [];
+      var loc = (prefs.locale || (navigator.language || 'en')).toLowerCase();
+      var best = null, enBest = null;
+      vs.forEach(function (v) {
+        var l = (v.lang || '').toLowerCase();
+        if (!best && l === loc) { best = v; }
+        if (!enBest && l.indexOf('en') === 0) { enBest = v; }
+      });
+      calmVoiceCache = best || enBest || null;
+    } catch (e) { calmVoiceCache = null; }
+    return calmVoiceCache;
+  }
+  try { // voices can arrive after boot (Chrome loads them async); refresh the pick when they do
+    if ('speechSynthesis' in window && typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+      window.speechSynthesis.onvoiceschanged = function () { calmVoiceTried = false; };
+    }
+  } catch (e) {}
+  function speakPhase(p) {
+    if (!prefs.breathVoice) { return; } // never without the opt-in
+    if (!('speechSynthesis' in window)) { return; }
+    try {
+      var synth = window.speechSynthesis;
+      synth.cancel(); // never overlap a stale line
+      var u = new SpeechSynthesisUtterance(voiceLineFor(p));
+      u.rate = 0.85; u.pitch = 0.9; u.volume = 0.9; // calm, unhurried
+      try { if (prefs.locale) { u.lang = prefs.locale; } } catch (e) {}
+      var v = pickCalmVoice();
+      if (v) { u.voice = v; }
+      synth.speak(u);
+    } catch (e) {}
+  }
+  function stopVoice() {
+    try { if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); } } catch (e) {}
+  }
+
   /* ---------- generative ambient pad: soft detuned oscillators through a lowpass, slow-evolving warm chord.
      Synthesized live with Web Audio — zero files, works fully offline, iOS-safe after the tap gesture. ---------- */
   var ambState = null;
@@ -529,6 +582,7 @@
     }
     breathHaptic(p.k);
     phaseCue(p.k);
+    speakPhase(p); // v21: the calm voice counts along only when the user opted in
     breathTimer = setTimeout(function () { runPhase(phases, i + 1); }, p.secs * 1000);
   }
   /* the co-rider breathes with you: caption names the companion so the moment is unmistakable */
@@ -554,7 +608,7 @@
     if (mode === 'ambient' || mode === 'both') { ambientStart(); }
     runPhase(PATTERNS[breathPattern].phases, 0); // no gate: the exercise starts NOW
   }
-  function stopBreathe() { if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; } if (breathSwap) { clearTimeout(breathSwap); breathSwap = null; } ambientStop(); }
+  function stopBreathe() { if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; } if (breathSwap) { clearTimeout(breathSwap); breathSwap = null; } stopVoice(); ambientStop(); }
   var stopHold = function () {}; // replaced by the hold-to-steady tool below; go() calls it so a mid-hold navigation never leaves the tone droning
   var stopMuscleHold = function () {}; // replaced by the muscle-release hold ring below (same reason: never leave a rAF loop running on a hidden screen)
   $('btn-breathe-end').addEventListener('click', function () { tick(); stopBreathe(); go(breatheReturn); });
@@ -1255,6 +1309,21 @@
     savePrefs(); renderHaptics(); tick();
   });
   renderHaptics();
+  /* ---------- privacy + breathe screen: the calm-voice toggle (v21). Off by default.
+     Flipping it only saves the pref — the voice never speaks until the user starts a breathing session. ---------- */
+  function renderVoice() {
+    ['set-voice', 'set-voice-2'].forEach(function (id) {
+      var b = $(id);
+      if (!b) { return; }
+      b.classList.toggle('done', !!prefs.breathVoice);
+      b.setAttribute('aria-pressed', prefs.breathVoice ? 'true' : 'false');
+    });
+  }
+  ['set-voice', 'set-voice-2'].forEach(function (id) {
+    var b = $(id);
+    if (b) { b.addEventListener('click', function () { prefs.breathVoice = !prefs.breathVoice; savePrefs(); renderVoice(); tick(); }); }
+  });
+  renderVoice();
   /* ---------- privacy: breathing sound picker (mirrors the one on the breathing screen) ---------- */
   function renderSoundSegs() {
     var cur = prefs.breathSound || 'chimes';
