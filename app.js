@@ -429,10 +429,15 @@
     else { chime(440, 0.5, 0.035); }                  // hold/rest: barely-there tick
   }
 
-  /* ---------- "a voice in the dark" (v21): opt-in calm count-ins via on-device speechSynthesis.
+  /* ---------- "a voice in the dark" (v21, hardened v22): opt-in calm count-ins via on-device speechSynthesis.
      Off by default, toggled in calm-time settings (breathe screen + Privacy), never auto-plays,
      count-ins only, zero jokes. Fully offline — no audio files, no network. Pref is the opt-in:
-     speech only ever starts inside the breathing exercise the user already chose to run. ---------- */
+     speech only ever starts inside the breathing exercise the user already chose to run.
+     v22 iOS hardening: (1) warm the engine inside the toggle-on gesture — the user hears
+     "Voice on." immediately, which is instant proof it works and the gesture unlocks iOS speech;
+     (2) never cancel()+speak() in the same tick (iOS Safari swallows the utterance);
+     (3) resume() a paused engine before speaking. The iPhone silent switch still mutes
+     speech — the hint under the toggle says so honestly. ---------- */
   var NUMW = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
   function voiceLineFor(p) {
     var lead = p.k === 'in' ? 'Breathe in' : p.k === 'out' ? 'Breathe out' : p.k === 'hold' ? 'Hold' : 'Rest';
@@ -463,22 +468,49 @@
       window.speechSynthesis.onvoiceschanged = function () { calmVoiceTried = false; };
     }
   } catch (e) {}
-  function speakPhase(p) {
-    if (!prefs.breathVoice) { return; } // never without the opt-in
-    if (!('speechSynthesis' in window)) { return; }
+  function synthNow() {
+    try { return ('speechSynthesis' in window) ? window.speechSynthesis : null; } catch (e) { return null; }
+  }
+  function speakUtterance(text) {
+    // Low-level speak with iOS Safari hardening. Returns false when there is no engine.
+    var synth = synthNow();
+    if (!synth || !text) { return false; }
     try {
-      var synth = window.speechSynthesis;
-      synth.cancel(); // never overlap a stale line
-      var u = new SpeechSynthesisUtterance(voiceLineFor(p));
+      try { if (typeof synth.resume === 'function') { synth.resume(); } } catch (e) {} // unstick a paused iOS engine
+      var busy = false;
+      try { busy = !!(synth.speaking || synth.pending); } catch (e) {}
+      var u = new SpeechSynthesisUtterance(text);
       u.rate = 0.85; u.pitch = 0.9; u.volume = 0.9; // calm, unhurried
       try { if (prefs.locale) { u.lang = prefs.locale; } } catch (e) {}
       var v = pickCalmVoice();
       if (v) { u.voice = v; }
-      synth.speak(u);
-    } catch (e) {}
+      if (busy) {
+        // iOS Safari swallows an utterance when cancel() and speak() run in the
+        // same tick — clear the stale line, then speak on the next tick.
+        try { synth.cancel(); } catch (e) {}
+        setTimeout(function () { try { synth.speak(u); } catch (e) {} }, 120);
+      } else {
+        synth.speak(u);
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+  function warmVoice() {
+    // Called inside the toggle-on gesture: unlocks iOS speech and gives instant
+    // audible proof the voice works. If the user hears nothing here, it is the
+    // silent switch or volume — the hint under the toggle says so.
+    var synth = synthNow();
+    if (!synth) { return; }
+    try { synth.getVoices(); } catch (e) {} // eager voice load, inside the gesture
+    calmVoiceTried = false; pickCalmVoice();
+    speakUtterance('Voice on.');
+  }
+  function speakPhase(p) {
+    if (!prefs.breathVoice) { return; } // never without the opt-in
+    speakUtterance(voiceLineFor(p));
   }
   function stopVoice() {
-    try { if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); } } catch (e) {}
+    try { var s = synthNow(); if (s) { s.cancel(); } } catch (e) {}
   }
 
   /* ---------- generative ambient pad: soft detuned oscillators through a lowpass, slow-evolving warm chord.
@@ -570,19 +602,15 @@
       cap.textContent = p.cap;
       cap.classList.remove('swap');
     }, 200);
-    var c = $('breath-circle');
     var grow = (p.k === 'in');
-    c.style.transition = 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
-    void c.offsetWidth;
-    c.style.transform = 'scale(' + (grow ? 1.32 : 1) + ')'; // the bloom opens and folds with the breath
-    var pb = $('pet-breathe'); // v12: the co-rider breathes with you, in sync
+    var pb = $('pet-breathe'); // v22: Mochi IS the breathing guide — big, unmissable, in sync
     if (pb) {
       pb.style.transition = 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
-      pb.style.transform = 'scale(' + (grow ? 1.14 : 1) + ')';
+      pb.style.transform = 'scale(' + (grow ? 1.4 : 1) + ')'; // the guide visibly inhales and exhales with you
     }
     breathHaptic(p.k);
     phaseCue(p.k);
-    speakPhase(p); // v21: the calm voice counts along only when the user opted in
+    speakPhase(p); // v22: the pet's voice counts along only when the user opted in
     breathTimer = setTimeout(function () { runPhase(phases, i + 1); }, p.secs * 1000);
   }
   /* the co-rider breathes with you: caption names the companion so the moment is unmistakable */
@@ -594,13 +622,13 @@
     breatheReturn = returnTo || 'screen-home';
     stopBreathe();
     ensureAudio(); // first user gesture: safe to init audio on iOS
-    petInto($('pet-breathe'), 'sleepy'); // the co-rider gets sleepy too
+    petInto($('pet-breathe'), 'sleepy'); // the guide settles in, calm and ready
     renderBreatheCap();
+    var nm0 = pet.name || 'Mochi';
+    var bc0 = $('breath-cap');
+    if (bc0) { bc0.textContent = 'Follow ' + nm0 + '.'; } // the pet tells you what to do
     setBreathPattern(pattern || 'gentle');
     $('breath-patterns').classList.toggle('hidden', !!minimal);
-    var c = $('breath-circle');
-    c.style.transition = 'none';
-    c.style.transform = 'scale(1)';
     var pb0 = $('pet-breathe');
     if (pb0) { pb0.style.transition = 'none'; pb0.style.transform = 'scale(1)'; }
     tick(); go('screen-breathe');
@@ -1309,21 +1337,32 @@
     savePrefs(); renderHaptics(); tick();
   });
   renderHaptics();
-  /* ---------- privacy + breathe screen: the calm-voice toggle (v21). Off by default.
-     Flipping it only saves the pref — the voice never speaks until the user starts a breathing session. ---------- */
+  /* ---------- privacy + breathe screen: the pet's voice toggle (v21, v22). Off by default.
+     Flipping it ON warms the speech engine inside the gesture and speaks "Voice on." —
+     instant proof it works (v22 iOS fix). The voice never counts along until the user
+     starts a breathing session. ---------- */
   function renderVoice() {
+    var nm = pet.name || 'Mochi';
     ['set-voice', 'set-voice-2'].forEach(function (id) {
       var b = $(id);
       if (!b) { return; }
       b.classList.toggle('done', !!prefs.breathVoice);
       b.setAttribute('aria-pressed', prefs.breathVoice ? 'true' : 'false');
+      var st = b.querySelector('strong'); // v22: the calm voice is the pet's voice now
+      if (st) { st.textContent = nm + '\u2019s voice'; }
     });
   }
   ['set-voice', 'set-voice-2'].forEach(function (id) {
     var b = $(id);
-    if (b) { b.addEventListener('click', function () { prefs.breathVoice = !prefs.breathVoice; savePrefs(); renderVoice(); tick(); }); }
+    if (b) {
+      b.addEventListener('click', function () {
+        prefs.breathVoice = !prefs.breathVoice;
+        savePrefs(); renderVoice(); tick();
+        if (prefs.breathVoice) { warmVoice(); } else { stopVoice(); } // v22: warm inside the gesture
+      });
+    }
   });
-  renderVoice();
+  /* boot render happens at the bottom with the pet section, after pet init */
   /* ---------- privacy: breathing sound picker (mirrors the one on the breathing screen) ---------- */
   function renderSoundSegs() {
     var cur = prefs.breathSound || 'chimes';
@@ -1689,6 +1728,7 @@
     renderPetSeg();
     renderPetComfortCard();
     renderBreatheCap();
+    renderVoice(); // v22: the voice toggle carries the pet's name
   }
   /* pet play */
   var petPlayReturn = 'screen-home';
@@ -2280,6 +2320,7 @@
   renderHomePet();
   petInto($('pet-breathe'), 'sleepy');
   renderBreatheCap();
+  renderVoice(); // v22: after pet init — the toggle carries the pet's name
   if (!read('iht_onboarded')) { go('screen-ob1'); }
   else { go('screen-home'); }
 
