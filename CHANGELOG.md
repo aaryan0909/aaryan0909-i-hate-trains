@@ -6,6 +6,7 @@ All changes are local in `~/workspace/i-hate-trains/`. Nothing pushed to GitHub 
 
 - **A calm voice for breathing, off by default.** New opt-in toggle ("A calm voice", on the breathe screen and in Privacy settings): when on, the device's own speech engine quietly counts each breath phase ("Breathe in — one, two, three, four") at a calm 0.85 rate. No audio files, no network, nothing leaves the phone; enabling the toggle never plays a sound — the voice only starts when the user begins a breathing session they chose. Ending the exercise or leaving the screen stops it immediately.
 - SW bumped to `iht-v21`; About reads "version 21".
+- Also synced `styles.css` to git main (the v20 `.q988` quiet-crisis-line style had only ever been file-deployed, so the first v21 auto-deploy briefly served it unstyled; now committed).
 
 ## v20 (2026-10-11 — quiet 988 line on the panic screen)
 - **Crisis escalation in the sacred flow.** The panic screen carried no crisis line — 988 lived only on screen-crisis, two taps from a panicking user. One quiet thumb-sized line now sits at the bottom of the panic screen (below "See my backup plan"): "If it ever gets really bad: call or text 988" (tel:988). Calm ink, 44px tap target, zero jokes; sacred flow untouched.
