@@ -2,6 +2,13 @@
 
 All changes are local in `~/workspace/i-hate-trains/`. Nothing pushed to GitHub (Aaryan away; push approvals time out). Push when he's back.
 
+## v23 (2026-10-12 — humanize "A calm voice", Aaryan's go)
+
+- **The voice is human now.** Aaryan's verdict on v22: "wayyy too robotic... almost scary." Three changes: (1) the voice picker now scores every on-device voice and takes the most human one — enhanced/premium/natural/neural/Siri voices first, the stock compact robot last (graceful fallback if the phone has nothing better); (2) prosody softened to rate 0.75, pitch 0.9 — calm, unhurried, warm; (3) the script is gentle cues instead of a counting machine: "breathe in…", "hold…", "and out…", "rest…". The pet's visible breathing carries the timing; the voice just guides.
+- Everything else from v22 kept: off by default, toggle warms the engine in the gesture ("Voice on." proof), never cancel()+speak() in the same tick, resume() before speaking, silent-switch hint under the toggle.
+- Storage: additive only — no new keys, no schema change. Div's setup survives.
+- SW bumped to `iht-v23`; About reads "version 23".
+
 ## v22 (2026-10-12 — pet-led breathing + voice fix, Aaryan's go)
 
 - **Mochi is the breathing guide.** Aaryan's verdict on the flower bloom: "not very impactful, eye catching, or even helpful." The bloom is gone; the pet now sits large and centered (172px) where it was, and visibly inhales/exhales in sync with each phase (scale 1.0 → 1.4 on the phase timing). The caption under the exercise reads "Follow Mochi." (pet name respected). Extends Div's 2026-10-09 ask — the pet is the guide now, not a bystander. Sacred flow untouched: calm only, zero jokes.
