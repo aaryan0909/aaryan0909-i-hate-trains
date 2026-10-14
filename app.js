@@ -1278,6 +1278,8 @@
       renderCrisisLocal();
     });
   });
+  /* v24: the locale-aware crisis line lives in crisis.js (kept out of app.js so this
+     file stays under the GitHub push transport cap). It exposes window.__ihtCrisis. */
 
   /* onboarding: persistent crisis escape — one tap skips setup (defaults kept) and opens help */
   $all('[data-ob-escape]').forEach(function (b) {
@@ -2342,6 +2344,7 @@
   petInto($('pet-breathe'), 'sleepy');
   renderBreatheCap();
   renderVoice(); // v22: after pet init — the toggle carries the pet's name
+  if (window.__ihtCrisis) { window.__ihtCrisis.renderQuiet(); window.__ihtCrisis.renderLocale(); } // v24: locale-aware crisis line (crisis.js)
   if (!read('iht_onboarded')) { go('screen-ob1'); }
   else { go('screen-home'); }
 
