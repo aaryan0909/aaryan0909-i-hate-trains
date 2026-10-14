@@ -160,7 +160,7 @@
       </button>
       <button class="linklike quiet rise d4" data-go="screen-nonbreath">Breathing and counting don't work for me</button>
       <button class="linklike quiet rise d4" id="btn-panic-plan">See my backup plan</button>
-      <p class="q988 rise d4">If it ever gets really bad: <a href="tel:988">call or text 988</a></p>
+      <p class="q988 rise d4" id="crisis-quiet">If it ever gets really bad: <a href="tel:988">call or text 988</a></p>
       <button class="backlink rise d4" data-go="screen-home">← back</button>
     </div>
   </section>
@@ -628,8 +628,10 @@
       <div class="crisislist rise d3">
         <a class="crisis" href="tel:988"><strong>Call or text 988</strong><em>US &amp; Canada · Suicide &amp; Crisis Lifeline</em></a>
         <a class="crisis" href="tel:116123"><strong>Call 116 123</strong><em>UK · Samaritans</em></a>
+        <a class="crisis" id="crisis-locale" href="#" hidden><strong id="crisis-locale-label"></strong><em id="crisis-locale-sub"></em></a>
         <a class="crisis" id="crisis-local" href="#" hidden><strong id="crisis-local-num"></strong><em>My local number</em></a>
       </div>
+      <p class="fineprint rise d3">Somewhere else in the world? <a href="https://findahelpline.com">Find a helpline where you are.</a></p>
       <label class="field rise d3">My local crisis number <em>(optional)</em>
         <input id="in-crisis-local" type="tel" inputmode="tel" autocomplete="off" placeholder="Saved on this phone only">
       </label>
@@ -694,6 +696,7 @@
       <ul class="bodylist rise d3">
         <li>US or Canada: call or text <strong>988</strong></li>
         <li>UK: call Samaritans at <strong>116 123</strong></li>
+        <li>Anywhere else: <a href="https://findahelpline.com">find a helpline where you are</a></li>
         <li>Anywhere in an emergency: call your local emergency number</li>
       </ul>
       <p class="fineprint rise d4">Made for everyone who holds their breath between stations.</p>
@@ -723,7 +726,7 @@
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 23</p>
+      <p class="fineprint rise d4" id="app-version">version 24</p>
     </div>
   </section>
 

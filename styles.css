@@ -72,6 +72,7 @@ h3 { font-size: 19px; margin: 30px 0 10px; color: var(--ink); font-weight: 600; 
 .bodylist { color: var(--dim); font-size: 16px; padding-left: 20px; line-height: 1.7; }
 .bodylist strong { color: var(--ink); }
 .fineprint { font-size: 13px; color: var(--dim); margin: 18px 0; line-height: 1.6; }
+.fineprint a, .bodylist a { color: var(--calm); text-decoration: underline; text-underline-offset: 2px; }
 em { font-style: normal; }
 
 /* buttons — soft press, never jarring */
@@ -276,6 +277,7 @@ em { font-style: normal; }
   transition: transform .14s ease, border-color .2s ease;
 }
 .crisis:active { transform: scale(.98); border-color: var(--calm); }
+.crisis[hidden] { display: none; }
 .crisis strong { display: block; font-size: 19px; font-weight: 600; }
 .crisis em { display: block; font-style: normal; font-size: 14px; color: var(--dim); margin-top: 2px; }
 

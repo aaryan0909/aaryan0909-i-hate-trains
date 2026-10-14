@@ -1,6 +1,14 @@
-# CHANGELOG — I Hate Trains (local hardening, unpushed)
+# CHANGELOG — I Hate Trains
 
-All changes are local in `~/workspace/i-hate-trains/`. Nothing pushed to GitHub (Aaryan away; push approvals time out). Push when he's back.
+Local source of truth is `~/workspace/i-hate-trains/`; the GitHub repo `aaryan0909/aaryan0909-i-hate-trains` (main) is pushed via `push_files` and Vercel auto-deploys from it.
+
+## v24 (2026-10-14 — locale-aware crisis line, Aaryan's go)
+
+- **The panic-screen line is no longer 988 for the whole world.** Aaryan's verdict on v20: 988 is US/Canada-only and wrong as the worldwide line. The quiet line at the bottom of the panic screen now shows the real number for the phone's locale (`navigator.language` → region), from a table of 9 lines verified 2026-10-14 from official sources: 988 (US/CA, call or text), 116 123 Samaritans (UK/IE), 02 2327 2327 Telefono Amico Italia (IT), 3114 (FR), 0800 111 0 111 Telefonseelsorge (DE), 024 (ES), 13 11 14 Lifeline (AU), 113 (NL), 1800-599-0019 Kiran (IN). Unknown locales get "find help where you are" → findahelpline.com (correct domain, not .org). Nothing invented; no network, all on-device.
+- **Crisis screen leads with the locale line** (above the 988 row; skipped when the locale line IS 988 or 116 123 to avoid duplicates), plus a quiet "Somewhere else in the world? Find a helpline where you are." link and the same link in About's "If it gets really bad" list.
+- **Bug fix riding along:** the `.crisis` card class sets `display:block`, which silently defeats the `hidden` attribute — the rider's "My local number" row was rendering as an empty dead card when no number was saved. Added `.crisis[hidden]{display:none}`; the new locale row uses the same hook.
+- Sacred flow untouched: same calm line, zero jokes, same 44px tap target. Storage untouched (no new keys). Verified: node --check clean + 193/193 jsdom checks across 13 locales (it-IT shows 02 2327 2327; xx-YY and empty locale fall back to the directory).
+- SW bumped to `iht-v24`; About reads "version 24".
 
 ## v23 (2026-10-12 — humanize "A calm voice", Aaryan's go)
 

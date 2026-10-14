@@ -4,7 +4,7 @@
    v19: precaches drift.js (generative ambient music), trimap.js + ttc.json (TTC map module).
    NOTE: install does NOT skipWaiting — the app shows a calm "update ready" prompt on safe
    screens and only then asks the waiting worker to activate. */
-var CACHE = 'iht-v23';
+var CACHE = 'iht-v24';
 var ASSETS = [
   './',
   'index.html',
