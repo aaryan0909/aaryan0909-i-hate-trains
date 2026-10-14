@@ -10,6 +10,7 @@ var ASSETS = [
   'index.html',
   'styles.css',
   'app.js',
+  'crisis.js',
   'drift.js',
   'trimap.js',
   'ttc.json',

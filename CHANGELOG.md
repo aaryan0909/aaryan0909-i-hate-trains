@@ -8,6 +8,7 @@ Local source of truth is `~/workspace/i-hate-trains/`; the GitHub repo `aaryan09
 - **Crisis screen leads with the locale line** (above the 988 row; skipped when the locale line IS 988 or 116 123 to avoid duplicates), plus a quiet "Somewhere else in the world? Find a helpline where you are." link and the same link in About's "If it gets really bad" list.
 - **Bug fix riding along:** the `.crisis` card class sets `display:block`, which silently defeats the `hidden` attribute — the rider's "My local number" row was rendering as an empty dead card when no number was saved. Added `.crisis[hidden]{display:none}`; the new locale row uses the same hook.
 - Sacred flow untouched: same calm line, zero jokes, same 44px tap target. Storage untouched (no new keys). Verified: node --check clean + 193/193 jsdom checks across 13 locales (it-IT shows 02 2327 2327; xx-YY and empty locale fall back to the directory).
+- Transport note: app.js outgrew the 131,072-byte single-argument push cap, so the crisis module lives in its own `crisis.js` (loaded before app.js, precached in sw.js; app.js calls it defensively via `window.__ihtCrisis`).
 - SW bumped to `iht-v24`; About reads "version 24".
 
 ## v23 (2026-10-12 — humanize "A calm voice", Aaryan's go)
