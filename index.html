@@ -394,6 +394,12 @@
       <label class="field rise d3">One person or tool I could reach for
         <input id="plan-reach" type="text" autocomplete="off" placeholder="e.g. text Maya, open the toolkit">
       </label>
+      <label class="field rise d3">Their name <em>(optional)</em>
+        <input id="plan-reach-name" type="text" autocomplete="off" placeholder="e.g. Maya" maxlength="40">
+      </label>
+      <label class="field rise d3">Their number <em>(optional — adds a one-tap call button on the reach-out screen)</em>
+        <input id="plan-reach-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="Saved on this phone only">
+      </label>
       <p class="body rise d3">Pocket checklist <em>(things that help me)</em></p>
       <div class="chiplist rise d3" id="plan-pocket"></div>
       <div class="addrow rise d3">
@@ -626,6 +632,7 @@
       <p class="kicker rise d1">reach someone</p>
       <h2 class="serene rise d2">You don't have to ride this out alone.</h2>
       <div class="crisislist rise d3">
+        <a class="crisis" id="crisis-person" href="#" hidden><strong id="crisis-person-label"></strong><em id="crisis-person-sub"></em></a>
         <a class="crisis" href="tel:988"><strong>Call or text 988</strong><em>US &amp; Canada · Suicide &amp; Crisis Lifeline</em></a>
         <a class="crisis" href="tel:116123"><strong>Call 116 123</strong><em>UK · Samaritans</em></a>
         <a class="crisis" id="crisis-locale" href="#" hidden><strong id="crisis-locale-label"></strong><em id="crisis-locale-sub"></em></a>
@@ -726,7 +733,7 @@
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 24</p>
+      <p class="fineprint rise d4" id="app-version">version 25</p>
     </div>
   </section>
 

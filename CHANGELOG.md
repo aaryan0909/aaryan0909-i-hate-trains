@@ -2,6 +2,11 @@
 
 Local source of truth is `~/workspace/i-hate-trains/`; the GitHub repo `aaryan0909/aaryan0909-i-hate-trains` (main) is pushed via `push_files` and Vercel auto-deploys from it.
 
+## v25 (2026-10-17 — one-tap "Call my person", Forge)
+
+- **Your backup person is one tap away.** The backup plan ("One person or tool I could reach for") gains two optional fields: their name and their number (type=tel, saved on this phone only, inside the existing `iht_plan` store — export/import and erase-everything need no changes). When a real number is saved, the reach-out (crisis) screen renders "Call {name}" as the first row, above 988 — tel: href built with the existing sanitization, under the existing honest "Tapping a number leaves the app and uses your phone service" disclosure. Numbers under 7 digits are treated as unset (no dead tel: link); name falls back to "Call my person"; everything set via textContent (no HTML injection). Zero jokes, same `.crisis` card style, offline-safe.
+- SW bumped to `iht-v25`; About reads "version 25".
+
 ## v24 (2026-10-14 — locale-aware crisis line, Aaryan's go)
 
 - **The panic-screen line is no longer 988 for the whole world.** Aaryan's verdict on v20: 988 is US/Canada-only and wrong as the worldwide line. The quiet line at the bottom of the panic screen now shows the real number for the phone's locale (`navigator.language` → region), from a table of 9 lines verified 2026-10-14 from official sources: 988 (US/CA, call or text), 116 123 Samaritans (UK/IE), 02 2327 2327 Telefono Amico Italia (IT), 3114 (FR), 0800 111 0 111 Telefonseelsorge (DE), 024 (ES), 13 11 14 Lifeline (AU), 113 (NL), 1800-599-0019 Kiran (IN). Unknown locales get "find help where you are" → findahelpline.com (correct domain, not .org). Nothing invented; no network, all on-device.
