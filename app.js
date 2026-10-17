@@ -1070,7 +1070,7 @@
   $all('[data-go="screen-history"]').forEach(function (b) { b.addEventListener('click', renderHistory); });
 
   /* ---------- my plan ---------- */
-  var plan = readJSON('iht_plan', null) || { exit: '', reach: '', pocket: ['Water', 'Headphones'], c1: '', c2: '', c3: '' };
+  var plan = readJSON('iht_plan', null) || { exit: '', reach: '', reachName: '', reachPhone: '', pocket: ['Water', 'Headphones'], c1: '', c2: '', c3: '' };
   function savePlan(msg) {
     store('iht_plan', JSON.stringify(plan));
     if (msg) { $('plan-saved').textContent = msg; }
@@ -1078,6 +1078,8 @@
   function renderPlan() {
     $('plan-exit').value = plan.exit || '';
     $('plan-reach').value = plan.reach || '';
+    $('plan-reach-name').value = plan.reachName || '';
+    $('plan-reach-phone').value = plan.reachPhone || '';
     $('plan-c1').value = plan.c1 || '';
     $('plan-c2').value = plan.c2 || '';
     $('plan-c3').value = plan.c3 || '';
@@ -1093,7 +1095,7 @@
     });
     $('plan-saved').textContent = '';
   }
-  [['plan-exit', 'exit'], ['plan-reach', 'reach'], ['plan-c1', 'c1'], ['plan-c2', 'c2'], ['plan-c3', 'c3']].forEach(function (pair) {
+  [['plan-exit', 'exit'], ['plan-reach', 'reach'], ['plan-reach-name', 'reachName'], ['plan-reach-phone', 'reachPhone'], ['plan-c1', 'c1'], ['plan-c2', 'c2'], ['plan-c3', 'c3']].forEach(function (pair) {
     $(pair[0]).addEventListener('input', function () { plan[pair[1]] = $(pair[0]).value; savePlan(); });
     $(pair[0]).addEventListener('change', function () { savePlan('Saved on this phone.'); });
   });
@@ -1276,8 +1278,30 @@
     b.addEventListener('click', function () {
       $('in-crisis-local').value = read('iht_crisis_local') || '';
       renderCrisisLocal();
+      renderCrisisPerson();
     });
   });
+  /* v25: one-tap "Call my person" — optional name + number saved in the backup plan
+     (iht_plan.reachName / reachPhone, on-device only). When a usable number is set,
+     the crisis screen renders it as the first row, above 988, reusing the existing
+     honest "Tapping a number leaves the app" disclosure and tel: sanitization. */
+  function renderCrisisPerson() {
+    var row = $('crisis-person');
+    if (!row) { return; }
+    var raw = String(plan.reachPhone || '').slice(0, 30);
+    var dial = raw.replace(/[^+\d]/g, '');
+    var digits = raw.replace(/\D/g, '');
+    if (digits.length >= 7) {
+      var name = String(plan.reachName || '').trim().slice(0, 40);
+      row.hidden = false;
+      row.href = 'tel:' + dial;
+      $('crisis-person-label').textContent = name ? 'Call ' + name : 'Call my person';
+      $('crisis-person-sub').textContent = 'My backup person · saved on this phone only';
+    } else {
+      row.hidden = true;
+      row.removeAttribute('href');
+    }
+  }
   /* v24: the locale-aware crisis line lives in crisis.js (kept out of app.js so this
      file stays under the GitHub push transport cap). It exposes window.__ihtCrisis. */
 
