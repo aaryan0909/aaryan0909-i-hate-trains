@@ -16,6 +16,7 @@
     var el = $(id);
     if (el) { el.classList.add('active'); window.scrollTo(0, 0); }
     if (id !== 'screen-breathe') { stopBreathe(); } // leaving the exercise always stops it cleanly
+    if (id !== 'screen-guide' && window.__ihtGuide) { try { window.__ihtGuide.stop(); } catch (e) {} } // v27: leaving the eyes-free rescue stops it cleanly
     stopHold(); stopMuscleHold(); // never leave a hold tone or rAF loop running on a hidden screen
     if (id === 'screen-butterfly') { flyReset(); }
     updateSosFloat(id);
@@ -43,7 +44,7 @@
     if (dx > 0) { navGoBack(); } else { navGoFwd(); }
   }, { passive: true });
   /* SOS stays one tap away on every screen except home (has the big button), the panic flow itself, and onboarding (each onboarding screen carries its own "I need help right now" escape straight to help) */
-  var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-ob1': 1, 'screen-ob2': 1, 'screen-ob3': 1, 'screen-ob4': 1, 'screen-ob5': 1 };
+  var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-guide': 1, 'screen-ob1': 1, 'screen-ob2': 1, 'screen-ob3': 1, 'screen-ob4': 1, 'screen-ob5': 1 };
   function updateSosFloat(id) {
     var f = $('sos-float');
     if (f) { f.hidden = !!SOS_HIDDEN[id]; }
@@ -73,6 +74,7 @@
     try { delete prefs.sound; } catch (e) {}
   }
   if (typeof prefs.breathVoice !== 'boolean') { prefs.breathVoice = false; } // v21: calm count-ins, off by default, opt-in only
+  if (typeof prefs.stopHeadsUp !== 'boolean') { prefs.stopHeadsUp = false; } // v26: spoken stop heads-up, off by default, opt-in only
   if (typeof prefs.theme !== 'string') { prefs.theme = 'auto'; } // auto | toronto | london | newyork | paris | tokyo | night
   if (!prefs.locale && navigator.language) { prefs.locale = navigator.language; } // locale hook: per-country copy variants later
   function savePrefs() { store('iht_prefs', JSON.stringify(prefs)); }
@@ -516,7 +518,7 @@
       return true;
     } catch (e) { return false; }
   }
-  function warmVoice() {
+  function warmVoice(phrase) {
     // Called inside the toggle-on gesture: unlocks iOS speech and gives instant
     // audible proof the voice works. If the user hears nothing here, it is the
     // silent switch or volume — the hint under the toggle says so.
@@ -524,7 +526,7 @@
     if (!synth) { return; }
     try { synth.getVoices(); } catch (e) {} // eager voice load, inside the gesture
     calmVoiceTried = false; pickCalmVoice();
-    speakUtterance('Voice on.');
+    speakUtterance(phrase || 'Voice on.');
   }
   function speakPhase(p) {
     if (!prefs.breathVoice) { return; } // never without the opt-in
@@ -533,6 +535,14 @@
   function stopVoice() {
     try { var s = synthNow(); if (s) { s.cancel(); } } catch (e) {}
   }
+
+  /* v26 "your stop, out loud": the pet voice + prefs surface stopheads.js needs.
+     advanceStop() calls window.__ihtStopHeadsUp(trip.left) defensively; the
+     toggle and the spoken lines live in stopheads.js (same split as crisis.js). */
+  window.__ihtVoice = {
+    speak: speakUtterance, warm: warmVoice, stop: stopVoice,
+    prefs: prefs, savePrefs: savePrefs
+  };
 
   /* ---------- generative ambient pad: soft detuned oscillators through a lowpass, slow-evolving warm chord.
      Synthesized live with Web Audio — zero files, works fully offline, iOS-safe after the tap gesture. ---------- */
@@ -933,7 +943,7 @@
     buzz(25);
     var n = $('stops-left');
     n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump');
-    if (trip.left > 0) { trip.left--; renderStops(); }
+    if (trip.left > 0) { trip.left--; renderStops(); if (window.__ihtStopHeadsUp) { try { window.__ihtStopHeadsUp(trip.left); } catch (e) {} } } // v26: spoken heads-up at 2 and 1, opt-in only (stopheads.js)
     if (trip.left === 0) {
       if (window.TriMap) { TriMap.closeMap(); }
       setTimeout(function () { arrivedNote(); go('screen-arrived'); }, 600); }
@@ -1725,6 +1735,11 @@
     wrap.classList.remove('pet-idle', 'pet-happy', 'pet-celebrate', 'pet-sleepy');
     wrap.classList.add(mode === 'sleepy' ? 'pet-sleepy' : mode === 'celebrate' ? 'pet-celebrate' : 'pet-idle');
   }
+  /* v27: the eyes-free rescue module (guide.js) needs the pet mount + name, same split pattern as crisis.js / stopheads.js. */
+  window.__ihtGuidePet = {
+    mount: function (el) { petInto(el, 'sleepy'); },
+    name: function () { try { return (pet && pet.name) || 'Mochi'; } catch (e) { return 'Mochi'; } }
+  };
   function petHearts(el, n) {
     for (var i = 0; i < (n || 3); i++) {
       (function (i) {
