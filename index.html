@@ -158,6 +158,10 @@
         <span class="po-ic pov-cute" aria-hidden="true"><i></i><i></i></span>
         <span class="po-tx"><strong>Show me something cute</strong><em>Give your mind something gentle to hold.</em></span>
       </button>
+      <button class="panicopt rise d4 po-guide" id="btn-panic-guide">
+        <span class="po-ic pov-guide" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="po-tx"><strong>Talk me through it</strong><em>Eyes-free — a calm voice walks you through it. No reading needed.</em></span>
+      </button>
       <button class="linklike quiet rise d4" data-go="screen-nonbreath">Breathing and counting don't work for me</button>
       <button class="linklike quiet rise d4" id="btn-panic-plan">See my backup plan</button>
       <p class="q988 rise d4" id="crisis-quiet">If it ever gets really bad: <a href="tel:988">call or text 988</a></p>
@@ -190,6 +194,21 @@
       <p class="breathcap" id="breath-cap">Follow Mochi.</p>
       <p class="fineprint" id="breath-safety">Breathing exercises are optional coping tools, not treatment. If breathing feels difficult, stop right away and pick a grounding tool instead.</p>
       <button class="linklike quiet" id="btn-breathe-end">I'm feeling steadier</button>
+    </div>
+  </section>
+
+  <!-- GUIDE — "Talk me through it": an eyes-free, voice-led rescue. One tap on the panic
+       screen starts a scripted linear rescue (acceptance → 3 paced breaths with the pet
+       visibly in sync → 5-4-3-2-1 grounding → close). The pet breathes in sync, the phase
+       word is the only thing on screen, the voice auto-enables inside this mode only
+       (the tap is the opt-in — the no-autoplay rule stays intact). One full-width
+       "I'm steadier" ends it at any moment; there is no menu, no reading, no decisions. -->
+  <section class="screen eyefree" id="screen-guide" aria-label="Guided rescue">
+    <div class="wrap narrow center">
+      <div class="petbreathe guidepet" id="guide-pet" aria-hidden="true"></div>
+      <p class="guideword" id="guide-word" aria-live="polite">&hellip;</p>
+      <p class="guidesub" id="guide-sub"></p>
+      <button class="btn ghost fullwidth guideend" id="btn-guide-end" type="button">I'm steadier</button>
     </div>
   </section>
 
@@ -297,6 +316,7 @@
           <button id="stops-plus" aria-label="More stops">+</button>
         </div>
       </div>
+      <button class="check rise d4" id="set-stopheads" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Your stop, out loud</strong><em>The pet's voice says the heads-up at 2 stops and 1 stop out. Spoken on this phone only, set up here — never in a panic moment.</em></span></button>
       <button class="btn calm big rise d4" id="btn-start-trip">Start trip</button>
       <button class="linklike quiet rise d4" id="btn-share-card">Send a trip card to someone you trust</button>
       <p class="fineprint" id="share-hint">Shares your route and ETA, while you still have signal.</p>
@@ -733,7 +753,7 @@
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 25</p>
+      <p class="fineprint rise d4" id="app-version">version 27</p>
     </div>
   </section>
 
@@ -766,5 +786,7 @@
 <script src="trimap.js"></script>
 <script src="crisis.js"></script>
 <script src="app.js"></script>
+<script src="stopheads.js"></script>
+<script src="guide.js"></script>
 </body>
 </html>

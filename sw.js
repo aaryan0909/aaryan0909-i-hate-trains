@@ -3,14 +3,18 @@
    the phone; cache fallback keeps everything alive offline (tunnels, dead zones).
    v19: precaches drift.js (generative ambient music), trimap.js + ttc.json (TTC map module).
    NOTE: install does NOT skipWaiting — the app shows a calm "update ready" prompt on safe
-   screens and only then asks the waiting worker to activate. */
-var CACHE = 'iht-v25';
+   screens and only then asks the waiting worker to activate.
+   v26: precaches stopheads.js (spoken stop heads-up module).
+   v27: precaches guide.js (eyes-free guided rescue module). */
+var CACHE = 'iht-v27';
 var ASSETS = [
   './',
   'index.html',
   'styles.css',
   'app.js',
   'crisis.js',
+  'stopheads.js',
+  'guide.js',
   'drift.js',
   'trimap.js',
   'ttc.json',
