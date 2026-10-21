@@ -684,6 +684,24 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 .tic-history i { left: 50%; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--dim); animation: tvspin 6s linear infinite; }
 .tic-privacy i { left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--calm); animation: tvring 2.8s ease-out infinite; }
 .tic-about i { left: 50%; top: 50%; width: 4px; height: 18px; margin: -9px 0 0 -2px; border-radius: 2px; background: var(--dim); animation: tvshimmer 3s ease-in-out infinite; }
+/* learn — three text lines, like a short read */
+.tic-learn i { left: 50%; top: 50%; height: 3px; border-radius: 2px; background: var(--dim); animation: tvshimmer 4s ease-in-out infinite; }
+.tic-learn i:nth-child(1) { width: 22px; margin: -8px 0 0 -11px; }
+.tic-learn i:nth-child(2) { width: 15px; margin: -1px 0 0 -11px; animation-delay: .6s; }
+.tic-learn i:nth-child(3) { width: 18px; margin: 6px 0 0 -11px; animation-delay: 1.2s; }
+
+/* calm facts (v28) — list + reader */
+.toolcard.learnitem { text-align: left; width: 100%; display: block; }
+.toolcard.learnitem .lt { display: block; font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+.toolcard.learnitem .lh { display: block; font-style: normal; font-size: 14px; color: var(--dim); line-height: 1.5; margin-bottom: 8px; }
+.toolcard.learnitem .lm { display: block; font-size: 12px; color: var(--dim); letter-spacing: .08em; text-transform: uppercase; }
+.learntitle { margin: 8px 0 6px; font-size: 30px; }
+#learn-read p.body { margin: 0 0 12px; font-size: 16px; line-height: 1.7; color: var(--ink); }
+.learnsrc { background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 16px 0; }
+.learnsrc .learnsrc-h { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin: 0 0 8px; }
+.learnsrc p { margin: 0 0 8px; font-size: 13.5px; color: var(--dim); line-height: 1.6; }
+.learnsrc p:last-child { margin: 0; }
+#learn-read .btn.fullwidth { width: 100%; margin: 4px 0 10px; }
 
 /* guided-minis cards: small living icons */
 .mv { width: 44px; height: 44px; border-radius: 12px; background: rgba(0,0,0,.28); border: 1px solid var(--line); position: relative; overflow: hidden; flex: none; }

@@ -126,6 +126,7 @@
       <p class="fineprint rise d4">Free forever. Works offline. Always. Even in a tunnel.</p>
       <div class="tools homenav rise d4">
         <button class="tool" data-go="screen-toolkit"><span class="tool-ic tic-toolkit" aria-hidden="true"><i></i><i></i><i></i></span>Toolkit</button>
+        <button class="tool" data-go="screen-learn"><span class="tool-ic tic-learn" aria-hidden="true"><i></i><i></i><i></i></span>Learn</button>
         <button class="tool" data-go="screen-comfort" id="link-comfort-home"><span class="tool-ic tic-comfort" aria-hidden="true"><i></i></span>Comfort</button>
         <button class="tool" data-go="screen-plan" id="link-plan-home"><span class="tool-ic tic-plan" aria-hidden="true"><i></i></span>Backup plan</button>
         <button class="tool" data-go="screen-history"><span class="tool-ic tic-history" aria-hidden="true"><i></i></span>History</button>
@@ -234,6 +235,19 @@
       <div class="toolcards featgrid rise d3" id="toolkit-featured"></div>
       <div id="toolkit-groups" class="rise d3"></div>
       <button class="backlink rise d4" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- LEARN — calm facts. Calm-time only: the only entry is the home tile.
+       Never linked from the panic flow, the crisis screens, or any tool. -->
+  <section class="screen" id="screen-learn" aria-label="Calm facts">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">calm facts</p>
+      <h2 class="serene rise d2">Know what's happening.</h2>
+      <p class="lede soft rise d3">Short, honest reads on how panic works — for between rides, so the tools land harder during them. Coping tools, not treatment.</p>
+      <div id="learn-list" class="toolcards rise d3"></div>
+      <div id="learn-read" class="rise d3" hidden></div>
+      <button class="backlink rise d4" data-go="screen-home" id="learn-back-home">← back</button>
     </div>
   </section>
 
@@ -753,7 +767,7 @@
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 27</p>
+      <p class="fineprint rise d4" id="app-version">version 28</p>
     </div>
   </section>
 

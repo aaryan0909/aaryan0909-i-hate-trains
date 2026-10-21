@@ -6,7 +6,7 @@
    screens and only then asks the waiting worker to activate.
    v26: precaches stopheads.js (spoken stop heads-up module).
    v27: precaches guide.js (eyes-free guided rescue module). */
-var CACHE = 'iht-v27';
+var CACHE = 'iht-v28';
 var ASSETS = [
   './',
   'index.html',

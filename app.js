@@ -1117,6 +1117,136 @@
   $all('[data-go="screen-plan"]').forEach(function (b) { b.addEventListener('click', renderPlan); });
   renderPlan();
 
+  /* ---------- learn tab: "calm facts" (v28). Calm-time only.
+     The only entry is the home tile; nothing in the panic flow, crisis screens,
+     or tools links here. Reads are written once, curated, cited, and honest:
+     coping tools, not treatment. No storage, no network, no accounts. ---------- */
+  var LEARN_READS = [
+    {
+      id: 'wave',
+      title: "The wave peaks, then passes",
+      hook: "The surge has a shape. It\u2019s not endless.",
+      tool: 'breath-box',
+      body: [
+        "A panic surge is your alarm system misfiring. Adrenaline floods in, your heart pounds, you might feel dizzy, tingly, or like you can\u2019t get enough air. It\u2019s miserable \u2014 and it\u2019s a false alarm.",
+        "The diagnostic manuals describe it plainly: a panic attack peaks within minutes. The peak is the worst part of it. After that comes a long, slow slope down, whether you do everything right or nothing at all.",
+        "Your job isn\u2019t to fight the wave or fix it. It\u2019s to outlast the peak. Sit down if you can, pick one tool if one sounds bearable, and let the slope do the rest."
+      ],
+      sources: [
+        "DSM-5 (American Psychiatric Association, 2013): panic attacks peak within minutes.",
+        "Honesty note: this is the typical pattern \u2014 your experience can differ, and nothing here diagnoses you."
+      ]
+    },
+    {
+      id: 'grounding',
+      title: "Why 5\u20134\u20133\u20132\u20131 works",
+      hook: "It doesn\u2019t argue with the fear. It just moves the searchlight.",
+      tool: 'five-senses',
+      body: [
+        "When panic hits, your attention locks onto threat signals \u2014 mostly your own body. Every heartbeat becomes evidence, every dizzy moment a warning.",
+        "5\u20134\u20133\u20132\u20131 gives that attention a different job: five things you can see, four you can hear, three you can feel, two you can smell, one you can taste. One concrete answer at a time.",
+        "This is a standard grounding technique used in CBT and trauma care. It works by moving the searchlight off your heartbeat and back onto the room around you \u2014 usually long enough for the surge to lose momentum."
+      ],
+      sources: [
+        "Grounding techniques are described across CBT and trauma literature (e.g. Najavits, L.M., Seeking Safety, 2002)."
+      ]
+    },
+    {
+      id: 'breath-science',
+      title: "What slow breathing actually does",
+      hook: "The exhale is the lever.",
+      tool: 'breath-box',
+      body: [
+        "Slow breathing with a longer out-breath nudges your nervous system toward its calmer side. Heart rate eases. The alarm gets quieter. You don\u2019t need to believe it for it to work.",
+        "There\u2019s real evidence behind the shape: a 2023 Stanford study found that five minutes a day of cyclic sighing \u2014 a double inhale through the nose, then one long exhale \u2014 improved mood and lowered breathing rate more than a matched mindfulness meditation.",
+        "The breathing tools here borrow that shape. Two honest notes: it helps on some rides and not others, and if paying attention to your breath feels wrong, the grounding tools work without it."
+      ],
+      sources: [
+        "Balban et al. (2023), Cell Reports Medicine \u2014 brief daily cyclic sighing vs mindfulness control (n=114): improved mood, reduced respiratory rate."
+      ]
+    },
+    {
+      id: 'thoughts',
+      title: "Scary thoughts are predictions, not reports",
+      hook: "\u201CI\u2019m going to faint\u201D is a forecast. Check the actual weather.",
+      tool: 'thought-check',
+      body: [
+        "Panic has a favorite move: it takes a sensation and assigns it the worst meaning. A pounding heart becomes \u201Csomething is terribly wrong.\u201D Dizziness becomes \u201CI\u2019m going to collapse.\u201D",
+        "In 1986, psychologist David Clark showed this loop is the engine of panic: sensation \u2192 scary meaning \u2192 more adrenaline \u2192 stronger sensation. Naming the loop doesn\u2019t make the sensation vanish \u2014 but it labels it correctly: a prediction, not a diagnosis.",
+        "The gentle thought check walks through exactly this: what do I know for sure right now, and what is fear predicting? You don\u2019t have to believe the kinder answer. You just have to ask the question."
+      ],
+      sources: [
+        "Clark, D.M. (1986), \u201CA cognitive approach to panic\u201D, Behaviour Research and Therapy."
+      ]
+    },
+    {
+      id: 'repetition',
+      title: "Rides get easier with repetition, not force",
+      hook: "Your brain learns the route is safe one boring ride at a time.",
+      tool: 'confidence-ladder',
+      body: [
+        "Avoidance is panic\u2019s best friend. Every ride you skip teaches your brain the train was dangerous \u2014 the fear grows in the empty space.",
+        "The way back is the opposite: small, repeated approaches. One stop. Then two. Nothing heroic. This is the core idea behind graded exposure in CBT: repeated, manageable contact teaches the alarm system the situation is survivable.",
+        "The confidence practice planner exists for exactly this \u2014 tiny, optional steps you choose in calm time. No streaks, no scores, no penalties. Boring rides are the whole point: boring means the lesson landed."
+      ],
+      sources: [
+        "Graded exposure is a core CBT technique for panic and phobias \u2014 small, repeated approaches, never forced."
+      ]
+    }
+  ];
+  function getLearn(id) { for (var i = 0; i < LEARN_READS.length; i++) { if (LEARN_READS[i].id === id) { return LEARN_READS[i]; } } return null; }
+  function renderLearn() {
+    var list = $('learn-list'), read = $('learn-read');
+    list.innerHTML = '';
+    LEARN_READS.forEach(function (r) {
+      var b = document.createElement('button');
+      b.className = 'toolcard learnitem';
+      b.type = 'button';
+      var t = document.createElement('strong'); t.className = 'lt'; t.textContent = r.title; b.appendChild(t);
+      var h = document.createElement('em'); h.className = 'lh'; h.textContent = r.hook; b.appendChild(h);
+      var m = document.createElement('span'); m.className = 'lm'; m.textContent = '1 min read'; b.appendChild(m);
+      b.addEventListener('click', function () { tick(); openLearn(r.id); });
+      list.appendChild(b);
+    });
+    list.hidden = false; read.hidden = true;
+    window.scrollTo(0, 0);
+  }
+  function openLearn(id) {
+    var r = getLearn(id); if (!r) { return; }
+    var list = $('learn-list'), host = $('learn-read');
+    host.innerHTML = '';
+    var back = document.createElement('button');
+    back.className = 'backlink'; back.type = 'button'; back.textContent = '\u2190 all reads';
+    back.addEventListener('click', function () { tick(); renderLearn(); });
+    host.appendChild(back);
+    var h = document.createElement('h3'); h.className = 'serene learntitle'; h.textContent = r.title; host.appendChild(h);
+    var hook = document.createElement('p'); hook.className = 'lede soft'; hook.textContent = r.hook; host.appendChild(hook);
+    r.body.forEach(function (p) {
+      var el = document.createElement('p'); el.className = 'body'; el.textContent = p; host.appendChild(el);
+    });
+    var src = document.createElement('div'); src.className = 'learnsrc';
+    var sh = document.createElement('p'); sh.className = 'learnsrc-h'; sh.textContent = 'Sources'; src.appendChild(sh);
+    r.sources.forEach(function (s) {
+      var el = document.createElement('p'); el.textContent = s; src.appendChild(el);
+    });
+    host.appendChild(src);
+    var t = getTool(r.tool);
+    if (t) {
+      var tb = document.createElement('button');
+      tb.className = 'btn calm fullwidth'; tb.type = 'button';
+      tb.textContent = 'Try the tool this explains: ' + t.title;
+      tb.addEventListener('click', function () { tick(); openTool(r.tool, 'screen-learn'); });
+      host.appendChild(tb);
+    }
+    var fine = document.createElement('p'); fine.className = 'fineprint';
+    fine.textContent = 'A short read, not a diagnosis. These are coping tools, not treatment.';
+    host.appendChild(fine);
+    list.hidden = true; host.hidden = false;
+    window.scrollTo(0, 0);
+  }
+  $all('[data-go="screen-learn"]').forEach(function (b) { b.addEventListener('click', renderLearn); });
+  renderLearn();
+
   /* ---------- comfort corner: bundled calm (always) + one comfort (online) ---------- */
   var KIND_NOTES = [
     'This ride will end. You\u2019re doing great.',
@@ -2335,7 +2465,7 @@
      safe screens only (home, settings, about, history, plan) — never on breathing, panic,
      trip, or any tool screen. Tapping "Update when you're ready" activates the new worker
      and reloads. If the SW never updates (offline), the banner simply never appears. ---------- */
-  var UPDATE_SAFE_SCREENS = { 'screen-home': 1, 'screen-privacy': 1, 'screen-about': 1, 'screen-history': 1, 'screen-plan': 1 };
+  var UPDATE_SAFE_SCREENS = { 'screen-home': 1, 'screen-privacy': 1, 'screen-about': 1, 'screen-history': 1, 'screen-plan': 1, 'screen-learn': 1 };
   var pendingUpdateApply = null;
   function maybeShowUpdateBanner() {
     var b = $('update-banner');
