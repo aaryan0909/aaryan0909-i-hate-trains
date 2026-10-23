@@ -108,8 +108,8 @@ console.log('rules + version:');
 const safeScreens = w.__ihtUpdate && w.__ihtUpdate.safe;
 ok(!!(safeScreens && safeScreens['screen-learn']), 'screen-learn is an update-banner safe screen');
 ok(d.getElementById('sos-float').hidden === false, 'SOS float visible on screen-learn (calm screen)');
-ok(/iht-v28/.test(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8')), 'sw.js cache is iht-v28');
-ok(/version 28/.test(html), 'About reads "version 28"');
+ok(/iht-v29/.test(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8')), 'sw.js cache is iht-v29');
+ok(/version 29/.test(html), 'About reads "version 29"');
 const keys = [];
 for (let i = 0; i < w.localStorage.length; i++) { keys.push(w.localStorage.key(i)); }
 const learnKeys = keys.filter(k => /learn/i.test(k));

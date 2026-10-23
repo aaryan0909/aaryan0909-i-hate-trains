@@ -2,6 +2,12 @@
 
 Local source of truth is `~/workspace/i-hate-trains/`; the GitHub repo `aaryan0909/aaryan0909-i-hate-trains` (main) is pushed via `push_files` and Vercel auto-deploys from it.
 
+## v29 (2026-10-23 — panic-screen hero: "Talk me through it" takes the first slot, Forge)
+
+- **The eyes-free rescue is now the panic screen's hero.** Spark-approved backlog item (2026-10-21, Rootd's Rootr / Ballast research): the v27 zero-decision eyes-free rescue was the 4th of 4 equally-weighted cards — a rider in tunnel vision had to read all four and choose. The near-black "Talk me through it — no reading needed" card now takes the dominant first action slot (larger: 116px min-height, 23px title, 2px border, still visually distinct from the tool buttons), above the fold on a 390px phone. Div's stated panic order (Breathe > Ground > Cute) stays as the calm secondary row under a quiet "other ways" divider. The 988 quiet line, "See my backup plan", "Breathing and counting don't work for me", and ← back are untouched; copy is zero-joke, no new storage keys.
+- **Composed: instant-render on the panic screen.** The hero must render with zero animation delay — applied the existing prefers-reduced-motion rule unconditionally on `#screen-panic` (the queued instant-render repeat, re-verified 2026-10-21): entrance delays up to .40s are gone, everything is visible the moment the screen appears. The rescue screen (#screen-guide) keeps its v27 instant rule.
+- SW bumped to `iht-v29`; About reads "version 29".
+
 ## v28 (2026-10-21 — "Calm facts": a calm-time Learn tab, Pilot)
 
 - **The education layer the app was missing.** Rootd's other headline feature is lessons on understanding panic, praised in reviews as guidance "backed up with facts" — IHT had nothing. A new "Learn" home tile opens a calm-time-only screen ("calm facts"): 5 short, honest reads (~1 min each), written once, curated, cited — the adrenaline wave peaking then passing (DSM-5), why 5-4-3-2-1 grounding works, what slow breathing actually does (Balban et al. 2023, Cell Reports Medicine), scary thoughts as predictions (Clark 1986 cognitive model), and rides getting easier with repetition (graded exposure). Stoic tone, zero jokes, clinical honesty ("coping tools, not treatment"), each read ending with a one-line honesty/source list and a "Try the tool this explains" button into the matching toolkit exercise.

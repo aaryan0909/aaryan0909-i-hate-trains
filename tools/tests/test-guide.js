@@ -56,7 +56,7 @@ ok(!!w.document.getElementById('screen-guide'), 'screen-guide section exists');
 ok(!!w.document.getElementById('guide-pet') && !!w.document.getElementById('guide-word') && !!w.document.getElementById('btn-guide-end'), 'guide pet/word/end button exist');
 ok(w.document.querySelector('script[src="guide.js"]') !== null, 'index.html loads guide.js');
 ok(/guide\.js/.test(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8')), 'sw.js precaches guide.js');
-ok(/iht-v27/.test(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8')), 'sw.js cache is iht-v27');
+ok(/iht-v29/.test(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8')), 'sw.js cache is iht-v29');
 
 console.log('rescue script sequence:');
 launchBtn.click();
@@ -103,7 +103,7 @@ const css = fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8');
 ok(/#screen-guide \.rise/.test(css) && /animation: none/.test(css), 'guide screen kills entrance-animation delays');
 ok(/#screen-guide\.eyefree/.test(css), 'guide screen is near-black (eyefree)');
 const idx = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-ok(/version 27/.test(idx), 'About reads version 27');
+ok(/version 29/.test(idx), 'About reads version 29');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

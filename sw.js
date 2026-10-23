@@ -5,8 +5,9 @@
    NOTE: install does NOT skipWaiting — the app shows a calm "update ready" prompt on safe
    screens and only then asks the waiting worker to activate.
    v26: precaches stopheads.js (spoken stop heads-up module).
-   v27: precaches guide.js (eyes-free guided rescue module). */
-var CACHE = 'iht-v28';
+   v27: precaches guide.js (eyes-free guided rescue module).
+   v29: panic-screen hero reorder + instant render — installed phones must re-cache. */
+var CACHE = 'iht-v29';
 var ASSETS = [
   './',
   'index.html',

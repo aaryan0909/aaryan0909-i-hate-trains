@@ -57,6 +57,10 @@ body::after {
 .screen.active .rise.d4 { animation-delay: .40s; }
 @keyframes risein { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+/* crisis screens render instantly — every second feels like forever mid-panic, so the panic
+   screen carries no entrance delays. Same rule as the prefers-reduced-motion twin below. */
+#screen-panic .rise { animation: none; opacity: 1; transform: none; }
+
 .wrap { max-width: 520px; margin: 0 auto; padding: 0 26px; }
 .wrap.narrow { max-width: 440px; }
 .center { text-align: center; }
@@ -440,6 +444,13 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 /* v27 "Talk me through it": visually distinct — near-black card, night voice, never confused with the three tool buttons */
 .po-guide { border-color: rgba(169,182,232,.35); background: linear-gradient(180deg, #0c0e16, #080a10); }
 .po-guide .po-ic { background: rgba(169,182,232,.1); color: var(--lav); box-shadow: 0 0 24px rgba(169,182,232,.18); }
+/* v29 panic hero: the eyes-free rescue takes the dominant first slot above the fold — larger,
+   quiet divider "other ways" keeps Breathe > Ground > Cute as the calm secondary row */
+.po-hero { min-height: 116px; border-radius: 26px; padding: 22px; border-width: 2px; margin-bottom: 20px; }
+.po-hero .po-ic { flex: 0 0 64px; width: 64px; height: 64px; font-size: 30px; }
+.po-hero .po-tx strong { font-size: 23px; }
+.po-hero .po-tx em { font-size: 15px; }
+.po-quiet { margin: 4px 0 2px; text-align: center; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--dim); opacity: .7; }
 
 /* ============ v10: the pet ============ */
 .petsvg svg { width: 100%; height: auto; display: block; overflow: visible; }
