@@ -14,27 +14,24 @@
 <body>
 <main id="app">
 
-  <!-- ONBOARDING 1/4 — first launch only -->
-  <section class="screen" id="screen-ob1" aria-label="Welcome">
-    <div class="wrap narrow">
-      <button class="ob-escape rise d1" data-ob-escape aria-label="Skip setup and get help right now">I need help right now</button>
-      <p class="kicker rise d1">first, a hello</p>
-      <p class="obstep rise d1">1 of 5</p>
-      <h2 class="serene rise d2">What should<br>I call you?</h2>
-      <label class="field rise d3">Your name
-        <input id="ob-name" type="text" inputmode="text" autocomplete="off" placeholder="Whatever feels right">
-      </label>
-      <button class="btn calm big rise d4" id="btn-ob1-next">Next</button>
-      <button class="linklike quiet" id="btn-ob1-skip">Skip this</button>
+  <!-- SPLASH (v31) — start screen on every cold open: the pet, the name, one motif.
+       The panic button is visible from 0.0s and goes straight to help; any tap after
+       1s dismisses. Never blocks help, never demands interaction. -->
+  <section class="screen" id="screen-splash" aria-label="Welcome">
+    <div class="wrap narrow splashwrap">
+      <div class="splashpet" id="splash-pet" aria-hidden="true"></div>
+      <p class="splashname" id="splash-name">I hate trains.</p>
+      <button class="panicbtn splashpanic" id="btn-splash-panic" type="button">I need help right now</button>
     </div>
   </section>
 
-  <!-- ONBOARDING 2/4 — location, VISIBLE geolocation attempt -->
-  <section class="screen" id="screen-ob2" aria-label="Where are you">
+  <!-- ONBOARDING 1/2 (v31) — city first, name optional. City is the only question
+       that changes function; everything else is deferrable. Escape stays dominant. -->
+  <section class="screen" id="screen-ob1" aria-label="Where are you">
     <div class="wrap narrow">
       <button class="ob-escape rise d1" data-ob-escape aria-label="Skip setup and get help right now">I need help right now</button>
       <p class="kicker rise d1">where are you</p>
-      <p class="obstep rise d1">2 of 5</p>
+      <p class="obstep rise d1">1 of 2</p>
       <h2 class="serene rise d2">Where's home base?</h2>
       <div class="loccard rise d2" aria-live="polite">
         <p class="body" id="ob-loc-status">Getting ready to look for you…</p>
@@ -43,54 +40,23 @@
       <label class="field rise d3">City
         <input id="ob-city" type="text" inputmode="text" autocomplete="off" placeholder="Your city">
       </label>
-      <label class="field rise d3">The line you ride most
+      <label class="field rise d3">The line you ride most <em>(optional)</em>
         <input id="ob-line" type="text" inputmode="text" autocomplete="off" placeholder="e.g. Line 1">
       </label>
-      <button class="btn calm big rise d4" id="btn-ob2-next">Next</button>
-      <button class="linklike quiet" id="btn-ob2-back">Back</button>
+      <label class="field rise d3">Your name <em>(optional)</em>
+        <input id="ob-name" type="text" inputmode="text" autocomplete="off" placeholder="Whatever feels right">
+      </label>
+      <button class="btn calm big rise d4" id="btn-ob1-next">Next</button>
+      <button class="linklike quiet" id="btn-ob1-skip">Skip this</button>
     </div>
   </section>
 
-  <!-- ONBOARDING 3/4 — how are you feeling -->
-  <section class="screen" id="screen-ob3" aria-label="How are you feeling">
-    <div class="wrap narrow">
-      <button class="ob-escape rise d1" data-ob-escape aria-label="Skip setup and get help right now">I need help right now</button>
-      <p class="kicker rise d1">right now</p>
-      <p class="obstep rise d1">3 of 5</p>
-      <h2 class="serene rise d2">How are you feeling<br>right now?</h2>
-      <div class="feelgrid rise d3" id="ob-feel">
-        <button class="feelbtn" data-feel="steady">Steady</button>
-        <button class="feelbtn" data-feel="uneasy">Uneasy</button>
-        <button class="feelbtn" data-feel="spiraling">Spiraling</button>
-      </div>
-      <p class="lede soft rise d3" id="ob-feel-note">No wrong answer. This just helps the app meet you where you are.</p>
-      <button class="btn calm big rise d4" id="btn-ob3-next">Next</button>
-      <button class="linklike quiet" id="btn-ob3-back">Back</button>
-    </div>
-  </section>
-
-  <!-- ONBOARDING 4/4 — one comfort, optional -->
-  <section class="screen" id="screen-ob4" aria-label="Your comfort">
-    <div class="wrap narrow">
-      <button class="ob-escape rise d1" data-ob-escape aria-label="Skip setup and get help right now">I need help right now</button>
-      <p class="kicker rise d1">your comfort</p>
-      <p class="obstep rise d1">4 of 5 · optional</p>
-      <h2 class="serene rise d2">One thing that<br>steadies you?</h2>
-      <p class="lede soft rise d3">A favorite reel, a playlist — one link. The app's calm cards always work, even offline.</p>
-      <div class="addrow rise d3">
-        <input id="ob-comfort-url" type="url" inputmode="url" autocomplete="off" placeholder="Paste one link (optional)…" aria-label="One comfort link">
-      </div>
-      <button class="btn calm big rise d4" id="btn-ob4-next">Next</button>
-      <button class="linklike quiet" id="btn-ob4-back">Back</button>
-    </div>
-  </section>
-
-  <!-- ONBOARDING 5/5 — meet your co-rider -->
-  <section class="screen" id="screen-ob5" aria-label="Meet your co-rider">
+  <!-- ONBOARDING 2/2 — meet your co-rider -->
+  <section class="screen" id="screen-ob2" aria-label="Meet your co-rider">
     <div class="wrap narrow">
       <button class="ob-escape rise d1" data-ob-escape aria-label="Skip setup and get help right now">I need help right now</button>
       <p class="kicker rise d1">one more thing</p>
-      <p class="obstep rise d1">5 of 5 · optional</p>
+      <p class="obstep rise d1">2 of 2 · optional</p>
       <h2 class="serene rise d2">Meet your<br>co-rider.</h2>
       <p class="lede soft rise d3">A small companion for scary rides. No feeding, no meters, no worries — just company.</p>
       <div class="petpick rise d3" id="ob-pet-pick" role="group" aria-label="Pick your co-rider">
@@ -101,9 +67,9 @@
       <label class="field rise d3">Their name
         <input id="ob-pet-name" type="text" inputmode="text" autocomplete="off" maxlength="24" placeholder="Mochi">
       </label>
-      <button class="btn calm big rise d4" id="btn-ob5-done">Done — take me in</button>
-      <button class="linklike quiet" id="btn-ob5-back">Back</button>
-      <button class="linklike quiet" id="btn-ob5-skip">Skip for now</button>
+      <button class="btn calm big rise d4" id="btn-ob2-done">Done — take me in</button>
+      <button class="linklike quiet" id="btn-ob2-skip">Skip for now</button>
+      <button class="linklike quiet" id="btn-ob2-back">Back</button>
     </div>
   </section>
 
@@ -123,17 +89,15 @@
         <p class="body" id="home-ride-line">Your ride</p>
         <button class="btn calm big" id="btn-start-ride" data-go="screen-checkin" style="margin-bottom:0">Start a ride</button>
       </div>
-      <div class="ridecard rise d4" id="home-top-tools" hidden>
-        <p class="kicker small">from your own ride notes</p>
-        <p class="body"><strong>What has helped you</strong></p>
-        <div id="home-top-tools-list"></div>
-        <p class="topnote">Counts come only from your own ride notes, on this phone. No scores, no streaks.</p>
-      </div>
-      <p class="fineprint rise d4">Free forever. Works offline. Always. Even in a tunnel.</p>
+      <p class="fineprint rise d4">Free forever. Works offline where it matters. Even in a tunnel.</p>
       <div class="tools homenav rise d4">
         <button class="tool" data-go="screen-toolkit"><span class="tool-ic tic-toolkit" aria-hidden="true"><i></i><i></i><i></i></span>Toolkit</button>
-        <button class="tool" data-go="screen-learn"><span class="tool-ic tic-learn" aria-hidden="true"><i></i><i></i><i></i></span>Learn</button>
         <button class="tool" data-go="screen-comfort" id="link-comfort-home"><span class="tool-ic tic-comfort" aria-hidden="true"><i></i></span>Comfort</button>
+        <button class="tool" data-go="screen-checkin"><span class="tool-ic tic-plan" aria-hidden="true"><i></i></span>Start a ride</button>
+      </div>
+      <button class="linklike quiet rise d4" id="btn-home-more" type="button">More</button>
+      <div class="tools homenav rise d4" id="homenav-more" hidden>
+        <button class="tool" data-go="screen-learn"><span class="tool-ic tic-learn" aria-hidden="true"><i></i><i></i><i></i></span>Learn</button>
         <button class="tool" data-go="screen-plan" id="link-plan-home"><span class="tool-ic tic-plan" aria-hidden="true"><i></i></span>Backup plan</button>
         <button class="tool" data-go="screen-history"><span class="tool-ic tic-history" aria-hidden="true"><i></i></span>History</button>
         <button class="tool" data-go="screen-privacy"><span class="tool-ic tic-privacy" aria-hidden="true"><i></i></span>Privacy</button>
@@ -142,38 +106,29 @@
     </div>
   </section>
 
-  <!-- PANIC — the sacred flow. Calm, direct, zero jokes. -->
+  <!-- PANIC — the sacred flow. Calm, direct, zero jokes. Layout is FROZEN: same
+       options, same words, same positions, every time. Muscle memory is safety.
+       Word budget under 20. When a backup plan exists, the plan line replaces
+       the reassurance line (one line, not two). -->
   <section class="screen" id="screen-panic" aria-label="Panic help">
-    <div class="wrap narrow">
-      <p class="kicker rise d1">right now</p>
+    <div class="wrap narrow panicwrap">
       <h2 class="serene rise d2">You're safe.</h2>
-      <p class="lede soft rise d3">This will pass. Pick what sounds bearable:</p>
-      <div class="calmcard rise d3" id="panic-lasthelp" hidden>
-        <p class="kicker small">from your own notes</p>
-        <p class="calmcard-tx" id="lasthelp-text"></p>
-        <button class="btn calm calmcard-go" id="btn-lasthelp" type="button"></button>
-      </div>
+      <p class="lede soft" id="panic-reassure">This will pass.</p>
+      <p class="lede soft" id="panic-plan-line" hidden></p>
       <button class="panicopt po-guide po-hero" id="btn-panic-guide">
         <span class="po-ic pov-guide" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="po-tx"><strong>Talk me through it</strong><em>Eyes-free — a calm voice walks you through it. No reading needed.</em></span>
+        <span class="po-tx"><strong>Talk me through it</strong></span>
       </button>
-      <p class="po-quiet">other ways</p>
-      <button class="panicopt rise d3 po-breathe" id="btn-panic-breathe">
+      <button class="panicopt po-breathe" id="btn-panic-breathe">
         <span class="po-ic pov-breathe" aria-hidden="true"><i></i></span>
-        <span class="po-tx"><strong>Breathe with me</strong><em>Slow your breath, slow your heart.</em></span>
+        <span class="po-tx"><strong>Breathe with me</strong></span>
       </button>
-      <button class="panicopt rise d4 po-ground" id="btn-panic-ground">
+      <button class="panicopt po-ground" id="btn-panic-ground">
         <span class="po-ic pov-ground" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="po-tx"><strong>Ground me instead</strong><em>Come back to the room, one sense at a time.</em></span>
+        <span class="po-tx"><strong>Ground me instead</strong></span>
       </button>
-      <button class="panicopt rise d4 po-cute" id="btn-panic-comfort">
-        <span class="po-ic pov-cute" aria-hidden="true"><i></i><i></i></span>
-        <span class="po-tx"><strong>Show me something cute</strong><em>Give your mind something gentle to hold.</em></span>
-      </button>
-      <button class="linklike quiet rise d4" data-go="screen-nonbreath">Breathing and counting don't work for me</button>
-      <button class="linklike quiet rise d4" id="btn-panic-plan">See my backup plan</button>
-      <p class="q988 rise d4" id="crisis-quiet">If it ever gets really bad: <a href="tel:988">call or text 988</a></p>
-      <button class="backlink rise d4" data-go="screen-home">← back</button>
+      <p class="q988" id="crisis-quiet">If it ever gets really bad: <a href="tel:988">call or text 988</a></p>
+      <button class="backlink" data-go="screen-home">← back</button>
     </div>
   </section>
 
@@ -202,6 +157,7 @@
       <p class="breathcap" id="breath-cap">Follow Mochi.</p>
       <p class="fineprint" id="breath-safety">Breathing exercises are optional coping tools, not treatment. If breathing feels difficult, stop right away and pick a grounding tool instead.</p>
       <button class="linklike quiet" id="btn-breathe-end">I'm feeling steadier</button>
+      <button class="linklike quiet" id="btn-breathe-opts" type="button">Options</button>
     </div>
   </section>
 
@@ -217,6 +173,8 @@
       <p class="guideword" id="guide-word" aria-live="polite">&hellip;</p>
       <p class="guidesub" id="guide-sub"></p>
       <button class="btn ghost fullwidth guideend" id="btn-guide-end" type="button">I'm steadier</button>
+      <button class="linklike quiet" id="btn-guide-ground" type="button">Try grounding instead</button>
+      <button class="linklike quiet" id="btn-guide-mute" type="button">Mute voice</button>
     </div>
   </section>
 
@@ -239,8 +197,14 @@
       <h2 class="serene rise d2">Things that can help.</h2>
       <p class="lede soft rise d3">These are coping tools, not treatment. Nothing here grades you. Pick whatever sounds bearable.</p>
       <p class="toolgroup rise d3">Hands-on — do, don’t read</p>
-      <div class="toolcards featgrid rise d3" id="toolkit-featured"></div>
       <div id="toolkit-groups" class="rise d3"></div>
+      <div class="ridecard rise d3" id="home-top-tools" hidden>
+        <p class="kicker small">from your own ride notes</p>
+        <p class="body"><strong>What has helped you</strong></p>
+        <div id="home-top-tools-list"></div>
+        <p class="topnote">Counts come only from your own ride notes, on this phone. No scores, no streaks.</p>
+      </div>
+      <button class="toolcard rise d3" data-go="screen-learn" type="button"><strong>Calm facts</strong><p>Short, honest reads on how panic works — for between rides.</p></button>
       <button class="backlink rise d4" data-go="screen-home">← back</button>
     </div>
   </section>
@@ -338,6 +302,7 @@
         </div>
       </div>
       <button class="check rise d4" id="set-stopheads" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Your stop, out loud</strong><em>The pet's voice says the heads-up at 2 stops and 1 stop out. Spoken on this phone only, set up here — never in a panic moment.</em></span></button>
+      <button class="check rise d4" id="set-stopheads-quiet" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Quiet stop alerts</strong><em>Pet pulse and screen flash instead of voice. For crowded trains.</em></span></button>
       <button class="btn calm big rise d4" id="btn-start-trip">Start trip</button>
       <button class="linklike quiet rise d4" id="btn-share-card">Send a trip card to someone you trust</button>
       <p class="fineprint" id="share-hint">Shares your route and ETA, while you still have signal.</p>
@@ -385,7 +350,7 @@
       <div class="petarrived" id="pet-arrived" aria-hidden="true"></div>
       <h2 class="serene rise d2">You made it.</h2>
       <p class="lede soft rise d3" id="arrived-lede">That took courage.</p>
-      <button class="btn calm big rise d3" id="btn-im-home">I'm home</button>
+      <button class="btn calm big rise d3" id="btn-im-home">I'm off</button>
       <p class="fineprint" id="home-note">Your person has your trip card with the ETA.</p>
     </div>
   </section>
@@ -674,6 +639,7 @@
       <h2 class="serene rise d2">You don't have to ride this out alone.</h2>
       <div class="crisislist rise d3">
         <a class="crisis" id="crisis-person" href="#" hidden><strong id="crisis-person-label"></strong><em id="crisis-person-sub"></em></a>
+        <a class="crisis" id="crisis-text" href="#" hidden><strong id="crisis-text-label"></strong><em>One tap sends a pre-written text, so you don't have to talk</em></a>
         <a class="crisis" href="tel:988"><strong>Call or text 988</strong><em>US &amp; Canada · Suicide &amp; Crisis Lifeline</em></a>
         <a class="crisis" href="tel:116123"><strong>Call 116 123</strong><em>UK · Samaritans</em></a>
         <a class="crisis" id="crisis-locale" href="#" hidden><strong id="crisis-locale-label"></strong><em id="crisis-locale-sub"></em></a>
@@ -774,7 +740,7 @@
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 30</p>
+      <p class="fineprint rise d4" id="app-version">version 31</p>
     </div>
   </section>
 

@@ -1,6 +1,6 @@
 # I Hate Trains: Redesign Spec (v31 direction)
 
-**Status:** SPEC ONLY. No code changes until Aaryan approves this document.
+**Status:** APPROVED 2026-10-24 and BUILT as v31 (see CHANGELOG.md). The spec below is the design record; the audit (AUDIT_LAYER2.md) wins on all disagreements.
 **Date:** 2026-10-24. Current live version: v30.
 **Trigger:** Aaryan's 2026-10-24 feedback, in his words: the app feels overcrowded and wordy, the pet is an afterthought instead of the guide, and the app needs a start screen plus a way to test it on a laptop that actually matches a phone.
 

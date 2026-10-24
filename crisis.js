@@ -42,13 +42,14 @@
 
   function byId(id) { return document.getElementById(id); }
 
-  /* panic screen: one quiet line, the real number for where the phone is */
+  /* panic screen: one quiet line, the real number for where the phone is.
+     v31: no prefix sentence — the panic screen has a 20-word budget and the
+     number itself is the message. */
   function renderQuietCrisis() {
     var el = byId('crisis-quiet');
     if (!el) { return; }
     var line = crisisLineForRegion(crisisRegion());
     while (el.firstChild) { el.removeChild(el.firstChild); }
-    el.appendChild(document.createTextNode('If it ever gets really bad: '));
     var a = document.createElement('a');
     if (line) {
       a.href = telHref(line.dial);

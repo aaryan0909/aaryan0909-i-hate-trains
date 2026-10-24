@@ -15,6 +15,9 @@
 
   /* ---------- sequencing ---------- */
   var timers = [];
+  var muted = false; // v31 audit: rescue voice is independent of the global toggle,
+  // auto-on at low volume, with a big mute inside rescue. A setting chosen in calm
+  // time must never silently remove voice from a rescue.
   function after(ms, fn) { var t = setTimeout(fn, ms); timers.push(t); return t; }
   function stop() {
     timers.forEach(function (t) { try { clearTimeout(t); } catch (e) {} });
@@ -22,18 +25,31 @@
     try { if (window.__ihtVoice && window.__ihtVoice.stop) { window.__ihtVoice.stop(); } } catch (e) {}
   }
   function say(text) {
-    try { if (window.__ihtVoice && window.__ihtVoice.speak) { window.__ihtVoice.speak(text); } } catch (e) {}
+    if (muted) { return; }
+    try {
+      if (window.__ihtVoice && window.__ihtVoice.speak) { window.__ihtVoice.speak(text, { volume: 0.6 }); }
+    } catch (e) {}
   }
   function word(text) { var el = $('guide-word'); if (el) { el.textContent = text; } }
   function sub(text) { var el = $('guide-sub'); if (el) { el.textContent = text || ''; } }
   function breathePet(grow, secs) {
     // The pet IS the breathing guide: visibly inhales and exhales in sync, same
     // easing the breathe screen uses, so eyes can rest on it without reading.
+    // v31: squash-and-stretch (tall on inhale, settled on exhale), and a reduced-
+    // motion opacity signal instead of scale.
     var pb = $('guide-pet');
-    if (pb) {
-      pb.style.transition = 'transform ' + secs + 's cubic-bezier(.37,0,.63,1)';
-      pb.style.transform = 'scale(' + (grow ? 1.35 : 1) + ')';
+    if (!pb) { return; }
+    var rm = false;
+    try { rm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
+    if (rm) {
+      pb.style.transition = 'opacity 1.2s ease';
+      pb.style.transform = 'none';
+      pb.style.opacity = grow ? '1' : '0.55';
+      return;
     }
+    pb.style.opacity = '1';
+    pb.style.transition = 'transform ' + secs + 's cubic-bezier(.37,0,.63,1)';
+    pb.style.transform = grow ? 'scale(0.96, 1.22)' : 'scale(1, 1)';
   }
 
   /* The rescue script: acceptance line → 3 paced breaths → rapid 5-4-3-2-1
@@ -85,6 +101,14 @@
     end.addEventListener('click', function () {
       stop();
       try { if (window.__ihtUpdate && window.__ihtUpdate.go) { window.__ihtUpdate.go('screen-panic'); } } catch (e) {}
+    });
+  }
+  var muteBtn = $('btn-guide-mute');
+  if (muteBtn) {
+    muteBtn.addEventListener('click', function () {
+      muted = !muted;
+      if (muted) { try { if (window.__ihtVoice && window.__ihtVoice.stop) { window.__ihtVoice.stop(); } } catch (e) {} }
+      muteBtn.textContent = muted ? 'Unmute voice' : 'Mute voice';
     });
   }
 

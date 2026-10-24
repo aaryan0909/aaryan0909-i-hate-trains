@@ -514,8 +514,10 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 @keyframes petwiggle { 0%,100% { transform: rotate(0) scale(1); } 25% { transform: rotate(-9deg) scale(1.06); } 60% { transform: rotate(8deg) scale(1.06); } }
 .pet-celebrate .petsvg { animation: petjump .8s ease 2; }
 @keyframes petjump { 0%,100% { transform: translateY(0); } 35% { transform: translateY(-26px) scale(1.04); } }
-.peye { transform-box: fill-box; transform-origin: center; animation: petblink 4.6s infinite; }
-@keyframes petblink { 0%, 91%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.06); } }
+.peye { transform-box: fill-box; transform-origin: center; }
+.peye-open { transform: translate(var(--px, 0px), var(--py, 0px)); }
+body.pet-blink .peye-open { display: none; }
+body.pet-blink .peye-shut { display: block; }
 .peye-shut { display: none; }
 .pet-sleepy .peye-open { display: none; }
 .pet-sleepy .peye-shut { display: block; }
@@ -754,3 +756,48 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 .guidesub:empty { display: none; }
 .btn.ghost.fullwidth.guideend { width: 100%; min-height: 60px; font-size: 18px; border-radius: 18px; margin-top: 6px; border-color: #3a3f52; color: #f4f1e8; }
 .btn.ghost.fullwidth.guideend:active { border-color: var(--lav); }
+
+/* ============ v31 redesign: phone frame, pet engine, splash, minimalism ============ */
+
+/* Phase 1 — desktop phone-frame preview. On wide screens the app column is capped
+   at phone size, centered on a dark page, wrapped in a phone frame. The app's
+   internal layout does not change at all: same CSS, same breakpoints, same column
+   the phone renders. Laptop testing now matches phone layout. */
+@media (min-width: 560px) {
+  body { background: #04050a; }
+  #app {
+    max-width: 430px; margin: 24px auto;
+    border: 10px solid #1a1e28; border-radius: 48px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.65);
+    overflow: hidden;
+  }
+  .screen { min-height: 844px; }
+}
+
+/* Panic screen: options cluster in the thumb zone (bottom half). The heading stays
+   up top; the hero and the two secondaries sit where a shaking thumb can reach them. */
+#screen-panic .panicwrap { display: flex; flex-direction: column; min-height: calc(100dvh - 140px); }
+#screen-panic .po-hero { margin-top: auto; }
+#screen-panic .q988 { margin-top: 18px; }
+
+/* Breathe screen: while the exercise runs, settings hide behind one "Options" tap.
+   Only the pet, one word, and the safety line stay visible. */
+#screen-breathe.running .patternchips,
+#screen-breathe.running .segsound,
+#screen-breathe.running .setrow,
+#screen-breathe.running #voice-hint { display: none; }
+
+/* Breathe + rescue pets are large: the pet IS the exercise, not a decoration. */
+.petbreathe { width: min(60vw, 240px); }
+.guidepet { width: min(62vw, 230px); }
+
+/* Splash screen: pet center stage, name under it, panic button bottom-anchored. */
+#screen-splash .splashwrap { display: flex; flex-direction: column; min-height: calc(100dvh - 140px); }
+.splashpet { width: min(56vw, 200px); margin: auto auto 8px; }
+.splashpet .petsvg { animation: petbob 3.4s ease-in-out infinite; }
+.splashname { font-family: var(--font-display); font-size: 34px; font-style: italic; text-align: center; margin: 0 0 12px; }
+.splashpanic { margin-top: auto; }
+
+/* Quiet stop alerts: screen flash instead of public voice. */
+body.stopflash #app { animation: stopflash .9s ease; }
+@keyframes stopflash { 0%, 100% { filter: none; } 50% { filter: brightness(1.3); } }

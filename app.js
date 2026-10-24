@@ -7,8 +7,23 @@
   function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
   function currentScreen() { var a = document.querySelector('.screen.active'); return a ? a.id : null; }
   var navBack = [], navFwd = [];
+  var panicFreezeTimer = null, splashTimer = null, splashActive = false;
+  /* v31 audit: celebration cooldown. If panic recurs within 10 minutes of the
+     last "I'm steadier", the pet stays steady, never chirpy. A repeated
+     celebration after a relapse feels mocking. */
+  var suppressCelebration = false;
+  function recentSteady() {
+    try {
+      var t = parseInt(localStorage.getItem('iht_last_steady') || '0', 10);
+      return !!t && (Date.now() - t < 10 * 60 * 1000);
+    } catch (e) { return false; }
+  }
+  function markSteady() { try { localStorage.setItem('iht_last_steady', String(Date.now())); } catch (e) {} }
+  function clearPanicFreeze() { if (panicFreezeTimer) { clearTimeout(panicFreezeTimer); panicFreezeTimer = null; } }
+  function clearSplashTimers() { if (splashTimer) { clearTimeout(splashTimer); splashTimer = null; } splashActive = false; }
   function go(id, opts) {
     opts = opts || {};
+    clearPanicFreeze(); clearSplashTimers();
     var cur = currentScreen();
     if (!opts.keep && cur && cur !== id) { navBack.push(cur); if (navBack.length > 30) { navBack.shift(); } navFwd = []; }
     if (coachVisible) { coachHide(); } // navigating dismisses the hint (it returns next visit)
@@ -22,8 +37,8 @@
     updateSosFloat(id);
     maybeCoach(id);
     maybeShowUpdateBanner(); // update prompt only ever appears on calm, non-crisis screens
-    if (id === 'screen-panic') { renderLastHelped(); } // journal read-back, one card, calm
-    if (id === 'screen-home') { renderTopTools(); } // journal aggregation, calm time only
+    if (id === 'screen-panic') { renderPanicPlan(); suppressCelebration = recentSteady(); armPanicFreeze(); } // v31: plan line + celebration cooldown + freeze auto-start
+    if (id === 'screen-toolkit') { renderTopTools(); } // v31: "What has helped you" lives in the toolkit now, not home
   }
   function navGoBack() { var p = navBack.pop(); if (!p) { return; } navFwd.push(currentScreen()); tick(); go(p, { keep: true }); }
   function navGoFwd() { var n = navFwd.pop(); if (!n) { return; } var c = currentScreen(); if (c) { navBack.push(c); } tick(); go(n, { keep: true }); }
@@ -45,7 +60,7 @@
     if (dx > 0) { navGoBack(); } else { navGoFwd(); }
   }, { passive: true });
   /* SOS stays one tap away on every screen except home (has the big button), the panic flow itself, and onboarding (each onboarding screen carries its own "I need help right now" escape straight to help) */
-  var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-guide': 1, 'screen-ob1': 1, 'screen-ob2': 1, 'screen-ob3': 1, 'screen-ob4': 1, 'screen-ob5': 1 };
+  var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-guide': 1, 'screen-splash': 1, 'screen-ob1': 1, 'screen-ob2': 1 };
   function updateSosFloat(id) {
     var f = $('sos-float');
     if (f) { f.hidden = !!SOS_HIDDEN[id]; }
@@ -348,7 +363,7 @@
     var host = $('toolkit-groups');
     var order = ['ground', 'breath', 'distract', 'understand', 'plan', 'reflect'];
     order.forEach(function (cat) {
-      var items = TOOLS.filter(function (t) { return t.cat === cat && FEATURED_IDS.indexOf(t.id) === -1; });
+      var items = TOOLS.filter(function (t) { return t.cat === cat; });
       if (!items.length) { return; }
       var h = document.createElement('p'); h.className = 'toolgroup'; h.textContent = CAT_LABEL[cat];
       host.appendChild(h);
@@ -495,8 +510,9 @@
   function synthNow() {
     try { return ('speechSynthesis' in window) ? window.speechSynthesis : null; } catch (e) { return null; }
   }
-  function speakUtterance(text) {
+  function speakUtterance(text, opts) {
     // Low-level speak with iOS Safari hardening. Returns false when there is no engine.
+    // opts.volume overrides the default (rescue uses a lower volume).
     var synth = synthNow();
     if (!synth || !text) { return false; }
     try {
@@ -504,7 +520,7 @@
       var busy = false;
       try { busy = !!(synth.speaking || synth.pending); } catch (e) {}
       var u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.75; u.pitch = 0.9; u.volume = 0.9; // v23: calm, unhurried, warm — never robotic
+      u.rate = 0.75; u.pitch = 0.9; u.volume = (opts && typeof opts.volume === 'number') ? opts.volume : 0.9; // v23: calm, unhurried, warm — never robotic
       try { if (prefs.locale) { u.lang = prefs.locale; } } catch (e) {}
       var v = pickCalmVoice();
       if (v) { u.voice = v; }
@@ -596,32 +612,43 @@
   var breathTimer = null, breathSwap = null, breatheReturn = 'screen-home';
   var PATTERNS = {
     gentle: { label: 'Gentle', phases: [
-      { k: 'in', secs: 4, word: 'Breathe in', cap: 'Slowly, through your nose.' },
-      { k: 'hold', secs: 4, word: 'Hold', cap: 'Rest here a moment.' },
-      { k: 'out', secs: 6, word: 'Breathe out', cap: 'Let your shoulders drop.' } ] },
+      { k: 'in', secs: 4, word: 'In', cap: 'Easy.' },
+      { k: 'hold', secs: 4, word: 'Hold', cap: 'Rest here.' },
+      { k: 'out', secs: 6, word: 'Out', cap: 'Let go.' } ] },
     box: { label: 'Box', phases: [
-      { k: 'in', secs: 4, word: 'Breathe in', cap: 'Four counts in.' },
-      { k: 'hold', secs: 4, word: 'Hold', cap: 'Four counts held.' },
-      { k: 'out', secs: 4, word: 'Breathe out', cap: 'Four counts out.' },
-      { k: 'rest', secs: 4, word: 'Rest', cap: 'Four counts rest.' } ] },
+      { k: 'in', secs: 4, word: 'In', cap: 'Four counts.' },
+      { k: 'hold', secs: 4, word: 'Hold', cap: 'Four counts.' },
+      { k: 'out', secs: 4, word: 'Out', cap: 'Four counts.' },
+      { k: 'rest', secs: 4, word: 'Rest', cap: 'Four counts.' } ] },
     '478': { label: '4–7–8', phases: [
-      { k: 'in', secs: 4, word: 'Breathe in', cap: 'Gently, four counts.' },
-      { k: 'hold', secs: 7, word: 'Pause', cap: 'Only if comfortable — skip any time.' },
-      { k: 'out', secs: 8, word: 'Breathe out', cap: 'Slow and easy. Never force it.' } ] }
+      { k: 'in', secs: 4, word: 'In', cap: 'Gently.' },
+      { k: 'hold', secs: 7, word: 'Hold', cap: 'Only if comfortable.' },
+      { k: 'out', secs: 8, word: 'Out', cap: 'Never force it.' } ] }
   };
-  var breathPattern = 'gentle';
+  /* v31: the pattern is remembered, not re-chosen mid-exercise. The chips live
+     behind one "Options" tap on the breathe screen; the running screen shows
+     only the pet, one word, and the safety line. */
+  var breathPattern = (prefs.breathPattern && PATTERNS[prefs.breathPattern]) ? prefs.breathPattern : 'gentle';
   $all('#breath-patterns .pchip').forEach(function (c) {
     c.addEventListener('click', function () {
       tick();
       $all('#breath-patterns .pchip').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
       c.setAttribute('aria-pressed', 'true');
       breathPattern = c.getAttribute('data-pattern');
+      prefs.breathPattern = breathPattern; savePrefs();
     });
   });
   function setBreathPattern(p) {
     breathPattern = p;
     $all('#breath-patterns .pchip').forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-pattern') === p ? 'true' : 'false'); });
   }
+  /* v31 pet engine: ONE timer drives the pet. The pet's squash-and-stretch IS the
+     breath signal: inhale stretches it tall, exhale settles it back. No separate
+     pet loop exists during breathing — that was the "breathing, not with you" bug.
+     Reduced-motion riders get an opacity phase signal instead of scale. */
+  var petBreathIn = false;
+  var reducedMotion = false;
+  try { reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
   function runPhase(phases, i) {
     if (!$('screen-breathe').classList.contains('active')) { return; }
     var p = phases[i % phases.length];
@@ -635,10 +662,12 @@
       cap.classList.remove('swap');
     }, 200);
     var grow = (p.k === 'in');
+    petBreathIn = grow;
     var pb = $('pet-breathe'); // v22: Mochi IS the breathing guide — big, unmissable, in sync
     if (pb) {
-      pb.style.transition = 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
-      pb.style.transform = 'scale(' + (grow ? 1.4 : 1) + ')'; // the guide visibly inhales and exhales with you
+      pb.style.transition = reducedMotion ? 'opacity 1.2s ease' : 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
+      if (reducedMotion) { pb.style.transform = 'none'; pb.style.opacity = grow ? '1' : '0.55'; }
+      else { pb.style.transform = grow ? 'scale(0.94, 1.2)' : 'scale(1, 1)'; }
     }
     breathHaptic(p.k);
     phaseCue(p.k);
@@ -659,57 +688,140 @@
     var nm0 = pet.name || 'Mochi';
     var bc0 = $('breath-cap');
     if (bc0) { bc0.textContent = 'Follow ' + nm0 + '.'; } // the pet tells you what to do
-    setBreathPattern(pattern || 'gentle');
+    setBreathPattern(pattern || prefs.breathPattern || 'gentle');
     $('breath-patterns').classList.toggle('hidden', !!minimal);
+    var sc = $('screen-breathe');
+    if (sc) { sc.classList.add('running'); } // v31: settings hide while the exercise runs
     var pb0 = $('pet-breathe');
-    if (pb0) { pb0.style.transition = 'none'; pb0.style.transform = 'scale(1)'; }
+    if (pb0) { pb0.style.transition = 'none'; pb0.style.transform = 'scale(1, 1)'; pb0.style.opacity = '1'; }
     tick(); go('screen-breathe');
     var mode = prefs.breathSound || 'chimes';
     if (mode === 'ambient' || mode === 'both') { ambientStart(); }
     runPhase(PATTERNS[breathPattern].phases, 0); // no gate: the exercise starts NOW
   }
-  function stopBreathe() { if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; } if (breathSwap) { clearTimeout(breathSwap); breathSwap = null; } stopVoice(); ambientStop(); }
+  function stopBreathe() {
+    if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; }
+    if (breathSwap) { clearTimeout(breathSwap); breathSwap = null; }
+    petBreathIn = false;
+    var sc = $('screen-breathe');
+    if (sc) { sc.classList.remove('running'); }
+    stopVoice(); ambientStop();
+  }
+  /* v31: one quiet "Options" tap reveals the pattern/sound/voice settings mid-exercise. */
+  (function () {
+    var b = $('btn-breathe-opts');
+    if (!b) { return; }
+    b.addEventListener('click', function () {
+      tick();
+      var sc = $('screen-breathe');
+      if (sc) { sc.classList.toggle('running'); }
+    });
+  })();
   var stopHold = function () {}; // replaced by the hold-to-steady tool below; go() calls it so a mid-hold navigation never leaves the tone droning
   var stopMuscleHold = function () {}; // replaced by the muscle-release hold ring below (same reason: never leave a rAF loop running on a hidden screen)
-  $('btn-breathe-end').addEventListener('click', function () { tick(); stopBreathe(); go(breatheReturn); });
+  $('btn-breathe-end').addEventListener('click', function () { tick(); stopBreathe(); markSteady(); go(breatheReturn); });
+  /* v31: guide-end lives in guide.js; this second listener only stamps the
+     celebration-cooldown clock. Multiple listeners on one button are fine. */
+  (function () {
+    var b = $('btn-guide-end');
+    if (b) { b.addEventListener('click', function () { markSteady(); }); }
+  })();
 
-  /* panic entry: minimal sacred flow */
+  /* panic entry: minimal sacred flow. The rescue's "try grounding instead" branch
+     (v31 audit): when breathing fails, the rider branches to grounding without a
+     menu, a question, or a restart. */
   $('btn-panic-breathe').addEventListener('click', function () { startBreathe('gentle', 'screen-panic', true); });
   $('btn-panic-ground').addEventListener('click', function () { openTool('five-senses', 'screen-panic'); });
+  (function () {
+    var b = $('btn-guide-ground');
+    if (!b) { return; }
+    b.addEventListener('click', function () {
+      tick();
+      try { if (window.__ihtGuide) { window.__ihtGuide.stop(); } } catch (e) {}
+      openTool('five-senses', 'screen-panic');
+    });
+  })();
+  /* v31: home "More" reveals the calm-time tiles (Learn, plan, history, privacy,
+     about) that used to compete with the panic button. */
+  (function () {
+    var b = $('btn-home-more'), more = $('homenav-more');
+    if (!b || !more) { return; }
+    b.addEventListener('click', function () {
+      tick();
+      more.hidden = !more.hidden;
+      b.textContent = more.hidden ? 'More' : 'Less';
+    });
+  })();
+  /* v31: toolkit groups collapse to one open section at a time (spec phase 2).
+     The first section opens by default; headers are tappable. */
+  (function () {
+    var host = $('toolkit-groups');
+    if (!host) { return; }
+    function collapseToolkit() {
+      var headers = $all('#toolkit-groups .toolgroup');
+      headers.forEach(function (h, i) {
+        var list = h.nextElementSibling;
+        if (!list || !list.classList.contains('toolcards')) { return; }
+        h.style.cursor = 'pointer';
+        h.setAttribute('role', 'button');
+        h.setAttribute('tabindex', '0');
+        h.setAttribute('aria-expanded', i === 0 ? 'true' : 'false');
+        list.hidden = i !== 0;
+        h.addEventListener('click', function () {
+          tick();
+          headers.forEach(function (h2) {
+            var l2 = h2.nextElementSibling;
+            if (l2 && l2.classList.contains('toolcards')) { l2.hidden = true; h2.setAttribute('aria-expanded', 'false'); }
+          });
+          list.hidden = false;
+          h.setAttribute('aria-expanded', 'true');
+        });
+      });
+    }
+    /* renderToolkit runs synchronously above this block, so the groups exist now. */
+    collapseToolkit();
+  })();
 
-  /* "what helped last time": the reflection journal (iht_journal, on-device, capped
-     at 100) is write-only today; read the most recent entry back on the panic
-     screen as one calm, personal suggestion. Nothing leaves the phone. Wrapped so
-     a corrupt journal can never break the sacred flow. */
-  var lastHelpTool = null;
+  /* v31: the panic screen carries a one-line backup-plan reminder, not a link.
+     Pre-commitment only works if it is visible at the moment of crisis. When a
+     plan exists, the plan line REPLACES the reassurance line (one line, not two).
+     When no plan exists, the reassurance line stands alone. */
+  function renderPanicPlan() {
+    var line = $('panic-plan-line'), re = $('panic-reassure');
+    if (!line || !re) { return; }
+    var bits = [];
+    try {
+      if (plan.exit) { bits.push('get off at ' + String(plan.exit).slice(0, 40)); }
+      if (plan.reachName) { bits.push('call ' + String(plan.reachName).slice(0, 40)); }
+    } catch (e) {}
+    if (bits.length) {
+      line.textContent = 'Your plan: ' + bits.join(', ') + '.';
+      line.hidden = false; re.hidden = true;
+    } else {
+      line.hidden = true; re.hidden = false;
+    }
+  }
+  /* v31 audit, highest-leverage change: a rider who taps "I need help right now"
+     and then freezes gets help anyway. 5 seconds of nothing on the panic screen
+     auto-starts the scripted rescue. Any tap re-arms the timer; any navigation
+     clears it (go() above). */
+  function armPanicFreeze() {
+    clearPanicFreeze();
+    panicFreezeTimer = setTimeout(function () {
+      panicFreezeTimer = null;
+      if (currentScreen() === 'screen-panic' && window.__ihtGuide) {
+        try { window.__ihtGuide.start(); } catch (e) {}
+      }
+    }, 5000);
+  }
+  document.addEventListener('pointerdown', function () {
+    if (currentScreen() === 'screen-panic') { armPanicFreeze(); }
+  }, { passive: true });
+
   function toolByTitle(title) {
     for (var i = 0; i < TOOLS.length; i++) { if (TOOLS[i].title === title) { return TOOLS[i]; } }
     return null;
   }
-  function renderLastHelped() {
-    var card = $('panic-lasthelp');
-    if (!card) { return; }
-    lastHelpTool = null;
-    try {
-      var log = readJSON('iht_journal', []);
-      for (var i = log.length - 1; i >= 0; i--) {
-        var e = log[i] || {};
-        if (e.tools && e.tools.length) {
-          var t = toolByTitle(e.tools[0]);
-          if (t) { lastHelpTool = t; break; }
-        }
-      }
-    } catch (err) { lastHelpTool = null; }
-    if (!lastHelpTool) { card.hidden = true; return; }
-    $('lasthelp-text').textContent = 'Last ride, ' + lastHelpTool.title + ' helped. Want to start there?';
-    $('btn-lasthelp').textContent = 'Start ' + lastHelpTool.title;
-    card.hidden = false;
-  }
-  $('btn-lasthelp').addEventListener('click', function () {
-    tick();
-    if (lastHelpTool) { openTool(lastHelpTool.id, 'screen-panic'); }
-  });
-
   /* "your most calming tools": aggregate iht_journal on-device and show the
      top 3 on the home screen (calm time only, never the panic flow). Counts
      are rides, not scores: one entry counts once per tool, ties break toward
@@ -721,9 +833,10 @@
     var ranked = [];
     try {
       var log = readJSON('iht_journal', []);
-      var counts = {}, lastSeen = {};
+      var counts = {}, lastSeen = {}, ridesNamed = 0;
       log.forEach(function (e, idx) {
         if (!e || !e.tools || !e.tools.length) { return; }
+        ridesNamed++;
         var seen = {};
         e.tools.forEach(function (title) {
           if (seen[title]) { return; } seen[title] = true;
@@ -733,6 +846,9 @@
           lastSeen[title] = idx;
         });
       });
+      /* v31 audit: never show until at least three rides have named a tool,
+         or it is an empty promise dressed as insight. */
+      if (ridesNamed < 3) { card.hidden = true; return; }
       ranked = Object.keys(counts).map(function (title) {
         return { tool: toolByTitle(title), count: counts[title], last: lastSeen[title] };
       }).sort(function (a, b) { return (b.count - a.count) || (b.last - a.last); }).slice(0, 3);
@@ -759,16 +875,17 @@
     card.hidden = false;
   }
 
-  /* comfort is a solution, not a silo: reachable from the panic flow, the toolkit, home, and mid-trip */
+  /* comfort is a solution, not a silo: reachable from the toolkit, home, and mid-trip.
+     v31: comfort is NO LONGER reachable from the panic screen (audit: redirects
+     during panic break companion presence). Post-"I'm steadier" only. */
   var comfortReturn = 'screen-home';
-  $('btn-panic-comfort').addEventListener('click', function () { comfortReturn = 'screen-panic'; tick(); go('screen-comfort'); });
   $('btn-comfort-back').addEventListener('click', function () { tick(); go(comfortReturn); });
   $('link-comfort-home').addEventListener('click', function () { comfortReturn = 'screen-home'; });
   $('tool-comfort').addEventListener('click', function () { comfortReturn = 'screen-trip'; });
 
-  /* the backup plan, one glance away from the panic flow */
+  /* the backup plan, one glance away from the panic flow (v31: as a one-line
+     reminder ON the panic screen, not a link away from it) */
   var planReturn = 'screen-home';
-  $('btn-panic-plan').addEventListener('click', function () { planReturn = 'screen-panic'; tick(); go('screen-plan'); });
   $('btn-plan-back').addEventListener('click', function () { tick(); go(planReturn); });
   $('link-plan-home').addEventListener('click', function () { planReturn = 'screen-home'; });
 
@@ -954,7 +1071,7 @@
   var trip = { city: '', line: '', dest: '', left: 0, total: 0 };
   var tripCardSent = false;
   function arrivedNote() {
-    petInto($('pet-arrived'), 'celebrate'); // you made it — so did they
+    petInto($('pet-arrived'), suppressCelebration ? 'idle' : 'celebrate'); // steady, not chirpy, on a second panic
     $('home-note').textContent = tripCardSent
       ? 'Your person has your trip card with the ETA.'
       : 'Take a breath. You\u2019re off the train.';
@@ -1481,15 +1598,25 @@
     var raw = String(plan.reachPhone || '').slice(0, 30);
     var dial = raw.replace(/[^+\d]/g, '');
     var digits = raw.replace(/\D/g, '');
+    var textRow = $('crisis-text');
     if (digits.length >= 7) {
       var name = String(plan.reachName || '').trim().slice(0, 40);
       row.hidden = false;
       row.href = 'tel:' + dial;
       $('crisis-person-label').textContent = name ? 'Call ' + name : 'Call my person';
       $('crisis-person-sub').textContent = 'My backup person · saved on this phone only';
+      /* v31 audit: talking is hard mid-panic. Texting is not. One tap sends a
+         pre-written text so the rider never has to find words. */
+      if (textRow) {
+        textRow.hidden = false;
+        textRow.href = 'sms:' + dial + '?body=' + encodeURIComponent("I'm having a panic attack on the train. I'm okay. Please stay on the line with me.");
+        var tl = $('crisis-text-label');
+        if (tl) { tl.textContent = name ? 'Text ' + name : 'Text my person'; }
+      }
     } else {
       row.hidden = true;
       row.removeAttribute('href');
+      if (textRow) { textRow.hidden = true; textRow.removeAttribute('href'); }
     }
   }
   /* v24: the locale-aware crisis line lives in crisis.js (kept out of app.js so this
@@ -1503,56 +1630,24 @@
       go('screen-panic');
     });
   });
-  /* ---------- onboarding (first launch only): name → location → feeling → comforts ---------- */
-  var obFeel = null;
-  function enterOb2() {
-    go('screen-ob2');
+  /* ---------- onboarding (first launch only, v31): city first, name optional,
+       then co-rider. Two screens. City is the only question that changes function;
+       feeling and comfort-link screens are cut (captured later, in calm time). ---------- */
+  function enterOb1() {
+    go('screen-ob1');
     tryLocate({ status: $('ob-loc-status'), city: $('ob-city'), retry: $('btn-ob-loc-retry'), onceKey: 'ob' });
   }
   $('btn-ob1-next').addEventListener('click', function () {
     tick();
-    profile.name = $('ob-name').value.trim().slice(0, 40);
-    saveProfile();
-    enterOb2();
-  });
-  $('btn-ob1-skip').addEventListener('click', function () { tick(); enterOb2(); });
-  $('btn-ob2-next').addEventListener('click', function () {
-    tick();
     profile.city = $('ob-city').value.trim().slice(0, 60);
     profile.line = $('ob-line').value.trim().slice(0, 60);
+    profile.name = $('ob-name').value.trim().slice(0, 40);
     saveProfile();
     applyTheme(); // the app dresses for the city as soon as it knows it
-    go('screen-ob3');
-  });
-  $('btn-ob2-back').addEventListener('click', function () { tick(); go('screen-ob1'); });
-  var obFeelNotes = {
-    steady: 'Good. The app will keep it simple.',
-    uneasy: 'That\u2019s okay. One stop at a time.',
-    spiraling: 'We\u2019ve got you. The big red button is always one tap away.'
-  };
-  $all('#ob-feel .feelbtn').forEach(function (b) {
-    b.addEventListener('click', function () {
-      tick();
-      $all('#ob-feel .feelbtn').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
-      b.setAttribute('aria-pressed', 'true');
-      obFeel = b.getAttribute('data-feel');
-      $('ob-feel-note').textContent = obFeelNotes[obFeel];
-    });
-  });
-  $('btn-ob3-next').addEventListener('click', function () {
-    tick();
-    if (obFeel) { profile.feeling = obFeel; checkinFeel = obFeel; saveProfile(); }
-    go('screen-ob4');
-  });
-  $('btn-ob3-back').addEventListener('click', function () { tick(); enterOb2(); });
-  $('btn-ob4-next').addEventListener('click', function () {
-    tick();
-    var v = ($('ob-comfort-url').value || '').trim();
-    if (v && /^https?:\/\//i.test(v)) { store('iht_comfort_one', v); }
     petPreviewOb();
-    go('screen-ob5');
+    go('screen-ob2');
   });
-  $('btn-ob4-back').addEventListener('click', function () { tick(); go('screen-ob3'); });
+  $('btn-ob1-skip').addEventListener('click', function () { tick(); petPreviewOb(); go('screen-ob2'); });
 
   /* ---------- home: greet by name, show the rider's usual ride, dress for the city ---------- */
   function applyProfileToHome() {
@@ -1870,7 +1965,44 @@
 
   /* ---------- the old full-screen tour is gone: contextual coach marks replace it (see boot block) ---------- */
 
-  /* ============ v10: THE PET — a co-rider. Zero maintenance: no meters, no death, no guilt. Ever. ============ */
+  /* ============ v31 PET ENGINE — alive, not decorative ============
+     Gaze: pupils translate a few pixels toward the last tap, easing back to
+     center after 2s. On the panic screen they default to center-forward: the pet
+     looks at the rider, never away. Blink: a JS loop (3-6s, randomized) that
+     swaps open eyes for shut eyes for 130ms; blinks pause on inhale so the pet
+     never looks away mid-breath. All transform/opacity only, GPU-friendly. */
+  var gazeResetTimer = null;
+  function petGaze(x, y) {
+    try {
+      var dx = Math.max(-1, Math.min(1, (x - window.innerWidth / 2) / (window.innerWidth / 2)));
+      var dy = Math.max(-1, Math.min(1, (y - window.innerHeight / 2) / (window.innerHeight / 2)));
+      var r = document.documentElement;
+      r.style.setProperty('--px', (dx * 3).toFixed(1) + 'px');
+      r.style.setProperty('--py', (dy * 2).toFixed(1) + 'px');
+      if (gazeResetTimer) { clearTimeout(gazeResetTimer); }
+      gazeResetTimer = setTimeout(function () {
+        r.style.setProperty('--px', '0px');
+        r.style.setProperty('--py', '0px');
+      }, 2000);
+    } catch (e) {}
+  }
+  document.addEventListener('pointerdown', function (e) {
+    if (currentScreen() === 'screen-panic') { return; } // panic: eyes forward, always
+    try { petGaze(e.clientX, e.clientY); } catch (err) {}
+  }, { passive: true });
+  (function petBlinkLoop() {
+    function schedule() {
+      setTimeout(function () {
+        if (!petBreathIn && !document.hidden) {
+          document.body.classList.add('pet-blink');
+          setTimeout(function () { document.body.classList.remove('pet-blink'); }, 130);
+        }
+        schedule();
+      }, 3000 + Math.random() * 3000);
+    }
+    schedule();
+  })();
+  /* v10: THE PET — a co-rider. Zero maintenance: no meters, no death, no guilt. Ever. */
   var PET_DEFAULTS = { blob: 'Mochi', bird: 'Pip', cat: 'Miso' };
   var pet = readJSON('iht_pet', null) || { type: 'blob', name: 'Mochi' };
   function savePet() { store('iht_pet', JSON.stringify(pet)); }
@@ -1947,7 +2079,7 @@
     var nm = pet.name || 'Mochi';
     $('pet-home-name').textContent = nm;
     var cap = document.querySelector('#pet-home .petcap em');
-    if (petMood === 'proud') {
+    if (petMood === 'proud' && !suppressCelebration) {
       petInto($('pet-home-svg'), 'celebrate');
       if (cap) { cap.textContent = nm + ' is proud of you'; }
       setTimeout(function () {
@@ -2022,9 +2154,9 @@
     renderPetEverywhere(); // every mount, not just home — the chosen pet must appear everywhere
     go('screen-home');
   }
-  $('btn-ob5-done').addEventListener('click', function () { tick(); finishOnboarding(); });
-  $('btn-ob5-skip').addEventListener('click', function () { tick(); obPetType = 'blob'; var i = $('ob-pet-name'); if (i) { i.value = ''; } finishOnboarding(); });
-  $('btn-ob5-back').addEventListener('click', function () { tick(); go('screen-ob4'); });
+  $('btn-ob2-done').addEventListener('click', function () { tick(); finishOnboarding(); });
+  $('btn-ob2-skip').addEventListener('click', function () { tick(); obPetType = 'blob'; var i = $('ob-pet-name'); if (i) { i.value = ''; } finishOnboarding(); });
+  $('btn-ob2-back').addEventListener('click', function () { tick(); go('screen-ob1'); });
   /* About: co-rider settings */
   function renderPetSeg() {
     $all('#pet-seg .segbtn').forEach(function (b) {
@@ -2158,7 +2290,7 @@
       { key: 'ride', sel: '#btn-start-ride', title: 'Start a ride when you board', body: 'How you feel, 30-second prep, then one tap per stop.' }
     ],
     'screen-toolkit': [
-      { key: 'tools', sel: '#toolkit-featured .toolcard', title: 'Hands-on tools', body: 'These you do with your fingers — no reading required.' }
+      { key: 'tools', sel: '#toolkit-groups .toolcard', title: 'Hands-on tools', body: 'These you do with your fingers — no reading required.' }
     ],
     'screen-trip': [
       { key: 'tap', sel: '#btn-stop-tap', title: 'One tap per stop', body: 'That\u2019s the whole job. The app counts down with you.' }
@@ -2557,14 +2689,104 @@
   /* tiny hook so automated checks can verify the update wiring without a real service worker */
   window.__ihtUpdate = { arm: armUpdatePrompt, refresh: maybeShowUpdateBanner, safe: UPDATE_SAFE_SCREENS, go: go };
 
-  /* ---------- boot: onboarding first, then home. Coach marks guide from there. ---------- */
+  /* ---------- v31 start screen: a loading screen meets a sitcom intro ----------
+     2.0-2.5s on a normal cold open, 1.2s when the rider already opened the app
+     3+ times today, pet-only 0.8s after the first week (audit frequency cap).
+     Skippable after 1s; the panic button works from 0.0s and skips the rest.
+     Warm resume (same tab session) skips the intro entirely. The motif is an
+     original 4-note figure synthesized with Web Audio: no files, no licenses,
+     offline by construction. If iOS blocks audio before a gesture, the intro is
+     still complete silent — the pet and the name carry it. */
+  function splashMotif() {
+    try {
+      var ctx = ensureAudio();
+      if (!ctx) { return; }
+      if (ctx.state === 'suspended') { ctx.resume(); }
+      var t0 = ctx.currentTime + 0.05;
+      var notes = [523.25, 659.25, 783.99, 659.25]; // C5 E5 G5 E5: a warm rise and resolve
+      notes.forEach(function (f, i) {
+        var t = t0 + i * 0.32;
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.05, t + 0.12);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t); o.stop(t + 0.55);
+      });
+      var pad = ctx.createOscillator(), pg = ctx.createGain(); // warm low pad underneath
+      pad.type = 'triangle'; pad.frequency.value = 261.63;
+      pg.gain.setValueAtTime(0.0001, t0);
+      pg.gain.exponentialRampToValueAtTime(0.02, t0 + 0.3);
+      pg.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.6);
+      pad.connect(pg); pg.connect(ctx.destination);
+      pad.start(t0); pad.stop(t0 + 1.65);
+    } catch (e) {} // silent intro is still complete: never fail boot on audio
+  }
+  function splashMode() {
+    /* returns { ms, short } — short means pet-only, no name fade. */
+    try {
+      var now = Date.now();
+      var st = readJSON('iht_splash', null) || {};
+      if (!st.first) { st.first = now; }
+      var today = new Date().toDateString();
+      st.count = (st.date === today) ? (st.count || 0) + 1 : 1;
+      st.date = today;
+      store('iht_splash', JSON.stringify(st));
+      if (now - st.first > 7 * 24 * 3600 * 1000) { return { ms: 800, short: true }; }
+      if (st.count >= 3) { return { ms: 1200, short: false }; }
+      return { ms: 2200, short: false };
+    } catch (e) { return { ms: 2200, short: false }; }
+  }
+  function dismissSplash(target) {
+    if (!splashActive) { return; }
+    clearSplashTimers();
+    if (!target) { return; }
+    if (target === 'screen-ob1') { enterOb1(); return; } // first launch: setup + geolocation attempt
+    go(target);
+  }
+  function showSplash(target) {
+    var mode = splashMode();
+    try { petInto($('splash-pet'), 'idle'); } catch (e) {}
+    var nm = $('splash-name');
+    if (nm) { nm.style.display = mode.short ? 'none' : 'block'; }
+    splashActive = true;
+    var started = Date.now();
+    go('screen-splash');
+    splashActive = true; // go() clears timers; re-arm after navigation
+    splashMotif();
+    splashTimer = setTimeout(function () { dismissSplash(target); }, mode.ms);
+    var splashEl = $('screen-splash');
+    if (splashEl) {
+      splashEl.addEventListener('pointerdown', function (e) {
+        if (e.target && e.target.id === 'btn-splash-panic') { return; } // panic has its own handler
+        if (Date.now() - started >= 1000) { dismissSplash(target); }
+      });
+    }
+  }
+  (function () {
+    var b = $('btn-splash-panic');
+    if (!b) { return; }
+    b.addEventListener('click', function () {
+      tick();
+      clearSplashTimers();
+      go('screen-panic');
+    });
+  })();
+
+  /* ---------- boot: splash on cold open, then onboarding or home. Coach marks guide from there. ---------- */
   applyProfileToHome();
   renderHomePet();
   petInto($('pet-breathe'), 'sleepy');
   renderBreatheCap();
   renderVoice(); // v22: after pet init — the toggle carries the pet's name
   if (window.__ihtCrisis) { window.__ihtCrisis.renderQuiet(); window.__ihtCrisis.renderLocale(); } // v24: locale-aware crisis line (crisis.js)
-  if (!read('iht_onboarded')) { go('screen-ob1'); }
-  else { go('screen-home'); }
+  (function boot() {
+    var target = read('iht_onboarded') ? 'screen-home' : 'screen-ob1';
+    var warm = false;
+    try { warm = !!sessionStorage.getItem('iht_session'); sessionStorage.setItem('iht_session', '1'); } catch (e) {}
+    if (warm) { go(target); return; }
+    showSplash(target);
+  })();
 
 })();

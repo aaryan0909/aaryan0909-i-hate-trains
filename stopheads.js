@@ -30,10 +30,17 @@
   }
   function render() {
     var b = $('set-stopheads');
-    if (!b) { return; }
-    var on = !!prefs().stopHeadsUp;
-    b.classList.toggle('done', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (b) {
+      var on = !!prefs().stopHeadsUp;
+      b.classList.toggle('done', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    var q = $('set-stopheads-quiet');
+    if (q) {
+      var qon = !!prefs().stopHeadsQuiet;
+      q.classList.toggle('done', qon);
+      q.setAttribute('aria-pressed', qon ? 'true' : 'false');
+    }
   }
   function tick() { try { if (navigator.vibrate) { navigator.vibrate(12); } } catch (e) {} }
 
@@ -49,11 +56,30 @@
       if (a) { if (p.stopHeadsUp) { a.warm(); } else { a.stop(); } }
     });
   }
+  var qb = $('set-stopheads-quiet');
+  if (qb) {
+    qb.addEventListener('click', function () {
+      var p = prefs();
+      p.stopHeadsQuiet = !p.stopHeadsQuiet;
+      save(); render(); tick();
+    });
+  }
   render();
 
   window.__ihtStopHeadsUp = function (left) {
     var a = app();
     if (!prefs().stopHeadsUp || !a) { return; } // never without the opt-in
+    /* v31 audit: quiet mode is first-class, not a buried toggle. Pet pulse plus
+       screen flash, no public voice — embarrassment is a real barrier on a
+       crowded train. */
+    if (prefs().stopHeadsQuiet) {
+      try { if (navigator.vibrate) { navigator.vibrate([60, 80, 60]); } } catch (e) {}
+      try {
+        document.body.classList.add('stopflash');
+        setTimeout(function () { document.body.classList.remove('stopflash'); }, 900);
+      } catch (e) {}
+      return;
+    }
     if (left === 2) { a.speak('Two stops to go. You\u2019re doing great.'); }
     else if (left === 1) { a.speak('Next stop is yours. Take a breath.'); }
   };
