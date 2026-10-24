@@ -106,6 +106,22 @@ em { font-style: normal; }
 .calmcard-tx { margin: 0 0 10px; font-size: 17px; line-height: 1.55; color: var(--ink); }
 .calmcard-go { margin: 0; font-size: 17px; padding: 14px 18px; min-height: 60px; }
 
+/* top-tools card on the home screen: one quiet row per tool, 44px+ tap target,
+   text set with textContent only (never HTML) in app.js. */
+.toptool {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 12px 14px; margin: 8px 0 0; min-height: 60px; cursor: pointer; text-align: left;
+}
+.toptool:active { transform: scale(.98); }
+.tt-tx { flex: 1; min-width: 0; }
+.tt-tx strong { display: block; font-size: 16px; color: var(--ink); }
+.tt-tx em { display: block; font-style: normal; font-size: 13px; color: var(--dim); margin-top: 2px; }
+.tt-go { font-size: 15px; font-weight: 700; color: var(--calm); white-space: nowrap; }
+.topnote { margin: 10px 0 0; font-size: 13px; color: var(--dim); }
+#home-top-tools .kicker { margin: 0 0 6px; font-size: 10px; }
+#home-top-tools .body { margin: 0 0 4px; }
+
 .panicbtn {
   display: block; width: 100%; min-height: 104px;
   border: 0; border-radius: 26px;

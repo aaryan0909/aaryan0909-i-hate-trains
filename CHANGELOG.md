@@ -2,6 +2,12 @@
 
 Local source of truth is `~/workspace/i-hate-trains/`; the GitHub repo `aaryan0909/aaryan0909-i-hate-trains` (main) is pushed via `push_files` and Vercel auto-deploys from it.
 
+## v30 (2026-10-24 — "Your most calming tools" on the home screen, Pilot)
+
+- **The journal finally reads back where you start the day.** The shipped "What helped last time" card only speaks on the panic screen; the home screen never learned anything. Now, in calm time only, the home screen shows "What has helped you": the top 3 tools from your own ride notes, ranked by how many rides they helped on ("helped on 4 rides"), ties toward the most recent ride, each row a Start button straight into that tool (breathing patterns use the normal breathing path, return home). One entry counts once per tool; unknown titles and empty entries are ignored; a corrupt journal hides the card instead of breaking anything.
+- **Same privacy story, no new machinery.** Counts come only from `iht_journal`, on this phone, counted at render time — no new storage keys, no scores, no streaks, no grades, nothing leaves the phone. The card stays hidden until at least one ride note names a tool, and the panic flow is untouched (no top-tools markup on the panic screen).
+- SW bumped to `iht-v30`; About reads "version 30". Verified: node --check clean, new jsdom suite 22/22 (ranking, tie-break, duplicate-in-one-entry, unknown-title, empty, corrupt, Start-to-tool + return, panic isolation, version markers), Learn 27/27 and panic-hero 27/27 regression suites green (their version assertions bumped 29 → 30 with the release).
+
 ## v29 (2026-10-23 — panic-screen hero: "Talk me through it" takes the first slot, Forge)
 
 - **The eyes-free rescue is now the panic screen's hero.** Spark-approved backlog item (2026-10-21, Rootd's Rootr / Ballast research): the v27 zero-decision eyes-free rescue was the 4th of 4 equally-weighted cards — a rider in tunnel vision had to read all four and choose. The near-black "Talk me through it — no reading needed" card now takes the dominant first action slot (larger: 116px min-height, 23px title, 2px border, still visually distinct from the tool buttons), above the fold on a 390px phone. Div's stated panic order (Breathe > Ground > Cute) stays as the calm secondary row under a quiet "other ways" divider. The 988 quiet line, "See my backup plan", "Breathing and counting don't work for me", and ← back are untouched; copy is zero-joke, no new storage keys.

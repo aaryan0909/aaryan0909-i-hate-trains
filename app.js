@@ -23,6 +23,7 @@
     maybeCoach(id);
     maybeShowUpdateBanner(); // update prompt only ever appears on calm, non-crisis screens
     if (id === 'screen-panic') { renderLastHelped(); } // journal read-back, one card, calm
+    if (id === 'screen-home') { renderTopTools(); } // journal aggregation, calm time only
   }
   function navGoBack() { var p = navBack.pop(); if (!p) { return; } navFwd.push(currentScreen()); tick(); go(p, { keep: true }); }
   function navGoFwd() { var n = navFwd.pop(); if (!n) { return; } var c = currentScreen(); if (c) { navBack.push(c); } tick(); go(n, { keep: true }); }
@@ -708,6 +709,55 @@
     tick();
     if (lastHelpTool) { openTool(lastHelpTool.id, 'screen-panic'); }
   });
+
+  /* "your most calming tools": aggregate iht_journal on-device and show the
+     top 3 on the home screen (calm time only, never the panic flow). Counts
+     are rides, not scores: one entry counts once per tool, ties break toward
+     the most recent ride, a corrupt journal hides the card. Nothing leaves
+     the phone, no new storage keys, no streaks, no grades. */
+  function renderTopTools() {
+    var card = $('home-top-tools'), list = $('home-top-tools-list');
+    if (!card || !list) { return; }
+    var ranked = [];
+    try {
+      var log = readJSON('iht_journal', []);
+      var counts = {}, lastSeen = {};
+      log.forEach(function (e, idx) {
+        if (!e || !e.tools || !e.tools.length) { return; }
+        var seen = {};
+        e.tools.forEach(function (title) {
+          if (seen[title]) { return; } seen[title] = true;
+          var t = toolByTitle(title);
+          if (!t) { return; }
+          counts[title] = (counts[title] || 0) + 1;
+          lastSeen[title] = idx;
+        });
+      });
+      ranked = Object.keys(counts).map(function (title) {
+        return { tool: toolByTitle(title), count: counts[title], last: lastSeen[title] };
+      }).sort(function (a, b) { return (b.count - a.count) || (b.last - a.last); }).slice(0, 3);
+    } catch (err) { ranked = []; }
+    if (!ranked.length) { card.hidden = true; return; }
+    list.innerHTML = '';
+    ranked.forEach(function (row) {
+      var b = document.createElement('button');
+      b.className = 'toptool'; b.type = 'button';
+      var tx = document.createElement('span'); tx.className = 'tt-tx';
+      var strong = document.createElement('strong'); strong.textContent = row.tool.title;
+      var em = document.createElement('em');
+      em.textContent = 'helped on ' + row.count + (row.count === 1 ? ' ride' : ' rides');
+      tx.appendChild(strong); tx.appendChild(em);
+      var go2 = document.createElement('span'); go2.className = 'tt-go'; go2.textContent = 'Start';
+      b.appendChild(tx); b.appendChild(go2);
+      b.addEventListener('click', function () {
+        tick();
+        if (row.tool.pattern) { startBreathe(row.tool.pattern, 'screen-home', false); }
+        else { openTool(row.tool.id, 'screen-home'); }
+      });
+      list.appendChild(b);
+    });
+    card.hidden = false;
+  }
 
   /* comfort is a solution, not a silo: reachable from the panic flow, the toolkit, home, and mid-trip */
   var comfortReturn = 'screen-home';

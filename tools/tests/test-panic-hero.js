@@ -105,8 +105,8 @@ hero.click();
 ok(active() === 'screen-guide', 'tapping the hero opens screen-guide');
 
 console.log('version markers:');
-ok(d.getElementById('app-version').textContent.trim() === 'version 29', 'About reads version 29');
-ok(/var CACHE = 'iht-v29'/.test(sw), 'sw.js cache is iht-v29');
+ok(d.getElementById('app-version').textContent.trim() === 'version 30', 'About reads version 30');
+ok(/var CACHE = 'iht-v30'/.test(sw), 'sw.js cache is iht-v30');
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
