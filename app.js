@@ -30,7 +30,9 @@
     $all('.screen').forEach(function (s) { s.classList.remove('active'); });
     var el = $(id);
     if (el) { el.classList.add('active'); window.scrollTo(0, 0); }
+    if (id === 'screen-ob0') { resetOb0State(); } // any entry to the breath screen resets it (warm reload, swipe-back)
     if (id !== 'screen-breathe') { stopBreathe(); } // leaving the exercise always stops it cleanly
+    if (id !== 'screen-ob0') { stopObBreath(); } // leaving setup stops the first-breath timer too
     if (id !== 'screen-guide' && window.__ihtGuide) { try { window.__ihtGuide.stop(); } catch (e) {} } // v27: leaving the eyes-free rescue stops it cleanly
     stopHold(); stopMuscleHold(); // never leave a hold tone or rAF loop running on a hidden screen
     if (id === 'screen-butterfly') { flyReset(); }
@@ -60,7 +62,7 @@
     if (dx > 0) { navGoBack(); } else { navGoFwd(); }
   }, { passive: true });
   /* SOS stays one tap away on every screen except home (has the big button), the panic flow itself, and onboarding (each onboarding screen carries its own "I need help right now" escape straight to help) */
-  var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-guide': 1, 'screen-splash': 1, 'screen-ob1': 1, 'screen-ob2': 1 };
+  var SOS_HIDDEN = { 'screen-home': 1, 'screen-panic': 1, 'screen-breathe': 1, 'screen-guide': 1, 'screen-splash': 1, 'screen-ob0': 1, 'screen-ob1': 1, 'screen-ob2': 1 };
   function updateSosFloat(id) {
     var f = $('sos-float');
     if (f) { f.hidden = !!SOS_HIDDEN[id]; }
@@ -982,12 +984,15 @@
         if (city) {
           if (o.city) { o.city.value = city; }
           o.status.textContent = 'Looks like you\u2019re near ' + city + '. Fix it below if I\u2019m wrong — then tell us your line.';
+          if (o.onFound) { try { o.onFound(city); } catch (e) {} }
         } else {
           o.status.textContent = 'Found your location, but couldn\u2019t name the city. Fill it in below.';
+          if (o.onFail) { try { o.onFail(); } catch (e) {} }
         }
       })
       .catch(function () {
         o.status.textContent = 'Found your location, but the city lookup needs internet. Fill it in below.';
+        if (o.onFail) { try { o.onFail(); } catch (e) {} }
       });
   }
   var locDone = {};
@@ -999,6 +1004,7 @@
     if (o.retry) { o.retry.hidden = true; o.retry.onclick = null; }
     if (!('geolocation' in navigator)) {
       st.textContent = 'This device can\u2019t locate itself. The fields below are all yours.';
+      if (o.onFail) { try { o.onFail(); } catch (e) {} }
       return;
     }
     st.textContent = 'Trying to find you… (GPS often can\u2019t reach underground — no worries either way.)';
@@ -1007,6 +1013,7 @@
       if (done) { return; }
       done = true;
       st.textContent = msg;
+      if (o.onFail) { try { o.onFail(); } catch (e) {} }
       if (o.retry) {
         o.retry.hidden = false;
         o.retry.onclick = function () { tick(); locDone[o.onceKey] = false; tryLocate(o); };
@@ -1018,7 +1025,7 @@
       done = true; clearTimeout(timer);
       var lat = pos.coords.latitude.toFixed(3), lon = pos.coords.longitude.toFixed(3);
       if (navigator.onLine) { reverseGeocode(lat, lon, o); }
-      else { st.textContent = 'Got your location (' + lat + ', ' + lon + ') but you\u2019re offline, so no city name. Fill it in below.'; }
+      else { st.textContent = 'Got your location (' + lat + ', ' + lon + ') but you\u2019re offline, so no city name. Fill it in below.'; if (o.onFail) { try { o.onFail(); } catch (e) {} } }
     }, function (err) {
       clearTimeout(timer);
       var code = err && err.code;
@@ -1630,24 +1637,133 @@
       go('screen-panic');
     });
   });
-  /* ---------- onboarding (first launch only, v31): city first, name optional,
-       then co-rider. Two screens. City is the only question that changes function;
-       feeling and comfort-link screens are cut (captured later, in calm time). ---------- */
+  /* ---------- onboarding (first launch only, v32): experience first.
+       ob0: one guided breath with the pet BEFORE any form field — a new user
+       feels the core value within 10 seconds of first open. ob1: one question
+       only (city), with an explicit looking / found / couldn't-find state.
+       ob2: pet pick AFTER the breath. Line and name live in calm time on home. ---------- */
+  var obBreathTimer = null;
+  function stopObBreath() {
+    if (obBreathTimer) { clearTimeout(obBreathTimer); obBreathTimer = null; }
+    var pb = $('pet-ob0');
+    if (pb) { pb.style.transition = 'none'; pb.style.transform = 'scale(1, 1)'; pb.style.opacity = '1'; }
+  }
+  function runObBreath(phases, i) {
+    if (currentScreen() !== 'screen-ob0') { return; }
+    var p = phases[i % phases.length];
+    var w = $('ob0-word');
+    if (w) { w.textContent = p.word; }
+    var pb = $('pet-ob0');
+    if (pb) {
+      var grow = (p.k === 'in');
+      pb.style.transition = reducedMotion ? 'opacity 1.2s ease' : 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
+      if (reducedMotion) { pb.style.transform = 'none'; pb.style.opacity = grow ? '1' : '0.55'; }
+      else { pb.style.transform = grow ? 'scale(0.94, 1.2)' : 'scale(1, 1)'; }
+      try { phaseCue(p.k); } catch (e) {}
+    }
+    if (i + 1 >= phases.length) {
+      /* 20 seconds done: the breath lands, then the one question appears. */
+      obBreathTimer = setTimeout(function () {
+        obBreathTimer = null;
+        if (currentScreen() !== 'screen-ob0') { return; }
+        var w2 = $('ob0-word'); if (w2) { w2.textContent = 'Nice.'; }
+        var ln = $('ob0-line'); if (ln) { ln.textContent = 'That feeling is the whole app. One quick question, then you\u2019re in.'; }
+        var b = $('btn-ob0-breathe'); if (b) { b.hidden = true; }
+        var n = $('btn-ob0-next'); if (n) { n.hidden = false; }
+        var pb2 = $('pet-ob0');
+        if (pb2) { pb2.style.transition = 'transform 1s ease'; pb2.style.transform = 'scale(1, 1)'; pb2.style.opacity = '1'; }
+      }, p.secs * 1000);
+      return;
+    }
+    obBreathTimer = setTimeout(function () { runObBreath(phases, i + 1); }, p.secs * 1000);
+  }
+  function resetOb0State() {
+    /* Entering the breath screen always resets it: pet mounted, breath offered,
+       Next hidden. Otherwise a warm reload or swipe-back could land on a stale
+       "Nice." state with an empty pet mount. Idempotent; safe to call twice. */
+    stopObBreath();
+    try { petInto($('pet-ob0'), 'sleepy'); } catch (e) {}
+    var ln = $('ob0-line');
+    if (ln) { ln.textContent = 'Hi, I\u2019m ' + ((pet && pet.name) || 'Mochi') + '. Let\u2019s take one breath together.'; }
+    var w = $('ob0-word'); if (w) { w.textContent = '…'; }
+    var b = $('btn-ob0-breathe'); if (b) { b.hidden = false; }
+    var n = $('btn-ob0-next'); if (n) { n.hidden = true; }
+  }
+  function enterOb0() { resetOb0State(); go('screen-ob0'); }
+  $('btn-ob0-breathe').addEventListener('click', function () {
+    tick();
+    try { ensureAudio(); } catch (e) {} // the tap is the gesture: safe to init audio on iOS
+    var b = $('btn-ob0-breathe'); if (b) { b.hidden = true; }
+    runObBreath([
+      { k: 'in', word: 'In…', secs: 4 }, { k: 'out', word: 'Out…', secs: 6 },
+      { k: 'in', word: 'In…', secs: 4 }, { k: 'out', word: 'Out…', secs: 6 }
+    ], 0);
+  });
+  $('btn-ob0-next').addEventListener('click', function () { tick(); stopObBreath(); enterOb1(); });
+  $('btn-ob0-skip').addEventListener('click', function () { tick(); stopObBreath(); finishOnboarding(); });
   function enterOb1() {
     go('screen-ob1');
-    tryLocate({ status: $('ob-loc-status'), city: $('ob-city'), retry: $('btn-ob-loc-retry'), onceKey: 'ob' });
+    var found = $('ob-loc-found'); if (found) { found.hidden = true; }
+    tryLocate({
+      status: $('ob-loc-status'), city: $('ob-city'), retry: $('btn-ob-loc-retry'), onceKey: 'ob',
+      onFound: function (city) {
+        /* Found state is unmistakable: short status + an explicit confirm card. */
+        var st = $('ob-loc-status'); if (st) { st.textContent = 'Found you.'; }
+        var ft = $('ob-loc-found-text'); if (ft) { ft.textContent = 'Looks like you\u2019re near ' + city + '. Is that right?'; }
+        var f = $('ob-loc-found'); if (f) { f.hidden = false; }
+      },
+      onFail: function () {
+        var f = $('ob-loc-found'); if (f) { f.hidden = true; }
+      }
+    });
   }
   $('btn-ob1-next').addEventListener('click', function () {
     tick();
     profile.city = $('ob-city').value.trim().slice(0, 60);
-    profile.line = $('ob-line').value.trim().slice(0, 60);
-    profile.name = $('ob-name').value.trim().slice(0, 40);
     saveProfile();
     applyTheme(); // the app dresses for the city as soon as it knows it
     petPreviewOb();
     go('screen-ob2');
   });
   $('btn-ob1-skip').addEventListener('click', function () { tick(); petPreviewOb(); go('screen-ob2'); });
+  $('btn-ob-loc-yes').addEventListener('click', function () {
+    tick();
+    profile.city = $('ob-city').value.trim().slice(0, 60);
+    saveProfile();
+    applyTheme();
+    petPreviewOb();
+    go('screen-ob2');
+  });
+  $('btn-ob-loc-no').addEventListener('click', function () {
+    tick();
+    var f = $('ob-loc-found'); if (f) { f.hidden = true; }
+    var inp = $('ob-city'); if (inp) { try { inp.focus(); } catch (e) {} }
+  });
+
+  /* ---------- calm-time setup (v32): line + name live here, never in onboarding.
+       One quiet card on home, only when either is missing and never dismissed. ---------- */
+  function renderFinishSetup() {
+    var card = $('home-finish-setup');
+    if (!card) { return; }
+    var dismissed = false;
+    try { dismissed = localStorage.getItem('iht_setup_deferred') === '1'; } catch (e) {}
+    var show = !dismissed && !!read('iht_onboarded') && (!profile.name || !profile.line);
+    card.hidden = !show;
+    if (!show) { return; }
+    var nm = $('in-setup-name'); if (nm && document.activeElement !== nm) { nm.value = profile.name || ''; }
+    var ln = $('in-setup-line'); if (ln && document.activeElement !== ln) { ln.value = profile.line || ''; }
+  }
+  $('btn-setup-save').addEventListener('click', function () {
+    tick();
+    var nm = $('in-setup-name'); if (nm) { profile.name = nm.value.trim().slice(0, 40); }
+    var ln = $('in-setup-line'); if (ln) { profile.line = ln.value.trim().slice(0, 60); }
+    saveProfile(); applyProfileToHome(); renderFinishSetup();
+  });
+  $('btn-setup-dismiss').addEventListener('click', function () {
+    tick();
+    try { localStorage.setItem('iht_setup_deferred', '1'); } catch (e) {}
+    renderFinishSetup();
+  });
 
   /* ---------- home: greet by name, show the rider's usual ride, dress for the city ---------- */
   function applyProfileToHome() {
@@ -1656,6 +1772,7 @@
     if (profile.line) { bits.push(profile.line); }
     $('home-ride-line').textContent = bits.length ? bits.join(' · ') : 'Your usual ride';
     applyTheme();
+    renderFinishSetup();
   }
 
   /* ---------- privacy: haptics + sound toggles, erase everything ---------- */
@@ -2742,7 +2859,7 @@
     if (!splashActive) { return; }
     clearSplashTimers();
     if (!target) { return; }
-    if (target === 'screen-ob1') { enterOb1(); return; } // first launch: setup + geolocation attempt
+    if (target === 'screen-ob0') { enterOb0(); return; } // first launch: breath first, then setup
     go(target);
   }
   function showSplash(target) {
@@ -2782,7 +2899,7 @@
   renderVoice(); // v22: after pet init — the toggle carries the pet's name
   if (window.__ihtCrisis) { window.__ihtCrisis.renderQuiet(); window.__ihtCrisis.renderLocale(); } // v24: locale-aware crisis line (crisis.js)
   (function boot() {
-    var target = read('iht_onboarded') ? 'screen-home' : 'screen-ob1';
+    var target = read('iht_onboarded') ? 'screen-home' : 'screen-ob0';
     var warm = false;
     try { warm = !!sessionStorage.getItem('iht_session'); sessionStorage.setItem('iht_session', '1'); } catch (e) {}
     if (warm) { go(target); return; }

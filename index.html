@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0c0e13">
-<meta name="description" content="I Hate Trains — a free pocket companion for people who get scared on trains. Works offline, always.">
+<meta name="description" content="I Hate Trains — a free pocket companion for people who get scared on trains. Core help works offline, even in a tunnel.">
 <title>I Hate Trains</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -25,40 +25,59 @@
     </div>
   </section>
 
-  <!-- ONBOARDING 1/2 (v31) — city first, name optional. City is the only question
-       that changes function; everything else is deferrable. Escape stays dominant. -->
+  <!-- ONBOARDING 0/3 (v32) — experience first. A brand-new user feels a guided
+       breath before any form field. The pet introduces itself, offers one
+       20-second breath, and only then does setup ask anything. Escape stays dominant. -->
+  <section class="screen" id="screen-ob0" aria-label="Meet your co-rider">
+    <div class="wrap narrow center">
+      <button class="ob-escape rise d1" data-ob-escape aria-label="Skip setup and get help right now">I need help right now</button>
+      <p class="kicker rise d1">first, a hello</p>
+      <p class="obstep rise d1">1 of 3</p>
+      <div class="petbreathe rise d2" id="pet-ob0" aria-hidden="true"></div>
+      <p class="lede rise d2" id="ob0-line">Hi, I'm Mochi. Let's take one breath together.</p>
+      <p class="breathword" id="ob0-word" aria-live="polite">…</p>
+      <button class="btn calm big rise d3" id="btn-ob0-breathe">Breathe with me · 20 seconds</button>
+      <button class="btn calm big rise d3" id="btn-ob0-next" hidden>Next: one quick question</button>
+      <button class="linklike quiet" id="btn-ob0-skip">Skip setup</button>
+    </div>
+  </section>
+
+  <!-- ONBOARDING 1/3 (v32) — one question only: city. The location status says
+       plainly which of three states it is in: looking, found (with a confirm
+       step), or couldn't find (honest reason + manual fallback). Line and name
+       moved to calm time on the home screen. -->
   <section class="screen" id="screen-ob1" aria-label="Where are you">
     <div class="wrap narrow">
       <button class="ob-escape rise d1" data-ob-escape aria-label="Skip setup and get help right now">I need help right now</button>
-      <p class="kicker rise d1">where are you</p>
-      <p class="obstep rise d1">1 of 2</p>
+      <p class="kicker rise d1">one quick question</p>
+      <p class="obstep rise d1">2 of 3</p>
       <h2 class="serene rise d2">Where's home base?</h2>
       <div class="loccard rise d2" aria-live="polite">
-        <p class="body" id="ob-loc-status">Getting ready to look for you…</p>
+        <p class="body" id="ob-loc-status">Looking for you…</p>
         <button class="linklike" id="btn-ob-loc-retry" hidden>Try again</button>
+      </div>
+      <div class="loccard rise d2" id="ob-loc-found" hidden>
+        <p class="body" id="ob-loc-found-text"></p>
+        <button class="btn calm big" id="btn-ob-loc-yes">Yes, that's right</button>
+        <button class="linklike quiet" id="btn-ob-loc-no">No, let me type</button>
       </div>
       <label class="field rise d3">City
         <input id="ob-city" type="text" inputmode="text" autocomplete="off" placeholder="Your city">
       </label>
-      <label class="field rise d3">The line you ride most <em>(optional)</em>
-        <input id="ob-line" type="text" inputmode="text" autocomplete="off" placeholder="e.g. Line 1">
-      </label>
-      <label class="field rise d3">Your name <em>(optional)</em>
-        <input id="ob-name" type="text" inputmode="text" autocomplete="off" placeholder="Whatever feels right">
-      </label>
-      <button class="btn calm big rise d4" id="btn-ob1-next">Next</button>
+      <button class="btn calm big rise d4" id="btn-ob1-next">Continue</button>
       <button class="linklike quiet" id="btn-ob1-skip">Skip this</button>
     </div>
   </section>
 
-  <!-- ONBOARDING 2/2 — meet your co-rider -->
+  <!-- ONBOARDING 2/3 — meet your co-rider, AFTER the first breath. The user has
+       already felt the pet guide them before being asked to keep or change it. -->
   <section class="screen" id="screen-ob2" aria-label="Meet your co-rider">
     <div class="wrap narrow">
       <button class="ob-escape rise d1" data-ob-escape aria-label="Skip setup and get help right now">I need help right now</button>
-      <p class="kicker rise d1">one more thing</p>
-      <p class="obstep rise d1">2 of 2 · optional</p>
-      <h2 class="serene rise d2">Meet your<br>co-rider.</h2>
-      <p class="lede soft rise d3">A small companion for scary rides. No feeding, no meters, no worries — just company.</p>
+      <p class="kicker rise d1">keep this co-rider?</p>
+      <p class="obstep rise d1">3 of 3 · optional</p>
+      <h2 class="serene rise d2">Mochi breathed<br>with you.</h2>
+      <p class="lede soft rise d3">Want to keep them, or pick another? No feeding, no meters, no worries — just company.</p>
       <div class="petpick rise d3" id="ob-pet-pick" role="group" aria-label="Pick your co-rider">
         <button class="petopt" data-pet="blob" aria-pressed="true"><span class="petprev" id="ob-pet-blob"></span><strong>Mochi</strong><em>the blob</em></button>
         <button class="petopt" data-pet="bird" aria-pressed="false"><span class="petprev" id="ob-pet-bird"></span><strong>Pip</strong><em>the bird</em></button>
@@ -67,7 +86,7 @@
       <label class="field rise d3">Their name
         <input id="ob-pet-name" type="text" inputmode="text" autocomplete="off" maxlength="24" placeholder="Mochi">
       </label>
-      <button class="btn calm big rise d4" id="btn-ob2-done">Done — take me in</button>
+      <button class="btn calm big rise d4" id="btn-ob2-done">Done</button>
       <button class="linklike quiet" id="btn-ob2-skip">Skip for now</button>
       <button class="linklike quiet" id="btn-ob2-back">Back</button>
     </div>
@@ -88,6 +107,19 @@
       <div class="ridecard rise d4">
         <p class="body" id="home-ride-line">Your ride</p>
         <button class="btn calm big" id="btn-start-ride" data-go="screen-checkin" style="margin-bottom:0">Start a ride</button>
+      </div>
+      <div class="ridecard rise d4" id="home-finish-setup" hidden>
+        <p class="kicker small">optional, whenever</p>
+        <p class="body"><strong>Make this yours?</strong></p>
+        <p class="body soft">Your name and usual line, only if you want them. Dismiss it and it never comes back.</p>
+        <label class="field">Your name
+          <input id="in-setup-name" type="text" autocomplete="off" placeholder="Whatever feels right">
+        </label>
+        <label class="field">The line you ride most
+          <input id="in-setup-line" type="text" autocomplete="off" placeholder="e.g. Line 1">
+        </label>
+        <button class="btn calm" id="btn-setup-save">Save</button>
+        <button class="linklike quiet" id="btn-setup-dismiss">Not now</button>
       </div>
       <p class="fineprint rise d4">Free forever. Works offline where it matters. Even in a tunnel.</p>
       <div class="tools homenav rise d4">
@@ -740,7 +772,7 @@
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 31</p>
+      <p class="fineprint rise d4" id="app-version">version 32</p>
     </div>
   </section>
 

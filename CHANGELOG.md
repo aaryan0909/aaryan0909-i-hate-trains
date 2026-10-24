@@ -2,6 +2,19 @@
 
 Local source of truth is `~/workspace/i-hate-trains/`; the GitHub repo `aaryan0909/aaryan0909-i-hate-trains` (main) is pushed via `push_files` and Vercel auto-deploys from it.
 
+## v32 (2026-10-24 — experience-first setup rebuild, Axle, GitHub issue #3)
+
+Setup no longer asks before it helps. Owner feedback on v31: the setup stages did not make sense (form first, confusing location card, pet pick before the pet had done anything, "Done — take me in" framing help as post-setup).
+- **Step 0 is an experience, not a form.** A brand-new user meets the pet ("Hi, I'm Mochi. Let's take one breath together.") and is offered one 20-second guided breath (In 4s / Out 6s / In 4s / Out 6s) with the pet scaling in sync via the same squash-and-stretch technique as the breathe screen, plus soft phase chimes after the tap gesture. The breath lands ("Nice. That feeling is the whole app.") and only then does the one question appear. A new user feels the core value within 10 seconds of first open, before any form field.
+- **Step 1 asks one question only: city.** The location status now says plainly which of three states it is in: "Looking for you…" while detecting, "Found you." plus an explicit confirm card ("Looks like you're near Toronto. Is that right?" with Yes / No-let-me-type) when auto-detect succeeds, or an honest reason (permission off, no fix, underground timeout, offline) with manual typing as fallback. The old card mixed auto-detect status and manual input with no confirmation step.
+- **Step 2 is pet pick AFTER the breath.** Heading "Mochi breathed with you." — the user has felt the pet guide them before being asked to keep or change it. Done button is now just "Done" (help is no longer framed as starting after setup).
+- **Line and name moved to calm time.** A quiet, dismissible "Make this yours?" card on the home screen (name + line inputs, Save / Not now) appears only when either is missing and never dismissed; dismissing sets `iht_setup_deferred` and it never returns. It never blocks anything.
+- **Skip and escape unchanged in spirit, tightened in fact.** "Skip setup" on the breath screen lands on a working home screen with defaults kept and the panic button dominant. The "I need help right now" escape stays dominant on every setup screen. Total setup is under 30 seconds for a user who taps through.
+- **Existing users are never re-onboarded.** Boot routing is unchanged in shape (`iht_onboarded` → home, otherwise the new breath screen); the v31 stored profile shape is untouched (same `iht_profile` keys). Entering the breath screen always resets it (pet mounted, breath offered, Next hidden), so a warm reload or swipe-back can never land on a stale "Nice." state with an empty pet mount — a real gap the harness caught.
+- **Panic screen untouched and still frozen** (3 options, same words and positions); v31 pet engine, start screen, and freeze auto-start untouched.
+- SW bumped to `iht-v32`; About reads "version 32". Verified: node --check clean on all 7 JS files, 38/38 DOM-stub harness checks green (new-user breath flow incl. real 20s run, skip-entirely, auto-detect found + confirm, permission-denied manual fallback, v31 full-profile upgrade, finish-card save/dismiss/persist, escape from every setup screen, frozen panic screen, breath-timer cleanup on mid-breath exit).
+- **Not built:** the v2 online work (live transit/GTFS, maps, station search, sync, feeds) remains sequenced after the redesign; manual ride flow stays the default.
+
 ## v31 (2026-10-24 — redesign build: less is more, pet as guide, start screen, freeze auto-start, Axle)
 
 Built from `docs/REDESIGN_SPEC.md` (v1 + v2) and `docs/AUDIT_LAYER2.md`. Where they disagree, the audit wins.
