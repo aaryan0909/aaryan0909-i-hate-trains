@@ -14,12 +14,28 @@
 <body>
 <main id="app">
 
-  <!-- SPLASH (v31) — start screen on every cold open: the pet, the name, one motif.
+  <!-- SPLASH (v33) — start screen on every cold open: a cute original cartoon train
+       chugging across the screen with the rider's own pet riding in the engine cab.
+       Pure HTML/CSS: parallax hills and clouds, spinning wheels, speed lines, puffs.
        The panic button is visible from 0.0s and goes straight to help; any tap after
        1s dismisses. Never blocks help, never demands interaction. -->
   <section class="screen" id="screen-splash" aria-label="Welcome">
     <div class="wrap narrow splashwrap">
-      <div class="splashpet" id="splash-pet" aria-hidden="true"></div>
+      <div class="trainscene" aria-hidden="true">
+        <i class="ts-cloud c1"></i><i class="ts-cloud c2"></i><i class="ts-cloud c3"></i>
+        <i class="ts-hill h1"></i><i class="ts-hill h2"></i>
+        <div class="ts-train" id="ts-train">
+          <div class="ts-car ts-caboose"><i class="ts-wheel w1"></i><i class="ts-wheel w2"></i></div>
+          <div class="ts-car ts-mid"><i class="ts-wheel w1"></i><i class="ts-wheel w2"></i></div>
+          <div class="ts-engine">
+            <i class="ts-chimney"></i><i class="ts-puff p1"></i><i class="ts-puff p2"></i><i class="ts-puff p3"></i>
+            <div class="ts-cab"><div class="ts-pet" id="ts-pet"></div></div>
+            <i class="ts-wheel w1"></i><i class="ts-wheel w2"></i><i class="ts-wheel w3"></i>
+            <i class="ts-speed s1"></i><i class="ts-speed s2"></i><i class="ts-speed s3"></i>
+          </div>
+        </div>
+        <div class="ts-track"></div>
+      </div>
       <p class="splashname" id="splash-name">I hate trains.</p>
       <button class="panicbtn splashpanic" id="btn-splash-panic" type="button">I need help right now</button>
     </div>
@@ -82,6 +98,27 @@
         <button class="petopt" data-pet="blob" aria-pressed="true"><span class="petprev" id="ob-pet-blob"></span><strong>Mochi</strong><em>the blob</em></button>
         <button class="petopt" data-pet="bird" aria-pressed="false"><span class="petprev" id="ob-pet-bird"></span><strong>Pip</strong><em>the bird</em></button>
         <button class="petopt" data-pet="cat" aria-pressed="false"><span class="petprev" id="ob-pet-cat"></span><strong>Miso</strong><em>the cat</em></button>
+        <button class="petopt" data-pet="fox" aria-pressed="false"><span class="petprev" id="ob-pet-fox"></span><strong>Rusty</strong><em>the fox</em></button>
+        <button class="petopt" data-pet="frog" aria-pressed="false"><span class="petprev" id="ob-pet-frog"></span><strong>Fern</strong><em>the frog</em></button>
+        <button class="petopt" data-pet="panda" aria-pressed="false"><span class="petprev" id="ob-pet-panda"></span><strong>Bao</strong><em>the panda</em></button>
+        <button class="petopt" data-pet="bunny" aria-pressed="false"><span class="petprev" id="ob-pet-bunny"></span><strong>Mallow</strong><em>the bunny</em></button>
+      </div>
+      <p class="toolgroup rise d3">Color</p>
+      <div class="colordots rise d3" id="ob-color-dots" role="group" aria-label="Pick a color">
+        <button class="cdot on" data-color="classic" aria-pressed="true" aria-label="Classic color" style="--sw:#93d3ab"></button>
+        <button class="cdot" data-color="mint" aria-pressed="false" aria-label="Mint" style="--sw:#93d3ab"></button>
+        <button class="cdot" data-color="peach" aria-pressed="false" aria-label="Peach" style="--sw:#f2b880"></button>
+        <button class="cdot" data-color="lilac" aria-pressed="false" aria-label="Lilac" style="--sw:#c3aed6"></button>
+        <button class="cdot" data-color="sky" aria-pressed="false" aria-label="Sky" style="--sw:#9cc8e8"></button>
+        <button class="cdot" data-color="butter" aria-pressed="false" aria-label="Butter" style="--sw:#f2d98c"></button>
+      </div>
+      <p class="toolgroup rise d3">Accessory</p>
+      <div class="seg segwrap rise d3 accseg" id="ob-acc-seg" role="group" aria-label="Pick an accessory">
+        <button class="segbtn on" data-acc="none" aria-pressed="true">None</button>
+        <button class="segbtn" data-acc="hat" aria-pressed="false">Hat</button>
+        <button class="segbtn" data-acc="glasses" aria-pressed="false">Glasses</button>
+        <button class="segbtn" data-acc="scarf" aria-pressed="false">Scarf</button>
+        <button class="segbtn" data-acc="bow" aria-pressed="false">Bow</button>
       </div>
       <label class="field rise d3">Their name
         <input id="ob-pet-name" type="text" inputmode="text" autocomplete="off" maxlength="24" placeholder="Mochi">
@@ -144,6 +181,7 @@
        the reassurance line (one line, not two). -->
   <section class="screen" id="screen-panic" aria-label="Panic help">
     <div class="wrap narrow panicwrap">
+      <button class="petmini panicpet" id="pet-panic" aria-label="Your co-rider is here"></button>
       <h2 class="serene rise d2">You're safe.</h2>
       <p class="lede soft" id="panic-reassure">This will pass.</p>
       <p class="lede soft" id="panic-plan-line" hidden></p>
@@ -215,6 +253,8 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">no breath required</p>
       <h2 class="serene rise d2">Breathing isn't for everyone.</h2>
+      <button class="petmini" id="pet-nonbreath" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-nonbreath"></p>
       <p class="lede soft rise d3">That's completely fine. These don't ask you to change your breath or count anything:</p>
       <div class="toolcards rise d3" id="nonbreath-list"></div>
       <button class="btn ghost rise d4" data-go="screen-crisis">I'd rather reach someone</button>
@@ -227,6 +267,8 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">the toolkit</p>
       <h2 class="serene rise d2">Things that can help.</h2>
+      <button class="petmini" id="pet-toolkit" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-toolkit"></p>
       <p class="lede soft rise d3">These are coping tools, not treatment. Nothing here grades you. Pick whatever sounds bearable.</p>
       <p class="toolgroup rise d3">Hands-on — do, don’t read</p>
       <div id="toolkit-groups" class="rise d3"></div>
@@ -247,6 +289,8 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">calm facts</p>
       <h2 class="serene rise d2">Know what's happening.</h2>
+      <button class="petmini" id="pet-learn" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-learn"></p>
       <p class="lede soft rise d3">Short, honest reads on how panic works — for between rides, so the tools land harder during them. Coping tools, not treatment.</p>
       <div id="learn-list" class="toolcards rise d3"></div>
       <div id="learn-read" class="rise d3" hidden></div>
@@ -277,6 +321,8 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">before we ride</p>
       <h2 class="serene rise d2">How are you feeling right now?</h2>
+      <button class="petmini" id="pet-checkin" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-checkin"></p>
       <p class="body" id="checkin-theme-line" style="margin-top:-6px"></p>
       <div class="feelgrid rise d3">
         <button class="feelbtn" data-feel="steady">Steady</button>
@@ -351,6 +397,7 @@
         <div class="counterlabel" id="stops-word">stops to go</div>
       </div>
       <button class="pettrip" id="pet-trip" aria-label="Your co-rider is riding with you"></button>
+      <p class="petline" id="petline-trip"></p>
       <button class="tapbtn rise d3" id="btn-stop-tap">Tap at each stop</button>
       <p class="fineprint" id="trip-fine">One tap per stop. That's all you have to do.</p>
       <button class="linklike quiet rise d3" id="btn-show-map" hidden>Show the map</button>
@@ -392,6 +439,8 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">one more thing</p>
       <h2 class="serene rise d2">How was that ride?</h2>
+      <button class="petmini" id="pet-reflect" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-reflect"></p>
       <p class="body rise d3">Compared to before:</p>
       <div class="feelgrid rise d3">
         <button class="feelbtn" data-r="calmer">Calmer</button>
@@ -413,6 +462,8 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">your rides</p>
       <h2 class="serene rise d2">What you've noticed.</h2>
+      <button class="petmini" id="pet-history" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-history"></p>
       <div id="history-list" class="rise d3"></div>
       <button class="btn ghost rise d4" id="btn-erase">Erase everything on this phone</button>
       <p class="fineprint">This deletes your plans, notes, reflections and saved links from this device. It can't be undone.</p>
@@ -425,6 +476,8 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">before boarding</p>
       <h2 class="serene rise d2">My backup plan.</h2>
+      <button class="petmini" id="pet-plan" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-plan"></p>
       <p class="lede soft rise d3">Set once, while you're calm. One glance when you're not. This plan never tells you to stay — you can always reassess.</p>
       <label class="field rise d3">A stop where I could step off, if I choose
         <input id="plan-exit" type="text" autocomplete="off" placeholder="e.g. the next big station">
@@ -466,6 +519,7 @@
       <h2 class="serene rise d2">Comfort corner.</h2>
       <p class="lede soft rise d3">Small calm things. They work even in a tunnel.</p>
       <button class="petcomfort rise d3" id="pet-comfort" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-comfort"></p>
       <div class="calmgrid rise d3" id="calm-grid"></div>
       <p class="toolgroup rise d3">Cute things, one tap</p>
       <p class="body rise d3">Pick a platform, then a mood. Zero searching.</p>
@@ -669,6 +723,8 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">reach someone</p>
       <h2 class="serene rise d2">You don't have to ride this out alone.</h2>
+      <button class="petmini" id="pet-crisis" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-crisis"></p>
       <div class="crisislist rise d3">
         <a class="crisis" id="crisis-person" href="#" hidden><strong id="crisis-person-label"></strong><em id="crisis-person-sub"></em></a>
         <a class="crisis" id="crisis-text" href="#" hidden><strong id="crisis-text-label"></strong><em>One tap sends a pre-written text, so you don't have to talk</em></a>
@@ -691,6 +747,8 @@
     <div class="wrap narrow">
       <p class="kicker rise d1">yours, only</p>
       <h2 class="serene rise d2">Privacy.</h2>
+      <button class="petmini" id="pet-privacy" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-privacy"></p>
       <p class="body rise d3">Everything you put here — plans, reflections, notes, saved links — stays on this phone. There is no account, no server, no analytics, no tracking, no ads. Deleting the app deletes everything.</p>
       <div class="setrow rise d3">
         <button class="check" id="set-haptics" aria-pressed="true"><span class="box" aria-hidden="true"></span><span><strong>Gentle vibrations</strong><em>Soft pulses during breathing. Android only — iPhones use sound cues instead.</em></span></button>
@@ -762,17 +820,39 @@
       <p class="toolgroup rise d4">Your co-rider</p>
       <div class="loccard rise d4">
         <p class="body">No feeding, no meters. Just company. You can also tap your co-rider anywhere they appear.</p>
+        <button class="petmini" id="pet-about" aria-label="Your co-rider"></button>
         <div class="seg segwrap" id="pet-seg" role="group" aria-label="Co-rider">
           <button class="segbtn on" data-pet="blob" aria-pressed="true">Blob</button>
           <button class="segbtn" data-pet="bird" aria-pressed="false">Bird</button>
           <button class="segbtn" data-pet="cat" aria-pressed="false">Cat</button>
+          <button class="segbtn" data-pet="fox" aria-pressed="false">Fox</button>
+          <button class="segbtn" data-pet="frog" aria-pressed="false">Frog</button>
+          <button class="segbtn" data-pet="panda" aria-pressed="false">Panda</button>
+          <button class="segbtn" data-pet="bunny" aria-pressed="false">Bunny</button>
+        </div>
+        <p class="toolgroup">Color</p>
+        <div class="colordots" role="group" aria-label="Pick a color">
+          <button class="cdot on" data-color="classic" aria-pressed="true" aria-label="Classic color" style="--sw:#93d3ab"></button>
+          <button class="cdot" data-color="mint" aria-pressed="false" aria-label="Mint" style="--sw:#93d3ab"></button>
+          <button class="cdot" data-color="peach" aria-pressed="false" aria-label="Peach" style="--sw:#f2b880"></button>
+          <button class="cdot" data-color="lilac" aria-pressed="false" aria-label="Lilac" style="--sw:#c3aed6"></button>
+          <button class="cdot" data-color="sky" aria-pressed="false" aria-label="Sky" style="--sw:#9cc8e8"></button>
+          <button class="cdot" data-color="butter" aria-pressed="false" aria-label="Butter" style="--sw:#f2d98c"></button>
+        </div>
+        <p class="toolgroup">Accessory</p>
+        <div class="seg segwrap accseg" role="group" aria-label="Pick an accessory">
+          <button class="segbtn on" data-acc="none" aria-pressed="true">None</button>
+          <button class="segbtn" data-acc="hat" aria-pressed="false">Hat</button>
+          <button class="segbtn" data-acc="glasses" aria-pressed="false">Glasses</button>
+          <button class="segbtn" data-acc="scarf" aria-pressed="false">Scarf</button>
+          <button class="segbtn" data-acc="bow" aria-pressed="false">Bow</button>
         </div>
         <label class="field" style="margin:14px 0 0">Their name
           <input id="in-pet-name" type="text" autocomplete="off" maxlength="24" aria-label="Co-rider name">
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 32</p>
+      <p class="fineprint rise d4" id="app-version">version 33</p>
     </div>
   </section>
 
@@ -793,6 +873,27 @@
     <button class="segbtn" data-pet="blob">Blob</button>
     <button class="segbtn" data-pet="bird">Bird</button>
     <button class="segbtn" data-pet="cat">Cat</button>
+    <button class="segbtn" data-pet="fox">Fox</button>
+    <button class="segbtn" data-pet="frog">Frog</button>
+    <button class="segbtn" data-pet="panda">Panda</button>
+    <button class="segbtn" data-pet="bunny">Bunny</button>
+  </div>
+  <p class="toolgroup">Color</p>
+  <div class="colordots" role="group" aria-label="Pick a color">
+    <button class="cdot on" data-color="classic" aria-pressed="true" aria-label="Classic color" style="--sw:#93d3ab"></button>
+    <button class="cdot" data-color="mint" aria-pressed="false" aria-label="Mint" style="--sw:#93d3ab"></button>
+    <button class="cdot" data-color="peach" aria-pressed="false" aria-label="Peach" style="--sw:#f2b880"></button>
+    <button class="cdot" data-color="lilac" aria-pressed="false" aria-label="Lilac" style="--sw:#c3aed6"></button>
+    <button class="cdot" data-color="sky" aria-pressed="false" aria-label="Sky" style="--sw:#9cc8e8"></button>
+    <button class="cdot" data-color="butter" aria-pressed="false" aria-label="Butter" style="--sw:#f2d98c"></button>
+  </div>
+  <p class="toolgroup">Accessory</p>
+  <div class="seg segwrap accseg" role="group" aria-label="Pick an accessory">
+    <button class="segbtn on" data-acc="none" aria-pressed="true">None</button>
+    <button class="segbtn" data-acc="hat" aria-pressed="false">Hat</button>
+    <button class="segbtn" data-acc="glasses" aria-pressed="false">Glasses</button>
+    <button class="segbtn" data-acc="scarf" aria-pressed="false">Scarf</button>
+    <button class="segbtn" data-acc="bow" aria-pressed="false">Bow</button>
   </div>
   <button class="linklike quiet" id="ps-close">Close</button>
 </section>

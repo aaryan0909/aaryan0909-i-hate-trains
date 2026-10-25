@@ -1,5 +1,18 @@
 # CHANGELOG — I Hate Trains
 
+## v33 (2026-10-25 — pet-first overhaul, Axle)
+
+Owner direction: a cute, fun, original cartoon-style train intro with the pet riding it; more pets and more customization; the pet as the core of every part of the app, so good users obsess over it.
+- **Intro train scene.** The static start-screen pet is replaced by an original cartoon train chugging across the screen with the rider's own pet riding in the engine cab. Pure HTML/CSS: parallax hills and clouds, spinning wheels, speed lines, chimney puffs, squash-and-stretch bobbing. No image or audio files, no copied characters or trademarked designs. The crossing is timed to the splash mode (2.2s / 1.2s / 0.8s); the synthesized motif stays; panic button works from 0.0s; any tap after 1s skips; reduced-motion riders get a static train.
+- **More pets.** Roster grows from 3 to 7: Mochi the blob, Pip the bird, Miso the cat, plus Rusty the fox, Fern the frog, Bao the panda, Mallow the bunny. Every species renders in every place the pet appears (home, breathe, rescue, intro train, picker, pet sheet, and all new screen mounts) from one data-driven builder with per-species eyes, blush, and accessory anchors.
+- **Customization.** Species, name, color, and accessory. Colors: classic (each species' original colors) plus mint, peach, lilac, and sky/butter palette options. Accessories: none, hat, glasses, scarf, bow — appearance only, drawn as SVG overlays. Picker UI stays simple: species row, color dots, accessory row, name field, in onboarding, the pet sheet, and About. Stored on-device under the existing `iht_pet` key; migration gives old profiles color classic and accessory none, so existing users see zero change unless they customize.
+- **Pet everywhere.** The pet now guides every screen with a contextual one-line reaction (tap any pet to open the pet sheet): toolkit, learn, plan, history, privacy, check-in, reflection, crisis (calm line, no jokes), non-breath, comfort (watches with you), and trip (reacts to stop taps: two stops and one stop lines plus a happy bounce). Panic keeps the frozen layout: the pet sits small, silent, and forward-facing, adding zero words and moving nothing. Breathe and rescue behavior unchanged; the 10-minute celebration cooldown still applies.
+- **Tap-pet-sheet rule extended.** Tapping the pet anywhere opens the pet sheet; opening the sheet now also clears the panic freeze timer, so the rescue can never auto-start underneath an open sheet.
+- SW bumped to `iht-v33`; About reads "version 33". Verified: node --check clean on all 7 JS files, 38/38 DOM-stub harness checks green (splash train + panic-from-0.0s, all 7 species, all 4 accessories, color save + reload persistence, v32 migration, pet mounts + lines on every screen, frozen 3-option panic screen).
+- **Not built:** the v2 online work (live transit/GTFS, maps, station search, sync, feeds) remains sequenced after the redesign; manual ride flow stays the default. True 3D rendering is out of scope (breaks the offline, zero-dependency budget); the intro is layered 2.5D cartoon, not WebGL.
+
+
+
 Local source of truth is `~/workspace/i-hate-trains/`; the GitHub repo `aaryan0909/aaryan0909-i-hate-trains` (main) is pushed via `push_files` and Vercel auto-deploys from it.
 
 ## v32 (2026-10-24 — experience-first setup rebuild, Axle, GitHub issue #3)

@@ -41,6 +41,7 @@
     maybeShowUpdateBanner(); // update prompt only ever appears on calm, non-crisis screens
     if (id === 'screen-panic') { renderPanicPlan(); suppressCelebration = recentSteady(); armPanicFreeze(); } // v31: plan line + celebration cooldown + freeze auto-start
     if (id === 'screen-toolkit') { renderTopTools(); } // v31: "What has helped you" lives in the toolkit now, not home
+    mountScreenPets(); renderPetScreenLines(); // v33: the pet guides every screen
   }
   function navGoBack() { var p = navBack.pop(); if (!p) { return; } navFwd.push(currentScreen()); tick(); go(p, { keep: true }); }
   function navGoFwd() { var n = navFwd.pop(); if (!n) { return; } var c = currentScreen(); if (c) { navBack.push(c); } tick(); go(n, { keep: true }); }
@@ -1122,7 +1123,7 @@
       if (window.TriMap) { TriMap.closeMap(); }
       setTimeout(function () { arrivedNote(); go('screen-arrived'); }, 600); }
   }
-  $('btn-stop-tap').addEventListener('click', function () { advanceStop(); });
+  $('btn-stop-tap').addEventListener('click', function () { advanceStop(); renderTripPetLine(); try { petInto($('pet-trip'), 'celebrate'); setTimeout(function () { petInto($('pet-trip'), 'idle'); }, 900); } catch (e) {} });
   $('btn-show-map').addEventListener('click', function () {
     tick();
     var s = window.TriMap && TriMap.current;
@@ -2120,54 +2121,192 @@
     schedule();
   })();
   /* v10: THE PET — a co-rider. Zero maintenance: no meters, no death, no guilt. Ever. */
-  var PET_DEFAULTS = { blob: 'Mochi', bird: 'Pip', cat: 'Miso' };
+  /* v33 PET MODEL — more pets, more customizable, same zero-maintenance promise.
+     Species are data, not special cases: each def carries its classic colors, eye
+     positions, blush spots, and accessory anchors. Colors are a small shared palette
+     (classic = the species' original colors, so existing users see zero change);
+     accessories are appearance-only overlays. Migration: old profiles ({type, name})
+     gain color 'classic' and accessory 'none' automatically. */
+  var PET_SPECIES = ['blob', 'bird', 'cat', 'fox', 'frog', 'panda', 'bunny'];
+  var PET_DEFAULTS = { blob: 'Mochi', bird: 'Pip', cat: 'Miso', fox: 'Rusty', frog: 'Fern', panda: 'Bao', bunny: 'Mallow' };
+  var PET_SPECIES_LABEL = { blob: 'Blob', bird: 'Bird', cat: 'Cat', fox: 'Fox', frog: 'Frog', panda: 'Panda', bunny: 'Bunny' };
+  var PET_PALETTE = {
+    mint: { main: '#93d3ab', dark: '#6fb98a' },
+    peach: { main: '#f2b880', dark: '#dd9a5c' },
+    lilac: { main: '#c3aed6', dark: '#a58cc0' },
+    sky: { main: '#9cc8e8', dark: '#7aadd6' },
+    butter: { main: '#f2d98c', dark: '#e0c168' }
+  };
+  var PET_COLOR_ORDER = ['classic', 'mint', 'peach', 'lilac', 'sky', 'butter'];
+  var PET_COLOR_SWATCH = { classic: '#93d3ab', mint: '#93d3ab', peach: '#f2b880', lilac: '#c3aed6', sky: '#9cc8e8', butter: '#f2d98c' };
+  var PET_ACCESSORIES = ['none', 'hat', 'glasses', 'scarf', 'bow'];
+  var PET_ACCESSORY_LABEL = { none: 'None', hat: 'Hat', glasses: 'Glasses', scarf: 'Scarf', bow: 'Bow' };
   var pet = readJSON('iht_pet', null) || { type: 'blob', name: 'Mochi' };
+  if (!PET_DEFAULTS[pet.type]) { pet.type = 'blob'; }
+  if (!pet.name) { pet.name = PET_DEFAULTS[pet.type]; }
+  if (!pet.color) { pet.color = 'classic'; }
+  if (!pet.accessory) { pet.accessory = 'none'; }
   function savePet() { store('iht_pet', JSON.stringify(pet)); }
-  function petSVG(type) {
-    var eyeOpen = '<g class="peye peye-open"><circle cx="48" cy="62" r="5.5" fill="#10141b"/><circle cx="72" cy="62" r="5.5" fill="#10141b"/><circle cx="50" cy="60" r="1.8" fill="#fff"/><circle cx="74" cy="60" r="1.8" fill="#fff"/></g>';
-    var eyeShut = '<g class="peye-shut"><path d="M42 62 q6 5 12 0 M66 62 q6 5 12 0" stroke="#10141b" stroke-width="3" fill="none" stroke-linecap="round"/></g>';
-    var blush = '<ellipse cx="37" cy="72" rx="5" ry="3.5" fill="#d98a9e" opacity=".55"/><ellipse cx="83" cy="72" rx="5" ry="3.5" fill="#d98a9e" opacity=".55"/>';
-    if (type === 'bird') {
-      return '<svg viewBox="0 0 120 120" class="petsvg" aria-hidden="true">'
-        + '<path d="M30 78 q-16 4 -20 18 q16 2 24 -8 Z" fill="#8a96cc"/>'
-        + '<circle cx="60" cy="66" r="30" fill="#a9b6e8"/>'
-        + '<ellipse cx="42" cy="70" rx="11" ry="17" fill="#8a96cc" transform="rotate(14 42 70)"/>'
-        + '<ellipse cx="50" cy="52" rx="9" ry="12" fill="#ffffff" opacity=".18" transform="rotate(-16 50 52)"/>'
-        + '<path d="M60 62 l13 5 l-13 5 Z" fill="#e8b86f"/>'
-        + '<g class="peye peye-open"><circle cx="70" cy="52" r="5.5" fill="#10141b"/><circle cx="72" cy="50" r="1.8" fill="#fff"/></g>'
-        + '<g class="peye-shut"><path d="M64 52 q6 5 12 0" stroke="#10141b" stroke-width="3" fill="none" stroke-linecap="round"/></g>'
-        + '<ellipse cx="60" cy="62" rx="5" ry="3.5" fill="#d98a9e" opacity=".55"/>'
-        + '<path d="M52 94 l0 9 M68 94 l0 9" stroke="#e8b86f" stroke-width="3" stroke-linecap="round"/></svg>';
-    }
-    if (type === 'cat') {
-      return '<svg viewBox="0 0 120 120" class="petsvg" aria-hidden="true">'
-        + '<path d="M90 86 q18 -2 22 -20" stroke="#e8b86f" stroke-width="9" fill="none" stroke-linecap="round"/>'
-        + '<path d="M34 42 L27 16 L49 30 Z" fill="#e8b86f"/><path d="M86 42 L93 16 L71 30 Z" fill="#e8b86f"/>'
-        + '<path d="M36 35 L31 21 L45 30 Z" fill="#d9a05f"/><path d="M84 35 L89 21 L75 30 Z" fill="#d9a05f"/>'
-        + '<circle cx="60" cy="64" r="30" fill="#e8b86f"/>'
-        + '<path d="M48 40 q3 5 0 10 M60 38 q3 5 0 10 M72 40 q3 5 0 10" stroke="#d9a05f" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
-        + eyeOpen + eyeShut + blush
-        + '<path d="M56 74 h8 l-4 5 Z" fill="#d98a9e"/>'
-        + '<path d="M30 66 l-15 -3 M30 73 l-15 3 M90 66 l15 -3 M90 73 l15 3" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".7"/></svg>';
-    }
-    return '<svg viewBox="0 0 120 120" class="petsvg" aria-hidden="true">'
-      + '<ellipse cx="60" cy="104" rx="30" ry="7" fill="rgba(0,0,0,.28)"/>'
-      + '<path d="M60 22 C36 22 26 44 26 66 C26 90 40 100 60 100 C80 100 94 90 94 66 C94 44 84 22 60 22 Z" fill="#93d3ab"/>'
-      + '<ellipse cx="45" cy="46" rx="10" ry="15" fill="#ffffff" opacity=".16" transform="rotate(-18 45 46)"/>'
-      + eyeOpen + eyeShut + blush
-      + '<path d="M54 76 q6 5 12 0" stroke="#10141b" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
+  function petName() { try { return (pet && pet.name) || PET_DEFAULTS[pet.type] || 'Mochi'; } catch (e) { return 'Mochi'; } }
+  function petEyesOpen(eyes) {
+    var out = '<g class="peye peye-open">';
+    eyes.forEach(function (e) {
+      out += '<circle cx="' + e[0] + '" cy="' + e[1] + '" r="5.5" fill="#10141b"/><circle cx="' + (e[0] + 2) + '" cy="' + (e[1] - 2) + '" r="1.8" fill="#fff"/>';
+    });
+    return out + '</g>';
   }
+  function petEyesShut(eyes) {
+    var out = '<g class="peye-shut">';
+    eyes.forEach(function (e) {
+      out += '<path d="M' + (e[0] - 6) + ' ' + e[1] + ' q6 5 12 0" stroke="#10141b" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    });
+    return out + '</g>';
+  }
+  function petBlush(spots) {
+    var out = '';
+    spots.forEach(function (p) {
+      out += '<ellipse cx="' + p[0] + '" cy="' + p[1] + '" rx="5" ry="3.5" fill="#d98a9e" opacity=".55"/>';
+    });
+    return out;
+  }
+  function petAccSVG(acc, sp) {
+    if (acc === 'hat') {
+      var h = sp.hat;
+      return '<g transform="rotate(-8 ' + h[0] + ' ' + h[1] + ')"><path d="M' + (h[0] - 17) + ' ' + (h[1] + 8) + ' q17 -24 34 0 Z" fill="#d95f5f"/><ellipse cx="' + h[0] + '" cy="' + (h[1] + 9) + '" rx="22" ry="4.5" fill="#b84a4a"/><circle cx="' + h[0] + '" cy="' + (h[1] - 13) + '" r="3.5" fill="#f2d98c"/></g>';
+    }
+    if (acc === 'glasses') {
+      var out = '';
+      sp.eyes.forEach(function (e) {
+        out += '<circle cx="' + e[0] + '" cy="' + e[1] + '" r="10.5" fill="rgba(255,255,255,.14)" stroke="#2b2b33" stroke-width="3"/>';
+      });
+      if (sp.eyes.length > 1) {
+        var a = sp.eyes[0], b = sp.eyes[1];
+        out += '<path d="M' + (a[0] + 10) + ' ' + a[1] + ' L' + (b[0] - 10) + ' ' + b[1] + '" stroke="#2b2b33" stroke-width="3" stroke-linecap="round"/>';
+        out += '<path d="M' + (a[0] - 10) + ' ' + a[1] + ' L' + (a[0] - 18) + ' ' + (a[1] - 2) + ' M' + (b[0] + 10) + ' ' + b[1] + ' L' + (b[0] + 18) + ' ' + (b[1] - 2) + '" stroke="#2b2b33" stroke-width="3" stroke-linecap="round"/>';
+      }
+      return out;
+    }
+    if (acc === 'scarf') {
+      return '<path d="M28 90 q32 12 64 0 l0 11 q-32 12 -64 0 Z" fill="#d95f5f"/><rect x="82" y="96" width="13" height="19" rx="4" fill="#b84a4a" transform="rotate(12 88 105)"/>';
+    }
+    if (acc === 'bow') {
+      var w = sp.bow;
+      return '<g><path d="M' + w[0] + ' ' + w[1] + ' L' + (w[0] - 14) + ' ' + (w[1] - 8) + ' L' + (w[0] - 14) + ' ' + (w[1] + 8) + ' Z" fill="#d95f5f"/><path d="M' + w[0] + ' ' + w[1] + ' L' + (w[0] + 14) + ' ' + (w[1] - 8) + ' L' + (w[0] + 14) + ' ' + (w[1] + 8) + ' Z" fill="#d95f5f"/><circle cx="' + w[0] + '" cy="' + w[1] + '" r="4" fill="#b84a4a"/></g>';
+    }
+    return '';
+  }
+  function petResolve(classicMain, classicDark, color) {
+    if (!color || color === 'classic' || !PET_PALETTE[color]) { return { main: classicMain, dark: classicDark }; }
+    return { main: PET_PALETTE[color].main, dark: PET_PALETTE[color].dark };
+  }
+  var PET_DEFS = {
+    blob: {
+      eyes: [[48, 62], [72, 62]], blush: [[37, 72], [83, 72]], hat: [60, 22], bow: [88, 40],
+      body: function (c) {
+        return '<ellipse cx="60" cy="104" rx="30" ry="7" fill="rgba(0,0,0,.28)"/>'
+          + '<path d="M60 22 C36 22 26 44 26 66 C26 90 40 100 60 100 C80 100 94 90 94 66 C94 44 84 22 60 22 Z" fill="' + c.main + '"/>'
+          + '<ellipse cx="45" cy="46" rx="10" ry="15" fill="#ffffff" opacity=".16" transform="rotate(-18 45 46)"/>'
+          + '<path d="M54 76 q6 5 12 0" stroke="#10141b" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+      }
+    },
+    bird: {
+      eyes: [[70, 52]], blush: [[60, 62]], hat: [62, 32], bow: [86, 38],
+      body: function (c) {
+        return '<path d="M30 78 q-16 4 -20 18 q16 2 24 -8 Z" fill="' + c.dark + '"/>'
+          + '<circle cx="60" cy="66" r="30" fill="' + c.main + '"/>'
+          + '<ellipse cx="42" cy="70" rx="11" ry="17" fill="' + c.dark + '" transform="rotate(14 42 70)"/>'
+          + '<ellipse cx="50" cy="52" rx="9" ry="12" fill="#ffffff" opacity=".18" transform="rotate(-16 50 52)"/>'
+          + '<path d="M60 62 l13 5 l-13 5 Z" fill="#e8b86f"/>'
+          + '<path d="M52 94 l0 9 M68 94 l0 9" stroke="#e8b86f" stroke-width="3" stroke-linecap="round"/>';
+      }
+    },
+    cat: {
+      eyes: [[48, 62], [72, 62]], blush: [[37, 72], [83, 72]], hat: [60, 26], bow: [88, 38],
+      body: function (c) {
+        return '<path d="M90 86 q18 -2 22 -20" stroke="' + c.main + '" stroke-width="9" fill="none" stroke-linecap="round"/>'
+          + '<path d="M34 42 L27 16 L49 30 Z" fill="' + c.main + '"/><path d="M86 42 L93 16 L71 30 Z" fill="' + c.main + '"/>'
+          + '<path d="M36 35 L31 21 L45 30 Z" fill="' + c.dark + '"/><path d="M84 35 L89 21 L75 30 Z" fill="' + c.dark + '"/>'
+          + '<circle cx="60" cy="64" r="30" fill="' + c.main + '"/>'
+          + '<path d="M48 40 q3 5 0 10 M60 38 q3 5 0 10 M72 40 q3 5 0 10" stroke="' + c.dark + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
+          + '<path d="M56 74 h8 l-4 5 Z" fill="#d98a9e"/>'
+          + '<path d="M30 66 l-15 -3 M30 73 l-15 3 M90 66 l15 -3 M90 73 l15 3" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".7"/>';
+      }
+    },
+    fox: {
+      eyes: [[48, 60], [72, 60]], blush: [[37, 72], [83, 72]], hat: [60, 26], bow: [88, 40],
+      body: function (c) {
+        return '<path d="M34 44 L28 14 L52 32 Z" fill="' + c.main + '"/><path d="M86 44 L92 14 L68 32 Z" fill="' + c.main + '"/>'
+          + '<path d="M36 36 L33 20 L48 31 Z" fill="#fdf6ec"/><path d="M84 36 L87 20 L72 31 Z" fill="#fdf6ec"/>'
+          + '<circle cx="60" cy="66" r="30" fill="' + c.main + '"/>'
+          + '<ellipse cx="60" cy="79" rx="16" ry="11" fill="#fdf6ec"/>'
+          + '<ellipse cx="60" cy="74" rx="4" ry="3.5" fill="#2b2b33"/>'
+          + '<path d="M60 78 L60 82 M60 82 q-4 3 -8 1 M60 82 q4 3 8 1" stroke="#2b2b33" stroke-width="2" fill="none" stroke-linecap="round"/>';
+      }
+    },
+    frog: {
+      eyes: [[42, 34], [78, 34]], blush: [[30, 74], [90, 74]], hat: [42, 14], bow: [90, 56],
+      body: function (c) {
+        return '<circle cx="42" cy="34" r="13" fill="' + c.main + '"/><circle cx="78" cy="34" r="13" fill="' + c.main + '"/>'
+          + '<circle cx="60" cy="70" r="32" fill="' + c.main + '"/>'
+          + '<ellipse cx="60" cy="82" rx="18" ry="13" fill="#ffffff" opacity=".25"/>'
+          + '<path d="M46 82 q14 10 28 0" stroke="' + c.dark + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+      }
+    },
+    panda: {
+      eyes: [[48, 62], [72, 62]], blush: [[37, 72], [83, 72]], hat: [60, 24], bow: [88, 40],
+      body: function (c) {
+        var patch = (!c || !c.patch) ? '#2b2b33' : c.patch;
+        return '<circle cx="32" cy="40" r="13" fill="' + patch + '"/><circle cx="88" cy="40" r="13" fill="' + patch + '"/>'
+          + '<circle cx="60" cy="66" r="30" fill="#f5f2ea"/>'
+          + '<ellipse cx="48" cy="62" rx="9" ry="12" fill="' + patch + '" transform="rotate(-15 48 62)"/>'
+          + '<ellipse cx="72" cy="62" rx="9" ry="12" fill="' + patch + '" transform="rotate(15 72 62)"/>'
+          + '<ellipse cx="60" cy="76" rx="4.5" ry="3.5" fill="' + patch + '"/>';
+      }
+    },
+    bunny: {
+      eyes: [[48, 64], [72, 64]], blush: [[37, 74], [83, 74]], hat: [60, 28], bow: [88, 44],
+      body: function (c) {
+        return '<ellipse cx="40" cy="26" rx="9" ry="24" fill="' + c.main + '" transform="rotate(-10 40 26)"/>'
+          + '<ellipse cx="80" cy="26" rx="9" ry="24" fill="' + c.main + '" transform="rotate(10 80 26)"/>'
+          + '<ellipse cx="40" cy="28" rx="4.5" ry="16" fill="' + c.dark + '" transform="rotate(-10 40 28)"/>'
+          + '<ellipse cx="80" cy="28" rx="4.5" ry="16" fill="' + c.dark + '" transform="rotate(10 80 28)"/>'
+          + '<circle cx="60" cy="68" r="28" fill="' + c.main + '"/>'
+          + '<path d="M57 74 h6 l-3 4 Z" fill="#d98a9e"/>'
+          + '<rect x="57" y="79" width="6" height="6" rx="1.5" fill="#fff" stroke="#e5e0d8"/>';
+      }
+    }
+  };
+  var PET_CLASSIC = {
+    blob: ['#93d3ab', '#6fb98a'], bird: ['#a9b6e8', '#8a96cc'], cat: ['#e8b86f', '#d9a05f'],
+    fox: ['#e89a4a', '#c97a2e'], frog: ['#7cc47f', '#5aa75e'], panda: ['#f5f2ea', '#2b2b33'],
+    bunny: ['#f2ede6', '#e8a0b4']
+  };
+  function petSVG(type, color, accessory) {
+    var sp = PET_DEFS[type] || PET_DEFS.blob;
+    var cl = PET_CLASSIC[type] || PET_CLASSIC.blob;
+    var c = petResolve(cl[0], cl[1], color);
+    if (type === 'panda' && color && color !== 'classic' && PET_PALETTE[color]) { c = { main: '#f5f2ea', dark: PET_PALETTE[color].dark, patch: PET_PALETTE[color].dark }; }
+    if (type === 'panda') { c.patch = c.dark; }
+    return '<svg viewBox="0 0 120 120" class="petsvg" aria-hidden="true">'
+      + sp.body(c) + petEyesOpen(sp.eyes) + petEyesShut(sp.eyes) + petBlush(sp.blush)
+      + petAccSVG(accessory || 'none', sp) + '</svg>';
+  }
+  /* tiny hook so automated checks can verify pet rendering without a real browser */
+  window.__ihtPetTest = {
+    svg: function (t, c, a) { return petSVG(t, c, a); },
+    get: function () { return { type: pet.type, name: pet.name, color: pet.color, accessory: pet.accessory }; }
+  };
   function petInto(el, mode, forceType) {
     if (!el) { return; }
-    el.innerHTML = petSVG(forceType || pet.type);
-    var wrap = (el.closest && el.closest('.pethome,.petstage,.pettrip,.petbreathe,.petarrived,.petprev,.petcomfort,.ps-pet')) || el;
+    el.innerHTML = petSVG(forceType || pet.type, pet.color, pet.accessory);
+    var wrap = (el.closest && el.closest('.pethome,.petstage,.pettrip,.petbreathe,.petarrived,.petprev,.petcomfort,.ps-pet,.petmini')) || el;
     wrap.classList.remove('pet-idle', 'pet-happy', 'pet-celebrate', 'pet-sleepy');
     wrap.classList.add(mode === 'sleepy' ? 'pet-sleepy' : mode === 'celebrate' ? 'pet-celebrate' : 'pet-idle');
   }
   /* v27: the eyes-free rescue module (guide.js) needs the pet mount + name, same split pattern as crisis.js / stopheads.js. */
   window.__ihtGuidePet = {
     mount: function (el) { petInto(el, 'sleepy'); },
-    name: function () { try { return (pet && pet.name) || 'Mochi'; } catch (e) { return 'Mochi'; } }
+    name: function () { try { return petName(); } catch (e) { return 'Mochi'; } }
   };
   function petHearts(el, n) {
     for (var i = 0; i < (n || 3); i++) {
@@ -2218,6 +2357,11 @@
     mountComfortPet();
     renderPetSeg();
     renderPetComfortCard();
+    renderPetColorDots();
+    renderPetAccSegs();
+    mountScreenPets();
+    petInto($('pet-about'), 'idle');
+    renderPetScreenLines();
     renderBreatheCap();
     renderVoice(); // v22: the voice toggle carries the pet's name
   }
@@ -2246,11 +2390,27 @@
   }
   /* onboarding: meet your co-rider */
   var obPetType = 'blob';
+  var obPetColor = 'classic';
+  var obPetAccessory = 'none';
   function petPreviewOb() {
-    petInto($('ob-pet-blob'), 'idle', 'blob');
-    petInto($('ob-pet-bird'), 'idle', 'bird');
-    petInto($('ob-pet-cat'), 'idle', 'cat');
+    PET_SPECIES.forEach(function (t) {
+      petInto($('ob-pet-' + t), 'idle', t);
+    });
   }
+  $all('#ob-color-dots .cdot').forEach(function (b) {
+    b.addEventListener('click', function () {
+      tick();
+      obPetColor = b.getAttribute('data-color');
+      $all('#ob-color-dots .cdot').forEach(function (x) { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    });
+  });
+  $all('#ob-acc-seg .segbtn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      tick();
+      obPetAccessory = b.getAttribute('data-acc');
+      $all('#ob-acc-seg .segbtn').forEach(function (x) { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    });
+  });
   $all('#ob-pet-pick .petopt').forEach(function (b) {
     b.addEventListener('click', function () {
       tick();
@@ -2263,6 +2423,8 @@
   });
   function finishOnboarding() {
     pet.type = obPetType;
+    pet.color = obPetColor;
+    pet.accessory = obPetAccessory;
     var nm = ($('ob-pet-name').value || '').trim().slice(0, 24);
     pet.name = nm || PET_DEFAULTS[obPetType];
     savePet();
@@ -2320,12 +2482,13 @@
      Zero-maintenance rule stands: no meters, no hunger, no death, no guilt. Ever. ============ */
   var petSheetReturn = 'screen-home';
   var petMood = null; // 'soft' after a spiraling check-in, 'proud' after a calmer ride — warmth only, never a meter
-  function mountComfortPet() { petInto($('pet-comfort'), 'idle'); }
+  function mountComfortPet() { petInto($('pet-comfort'), 'idle'); renderPetScreenLines(); }
   ['link-comfort-home', 'tool-comfort'].forEach(function (id) {
     var el = $(id);
     if (el) { el.addEventListener('click', mountComfortPet); }
   });
   function openPetSheet() {
+    try { clearPanicFreeze(); } catch (e) {}
     petSheetReturn = currentScreen() || 'screen-home';
     var nm = pet.name || 'Mochi';
     $('pet-sheet-name').textContent = nm;
@@ -2373,6 +2536,88 @@
     $('ps-pick').textContent = v + ' picks for me';
     $('pet-sheet-line').textContent = 'Tap ' + v + ' for some love.';
   }
+  function setPetColor(c) {
+    if (!c || PET_COLOR_ORDER.indexOf(c) === -1) { return; }
+    pet.color = c;
+    savePet();
+    renderPetColorDots();
+    renderPetEverywhere();
+  }
+  function setPetAccessory(a) {
+    if (!a || PET_ACCESSORIES.indexOf(a) === -1) { return; }
+    pet.accessory = a;
+    savePet();
+    renderPetAccSegs();
+    renderPetEverywhere();
+  }
+  function renderPetColorDots() {
+    $all('.colordots .cdot').forEach(function (b) {
+      var on = b.getAttribute('data-color') === pet.color;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  function renderPetAccSegs() {
+    $all('.accseg .segbtn').forEach(function (b) {
+      var on = b.getAttribute('data-acc') === pet.accessory;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  /* v33 PET EVERYWHERE — the pet is the guide of the whole app, not decoration.
+     Each screen below gets a small pet mount (tap opens the pet sheet) plus a
+     contextual one-line reaction from the pet. Panic is the exception: the pet
+     sits silent and forward-facing (frozen layout, no new words). */
+  var PET_SCREEN_LINES = {
+    toolkit: ['Pick one. Any one is enough.', 'No rush. Browse, then pick what feels kind.', 'I am right here while you look.'],
+    learn: ['Tiny reads, for between rides.', 'Knowing what panic does makes it less scary.', 'Read one, then try its tool.'],
+    plan: ['Set this while you are calm. Future-you says thanks.', 'One glance when you are not. That is the whole job.'],
+    history: ['Look what you got through.', 'Every ride here is one you finished.'],
+    privacy: ['Everything here stays on this phone. Just us.', 'No accounts. No tracking. Just you and me.'],
+    checkin: ['I am ready when you are.', 'However you feel is a fine place to start.'],
+    reflect: ['You did it. That is enough.', 'How was that, really? No grade, just noticing.'],
+    crisis: ['I am right here with you.', 'You do not have to ride this out alone.'],
+    nonbreath: ['No breath required. These work differently, and they work.', 'Counting is not the only way. Pick what feels possible.']
+  };
+  var PET_SCREEN_MOUNTS = {
+    'screen-toolkit': 'pet-toolkit', 'screen-learn': 'pet-learn', 'screen-plan': 'pet-plan',
+    'screen-history': 'pet-history', 'screen-privacy': 'pet-privacy', 'screen-checkin': 'pet-checkin',
+    'screen-reflect': 'pet-reflect', 'screen-crisis': 'pet-crisis', 'screen-nonbreath': 'pet-nonbreath'
+  };
+  function renderPetScreenLines() {
+    var nm = petName();
+    Object.keys(PET_SCREEN_LINES).forEach(function (key) {
+      var el = $('petline-' + key);
+      if (!el) { return; }
+      var lines = PET_SCREEN_LINES[key];
+      el.textContent = nm + ' says: ' + lines[Math.floor(Math.random() * lines.length)];
+    });
+    var cl = $('petline-comfort');
+    if (cl) { cl.textContent = nm + ' is watching with you.'; }
+    var tl = $('petline-trip');
+    if (tl) { tl.textContent = nm + ' is riding with you.'; }
+  }
+  function mountScreenPets() {
+    Object.keys(PET_SCREEN_MOUNTS).forEach(function (screen) {
+      petInto($(PET_SCREEN_MOUNTS[screen]), 'idle');
+    });
+    petInto($('pet-panic'), 'idle');
+  }
+  function renderTripPetLine() {
+    var tl = $('petline-trip');
+    if (!tl) { return; }
+    var nm = petName();
+    try {
+      var left = (typeof trip !== 'undefined' && trip) ? trip.left : null;
+      if (left === 1) { tl.textContent = nm + ' says: next stop is yours. You have got this.'; }
+      else if (left === 2) { tl.textContent = nm + ' says: two stops to go. Almost there.'; }
+      else { tl.textContent = nm + ' is riding with you.'; }
+    } catch (e) { tl.textContent = nm + ' is riding with you.'; }
+  }
+  $all('.petmini').forEach(function (b) {
+    b.addEventListener('click', function () { tick(); openPetSheet(); });
+  });
+
   /* Mochi picks for you: a random calming tool — cute AND functional */
   var PET_PICKS = TOOLS.filter(function (t) {
     return ['ground', 'touch', 'breath', 'distract', 'understand'].indexOf(t.cat) !== -1;
@@ -2394,6 +2639,20 @@
   $('ps-name').addEventListener('change', function () { setPetName($('ps-name').value); });
   $all('#ps-pet-seg .segbtn').forEach(function (b) {
     b.addEventListener('click', function () { tick(); setPetType(b.getAttribute('data-pet')); });
+  });
+  $all('.colordots .cdot').forEach(function (b) {
+    b.addEventListener('click', function () {
+      tick();
+      if (b.closest && b.closest('#ob-color-dots')) { return; } // onboarding has its own handler
+      setPetColor(b.getAttribute('data-color'));
+    });
+  });
+  $all('.accseg .segbtn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      tick();
+      if (b.closest && b.closest('#ob-acc-seg')) { return; } // onboarding has its own handler
+      setPetAccessory(b.getAttribute('data-acc'));
+    });
   });
   $('ps-close').addEventListener('click', closePetSheet);
   $('pet-sheet-back').addEventListener('click', closePetSheet);
@@ -2864,7 +3123,8 @@
   }
   function showSplash(target) {
     var mode = splashMode();
-    try { petInto($('splash-pet'), 'idle'); } catch (e) {}
+    try { petInto($('ts-pet'), 'idle'); } catch (e) {}
+    try { var tr = $('ts-train'); if (tr) { tr.style.animationDuration = mode.ms + 'ms, .55s'; } } catch (e) {}
     var nm = $('splash-name');
     if (nm) { nm.style.display = mode.short ? 'none' : 'block'; }
     splashActive = true;

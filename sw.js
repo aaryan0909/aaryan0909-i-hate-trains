@@ -8,7 +8,7 @@
    v27: precaches guide.js (eyes-free guided rescue module).
    v29: panic-screen hero reorder + instant render — installed phones must re-cache.
    v30: home-screen "what has helped you" top-tools card — installed phones must re-cache. */
-var CACHE = 'iht-v32';
+var CACHE = 'iht-v33';
 var ASSETS = [
   './',
   'index.html',
