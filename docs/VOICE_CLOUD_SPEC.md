@@ -1,3 +1,14 @@
+# REMOVED (v35) — voice work is cancelled by owner decision
+
+> Status: REMOVED in v35. No speech output remains in the app: no device
+> voices, no picker, no spoken cues, no cloud TTS. The pet guides with
+> on-screen text and speech bubbles only; all sound comes from sound.js.
+> The rest of this file is kept as history only and describes a system
+> that must NOT be built. See REPORT.md in the repo root (v35 audio
+> workstream) for the removal patch list.
+
+---
+
 # Voice layer two spec: opt-in cloud TTS (v34 spec only, NOT built)
 
 Status: spec only. v34 ships device-voice casting only (layer one). No API keys,

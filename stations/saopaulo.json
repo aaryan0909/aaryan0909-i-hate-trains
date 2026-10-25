@@ -1,0 +1,143 @@
+{
+"city": "São Paulo",
+"updated": "2026-10-25",
+"source": "SPTrans GTFS static feed (Metro lines)",
+"lines": [
+{
+"id": "l1",
+"name": "Line 1",
+"color": "#0455A1",
+"stations": [
+"Jabaquara",
+"Conceição",
+"São Judas",
+"Saúde",
+"Praça Da Árvore",
+"Santa Cruz",
+"Vila Mariana",
+"Ana Rosa",
+"Paraíso",
+"Vergueiro",
+"São Joaquim",
+"Liberdade",
+"Sé",
+"São Bento",
+"Luz",
+"Tiradentes",
+"Armênia",
+"Portuguesa-tietê",
+"Carandiru",
+"Santana",
+"Jardim São Paulo-ayrton Senna",
+"Parada Inglesa",
+"Tucuruvi"
+]
+},
+{
+"id": "l2",
+"name": "Line 2",
+"color": "#007E5E",
+"stations": [
+"Vila Prudente",
+"Tamanduateí",
+"Sacomã",
+"Alto Do Ipiranga",
+"Santos-imigrantes",
+"Chácara Klabin",
+"Ana Rosa",
+"Paraíso",
+"Brigadeiro",
+"Trianon-masp",
+"Consolação",
+"Clínicas",
+"S. N. Sra. De Fátima-sumaré",
+"Vila Madalena"
+]
+},
+{
+"id": "l3",
+"name": "Line 3",
+"color": "#EE372F",
+"stations": [
+"Palmeiras - Barra Funda",
+"Marechal Deodoro",
+"Santa Cecília",
+"República",
+"Anhangabaú",
+"Sé",
+"Pedro II",
+"Brás",
+"Bresser-mooca",
+"Belém",
+"Tatuapé",
+"Carrão",
+"Penha",
+"Vila Matilde",
+"Guilhermina Esperança",
+"Patriarca",
+"Artur Alvim",
+"Corinthians-itaquera"
+]
+},
+{
+"id": "l4",
+"name": "Line 4",
+"color": "#FFFF00",
+"stations": [
+"Luz",
+"República",
+"Higienópolis-mackenzie",
+"Paulista",
+"Oscar Freire",
+"Fradique Coutinho",
+"Faria Lima",
+"Pinheiros Metrô",
+"Butantã",
+"São Paulo - Morumbi",
+"Vila Sônia"
+]
+},
+{
+"id": "l5",
+"name": "Line 5",
+"color": "#9B3894",
+"stations": [
+"Chácara Klabin",
+"Santa Cruz",
+"Hospital São Paulo",
+"Aacd - Servidor",
+"Moema",
+"Eucaliptos",
+"Campo Belo",
+"Brooklin",
+"Borba Gato",
+"Alto Da Boa Vista",
+"Adolfo Pinheiro",
+"Largo Treze",
+"Santo Amaro",
+"Giovanni Gronchi",
+"Vila Das Belezas",
+"Campo Limpo",
+"Capão Redondo"
+]
+},
+{
+"id": "l15",
+"name": "Line 15",
+"color": "#C0C0C0",
+"stations": [
+"Vila Prudente (monotrilho)",
+"Oratorio",
+"São Lucas",
+"Camilo Haddad",
+"Vila Tolstói",
+"Vila União",
+"Jardim Planalto",
+"Sapopemba",
+"Fazenda Da Juta",
+"São Mateus",
+"Jardim Colonial"
+]
+}
+]
+}

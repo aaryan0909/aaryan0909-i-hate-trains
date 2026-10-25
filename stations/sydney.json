@@ -1,0 +1,45 @@
+{
+"city": "Sydney",
+"updated": "2026-10-25",
+"source": "Transport for NSW GTFS static feed (Greater Sydney bundle)",
+"lines": [
+{
+"id": "m1",
+"name": "M1 Metro",
+"color": "#168388",
+"stations": [
+"Tallawong Station",
+"Rouse Hill Station",
+"Kellyville Station",
+"Bella Vista Station",
+"Norwest Station",
+"Hills Showground Station",
+"Castle Hill Station",
+"Cherrybrook Station",
+"Epping Station",
+"Macquarie University Station",
+"Macquarie Park Station",
+"North Ryde Station",
+"Chatswood Station",
+"Crows Nest Station",
+"Victoria Cross Station",
+"Barangaroo Station",
+"Martin Place Station",
+"Gadigal Station",
+"Central Station",
+"Waterloo Station",
+"Sydenham Station",
+"Marrickville Station",
+"Dulwich Hill Station",
+"Hurlstone Park Station",
+"Canterbury Station",
+"Campsie Station",
+"Belmore Station",
+"Lakemba Station",
+"Wiley Park Station",
+"Punchbowl Station",
+"Bankstown Station"
+]
+}
+]
+}

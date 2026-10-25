@@ -1,0 +1,108 @@
+{
+"city": "Montreal",
+"updated": "2026-10-25",
+"source": "STM (Societe de transport de Montreal) GTFS static feed",
+"lines": [
+{
+"id": "green",
+"name": "Green Line",
+"color": "#00B300",
+"stations": [
+"Station Angrignon",
+"Station Monk",
+"Station Jolicoeur",
+"Station Verdun",
+"Station De L'Église",
+"Station Lasalle",
+"Station Charlevoix",
+"Station Lionel-Groulx",
+"Station Atwater",
+"Station Guy-Concordia",
+"Station Peel",
+"Station Mcgill",
+"Station Place Des Arts",
+"Station St-Laurent",
+"Station Berri-Uqam",
+"Station Beaudry",
+"Station Papineau",
+"Station Frontenac",
+"Station Préfontaine",
+"Station Joliette",
+"Station Pie Ix",
+"Station Viau",
+"Station De L'Assomption",
+"Station Cadillac",
+"Station Langelier",
+"Station Radisson",
+"Station Honoré-Beaugrand"
+]
+},
+{
+"id": "orange",
+"name": "Orange Line",
+"color": "#D95700",
+"stations": [
+"Station Côte-Vertu",
+"Station Du Collège",
+"Station De La Savane",
+"Station Namur",
+"Station Plamondon",
+"Station Côte-Ste-Catherine",
+"Station Snowdon",
+"Station Villa-Maria",
+"Station Vendôme",
+"Station Place St-Henri",
+"Station Lionel-Groulx",
+"Station Georges-Vanier",
+"Station Lucien-L'Allier",
+"Station Bonaventure",
+"Station Square Victoria-Oaci",
+"Station Place D'Armes",
+"Station Champs De Mars",
+"Station Berri-Uqam",
+"Station Sherbrooke",
+"Station Mont-Royal",
+"Station Laurier",
+"Station Rosemont",
+"Station Beaubien",
+"Station Jean-Talon",
+"Station Jarry",
+"Station Crémazie",
+"Station Sauvé",
+"Station Henri-Bourassa",
+"Station Cartier",
+"Station De La Concorde",
+"Station Montmorency"
+]
+},
+{
+"id": "yellow",
+"name": "Yellow Line",
+"color": "#FFD900",
+"stations": [
+"STATION LONGUEUIL- U. de SHERBROOKE",
+"Station Jean-Drapeau",
+"Station Berri-Uqam"
+]
+},
+{
+"id": "blue",
+"name": "Blue Line",
+"color": "#0095E6",
+"stations": [
+"Station Snowdon",
+"Station Côte-Des-Neiges",
+"Station Université De Montreal",
+"Station Édouard-Montpetit",
+"Station Outremont",
+"Station Acadie",
+"Station  Du Parc",
+"Station De Castelnau",
+"Station Jean-Talon",
+"Station Fabre",
+"Station Iberville",
+"Station Saint-Michel"
+]
+}
+]
+}

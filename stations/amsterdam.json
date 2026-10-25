@@ -1,0 +1,118 @@
+{
+"city": "Amsterdam",
+"updated": "2026-10-25",
+"source": "OVapi Netherlands GTFS (GVB Amsterdam metro)",
+"lines": [
+{
+"id": "50",
+"name": "Line 50",
+"color": "#187a36",
+"stations": [
+"Isolatorweg",
+"Station Sloterdijk",
+"Burg. De Vlugtlaan",
+"Jan van Galenstraat",
+"Postjesweg",
+"Station Lelylaan",
+"Heemstedestraat",
+"Henk Sneevlietweg",
+"Amstelveenseweg",
+"Station Zuid",
+"Station RAI",
+"Overamstel",
+"Van der Madeweg",
+"Station Duivendrecht",
+"Strandvliet",
+"Station Bijlmer ArenA",
+"Bullewijk",
+"Station Holendrecht",
+"Reigersbos",
+"Gein"
+]
+},
+{
+"id": "51",
+"name": "Line 51",
+"color": "#FF6600",
+"stations": [
+"Centraal Station",
+"Nieuwmarkt",
+"Waterlooplein",
+"Weesperplein",
+"Wibautstraat",
+"Amstelstation",
+"Spaklerweg",
+"Overamstel",
+"Station RAI",
+"Station Zuid",
+"Amstelveenseweg",
+"Henk Sneevlietweg",
+"Heemstedestraat",
+"Station Lelylaan",
+"Postjesweg",
+"Jan van Galenstraat",
+"Burg. De Vlugtlaan",
+"Station Sloterdijk",
+"Isolatorweg"
+]
+},
+{
+"id": "52",
+"name": "Line 52",
+"color": "#00adef",
+"stations": [
+"Noord",
+"Noorderpark",
+"Centraal Station",
+"Rokin",
+"Vijzelgracht",
+"De Pijp",
+"Europaplein",
+"Station Zuid"
+]
+},
+{
+"id": "53",
+"name": "Line 53",
+"color": "#d81118",
+"stations": [
+"Gaasperplas",
+"Kraaiennest",
+"Ganzenhoef",
+"Verrijn Stuartweg",
+"Station Diemen Zuid",
+"Venserpolder",
+"Van der Madeweg",
+"Spaklerweg",
+"Amstelstation",
+"Wibautstraat",
+"Weesperplein",
+"Waterlooplein",
+"Nieuwmarkt",
+"Centraal Station"
+]
+},
+{
+"id": "54",
+"name": "Line 54",
+"color": "#fff200",
+"stations": [
+"Gein",
+"Reigersbos",
+"Station Holendrecht",
+"Bullewijk",
+"Station Bijlmer ArenA",
+"Strandvliet",
+"Station Duivendrecht",
+"Van der Madeweg",
+"Spaklerweg",
+"Amstelstation",
+"Wibautstraat",
+"Weesperplein",
+"Waterlooplein",
+"Nieuwmarkt",
+"Centraal Station"
+]
+}
+]
+}

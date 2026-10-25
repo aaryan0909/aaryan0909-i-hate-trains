@@ -1,0 +1,431 @@
+/* v35-design.css: calm-time design system for I Hate Trains v35.
+   Scope: calm-time screens only. Panic and crisis screens are EXEMPT and
+   no class in this file targets them. This file adds new classes only.
+   It does not restyle existing classes. A coordinator must link this file
+   after styles.css and must add markup using these classes; nothing here
+   changes app.js, index.html, metros.js, or styles.css on its own.
+   Every color, spacing, radius, motion, type, and target value below is
+   a token defined in :root. Structural keywords (display, position,
+   flex direction) are not tokenizable constants and are the only
+   non-token values in the classes below. */
+
+/* ============ Tokens ============ */
+:root {
+  /* Color roles. Each token carries a banned use. Dark calm palette,
+     chosen so every text pairing in this file passes 4.5:1. */
+  /* Banned: never as body copy, never as a large background. */
+  --v35-accent: #93d3ab;
+  /* Banned: never as a background, never as small text on a dark surface. */
+  --v35-accent-ink: #0b241a;
+  /* Banned: never as body copy, never as a large background. */
+  --v35-accent-deep: #5da87e;
+  /* Banned: never as a background. Text only, on dark surfaces. */
+  --v35-ink: #f2ede1;
+  /* Banned: never as a primary action color, never on a light surface. */
+  --v35-ink-dim: #aaa28d;
+  /* Banned: never as text, never as a button label. */
+  --v35-surface: #12161f;
+  /* Banned: never as page background, never as body copy. */
+  --v35-surface-raised: #161c28;
+  /* Banned: never as text, never as a filled button. */
+  --v35-border: #263044;
+  /* Banned: never as body copy, never as a large background. */
+  --v35-focus: #93d3ab;
+  /* Banned: never as a card background, never as body copy. */
+  --v35-page: #090b10;
+  /* Banned: never as text on a dark surface. */
+  --v35-face: #e8b86f;
+
+  /* Spacing. Base grid is 4. Banned: never invent a spacing value
+     outside this scale, never use spacing to fake a touch target. */
+  --v35-space-0: 0;
+  --v35-space-4: 4px;
+  --v35-space-8: 8px;
+  --v35-space-12: 12px;
+  --v35-space-16: 16px;
+  --v35-space-20: 20px;
+  --v35-space-24: 24px;
+  --v35-space-32: 32px;
+
+  /* Radius. One radius per component type. Banned: never mix radii
+     inside one component, never use pill for a card. */
+  --v35-radius-small: 8px;
+  --v35-radius-medium: 12px;
+  --v35-radius-large: 16px;
+  --v35-radius-xlarge: 24px;
+  --v35-radius-pill: 999px;
+  --v35-radius-circle: 50%;
+
+  /* Touch targets. Banned: never ship an interactive element smaller
+     than the target token, never rely on padding alone to reach it. */
+  --v35-target: 48px;
+  --v35-target-gap: 8px;
+  --v35-glyph: 24px;
+
+  /* Type. Banned: never use caption size for body copy, never use
+     display size for a label, never set body copy below the body token. */
+  --v35-text-display: 34px;
+  --v35-text-title: 18px;
+  --v35-text-body: 16px;
+  --v35-text-caption: 14px;
+  --v35-text-eyebrow: 13px;
+  --v35-line-body: 1.6;
+  --v35-line-tight: 1.35;
+  --v35-weight-regular: 400;
+  --v35-weight-semibold: 600;
+  --v35-weight-bold: 700;
+
+  /* Motion. One curve, one scale. Banned: never animate layout
+     properties, never exceed the max token, never animate a logo. */
+  --v35-curve: cubic-bezier(0.2, 0, 0, 1);
+  --v35-dur-ack: 80ms;
+  --v35-dur-ui: 200ms;
+  --v35-dur-large: 300ms;
+  --v35-dur-max: 1000ms;
+  --v35-dur-none: 0ms;
+
+  /* Structure. Banned: never use these for color, spacing, or motion. */
+  --v35-full: 100%;
+  --v35-border-thin: 1px;
+  --v35-border-medium: 2px;
+  --v35-focus-width: 2px;
+  --v35-shadow-card: 0 12px 32px rgba(0, 0, 0, 0.28);
+  /* Press feedback. Banned: never use a press scale larger than these. */
+  --v35-press: scale(0.98);
+  --v35-press-strong: scale(0.96);
+  --v35-press-close: scale(0.92);
+  --v35-press-none: scale(1);
+  --v35-opacity-dim: 1;
+}
+
+/* ============ Card browsing: one thing per card, one secondary fact ============ */
+.v35-card {
+  display: block;
+  width: var(--v35-full);
+  text-align: left;
+  background: var(--v35-surface);
+  border: var(--v35-border-thin) solid var(--v35-border);
+  border-radius: var(--v35-radius-large);
+  padding: var(--v35-space-16) var(--v35-space-16);
+  color: var(--v35-ink);
+  cursor: pointer;
+  box-shadow: var(--v35-shadow-card);
+  transition: transform var(--v35-dur-ui) var(--v35-curve), border-color var(--v35-dur-ui) var(--v35-curve);
+}
+.v35-card:active { transform: var(--v35-press); border-color: var(--v35-accent); }
+.v35-card-title {
+  display: block;
+  font-size: var(--v35-text-title);
+  font-weight: var(--v35-weight-semibold);
+  line-height: var(--v35-line-tight);
+  color: var(--v35-ink);
+  margin: var(--v35-space-0) var(--v35-space-0) var(--v35-space-4);
+}
+/* One secondary fact only. Banned: never add a second fact line here. */
+.v35-card-fact {
+  display: block;
+  font-size: var(--v35-text-body);
+  line-height: var(--v35-line-body);
+  color: var(--v35-ink-dim);
+  margin: var(--v35-space-0);
+}
+
+/* ============ Chips: unmistakable active state, never color alone ============ */
+.v35-chiprow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--v35-target-gap);
+  margin: var(--v35-space-8) var(--v35-space-0) var(--v35-space-16);
+}
+.v35-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--v35-space-8);
+  min-height: var(--v35-target);
+  padding: var(--v35-space-12) var(--v35-space-16);
+  border-radius: var(--v35-radius-pill);
+  border: var(--v35-border-medium) solid var(--v35-border);
+  background: var(--v35-surface);
+  color: var(--v35-ink);
+  font-size: var(--v35-text-body);
+  font-weight: var(--v35-weight-regular);
+  cursor: pointer;
+  transition: transform var(--v35-dur-ui) var(--v35-curve), border-color var(--v35-dur-ui) var(--v35-curve), background-color var(--v35-dur-ui) var(--v35-curve);
+}
+.v35-chip:active { transform: var(--v35-press-strong); }
+/* Active state uses three cues at once: accent fill, dark ink, and a
+   check mark. Color alone never carries the state. */
+.v35-chip[aria-pressed="true"] {
+  background: var(--v35-accent);
+  border-color: var(--v35-accent);
+  color: var(--v35-accent-ink);
+  font-weight: var(--v35-weight-bold);
+}
+.v35-chip[aria-pressed="true"]::before { content: "✓"; }
+.v35-chip[aria-pressed="false"]::before { content: ""; }
+
+/* ============ Section headers with see-all ============ */
+.v35-section {
+  display: flex;
+  align-items: center;
+  gap: var(--v35-space-12);
+  margin: var(--v35-space-24) var(--v35-space-0) var(--v35-space-12);
+}
+.v35-section-title {
+  flex: 1;
+  font-size: var(--v35-text-title);
+  font-weight: var(--v35-weight-semibold);
+  line-height: var(--v35-line-tight);
+  color: var(--v35-ink);
+  margin: var(--v35-space-0);
+}
+.v35-seeall {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--v35-target);
+  padding: var(--v35-space-12) var(--v35-space-16);
+  background: transparent;
+  border: var(--v35-border-thin) solid transparent;
+  border-radius: var(--v35-radius-pill);
+  color: var(--v35-accent);
+  font-size: var(--v35-text-body);
+  font-weight: var(--v35-weight-semibold);
+  text-decoration: underline;
+  cursor: pointer;
+  transition: transform var(--v35-dur-ui) var(--v35-curve);
+}
+.v35-seeall:active { transform: var(--v35-press-strong); }
+
+/* ============ Finite curated recommendation rows: never an endless feed ============ */
+/* Render at most four cards in one row. Banned: never paginate this into
+   an endless feed, never auto-load more on scroll. */
+.v35-recrow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--v35-space-12);
+  margin: var(--v35-space-0) var(--v35-space-0) var(--v35-space-16);
+}
+.v35-rec-card {
+  display: block;
+  width: var(--v35-full);
+  text-align: left;
+  background: var(--v35-surface-raised);
+  border: var(--v35-border-thin) solid var(--v35-border);
+  border-radius: var(--v35-radius-medium);
+  padding: var(--v35-space-16);
+  color: var(--v35-ink);
+  cursor: pointer;
+  transition: transform var(--v35-dur-ui) var(--v35-curve), border-color var(--v35-dur-ui) var(--v35-curve);
+}
+.v35-rec-card:active { transform: var(--v35-press); border-color: var(--v35-accent); }
+.v35-rec-title {
+  display: block;
+  font-size: var(--v35-text-body);
+  font-weight: var(--v35-weight-semibold);
+  line-height: var(--v35-line-tight);
+  color: var(--v35-ink);
+  margin: var(--v35-space-0) var(--v35-space-0) var(--v35-space-4);
+}
+.v35-rec-fact {
+  display: block;
+  font-size: var(--v35-text-caption);
+  line-height: var(--v35-line-body);
+  color: var(--v35-ink-dim);
+  margin: var(--v35-space-0);
+}
+
+/* ============ Location header with one-tap change ============ */
+.v35-locheader {
+  display: flex;
+  align-items: center;
+  gap: var(--v35-space-12);
+  background: var(--v35-surface);
+  border: var(--v35-border-thin) solid var(--v35-border);
+  border-radius: var(--v35-radius-large);
+  padding: var(--v35-space-16);
+  margin: var(--v35-space-0) var(--v35-space-0) var(--v35-space-20);
+}
+.v35-loc-name {
+  flex: 1;
+  font-size: var(--v35-text-title);
+  font-weight: var(--v35-weight-semibold);
+  line-height: var(--v35-line-tight);
+  color: var(--v35-ink);
+  margin: var(--v35-space-0);
+}
+.v35-loc-change {
+  min-height: var(--v35-target);
+  padding: var(--v35-space-12) var(--v35-space-16);
+  border-radius: var(--v35-radius-pill);
+  border: var(--v35-border-medium) solid var(--v35-border);
+  background: transparent;
+  color: var(--v35-accent);
+  font-size: var(--v35-text-body);
+  font-weight: var(--v35-weight-semibold);
+  cursor: pointer;
+  transition: transform var(--v35-dur-ui) var(--v35-curve), border-color var(--v35-dur-ui) var(--v35-curve);
+}
+.v35-loc-change:active { transform: var(--v35-press-strong); border-color: var(--v35-accent); }
+
+/* ============ Saved-shortcut rows ============ */
+.v35-shortcut {
+  display: flex;
+  align-items: center;
+  gap: var(--v35-space-12);
+  width: var(--v35-full);
+  min-height: var(--v35-target);
+  text-align: left;
+  background: var(--v35-surface);
+  border: var(--v35-border-thin) solid var(--v35-border);
+  border-radius: var(--v35-radius-large);
+  padding: var(--v35-space-16);
+  color: var(--v35-ink);
+  cursor: pointer;
+  transition: transform var(--v35-dur-ui) var(--v35-curve), border-color var(--v35-dur-ui) var(--v35-curve);
+}
+.v35-shortcut:active { transform: var(--v35-press); border-color: var(--v35-accent); }
+.v35-shortcut-text { flex: 1; }
+.v35-shortcut-name {
+  display: block;
+  font-size: var(--v35-text-body);
+  font-weight: var(--v35-weight-semibold);
+  line-height: var(--v35-line-tight);
+  color: var(--v35-ink);
+  margin: var(--v35-space-0) var(--v35-space-0) var(--v35-space-4);
+}
+.v35-shortcut-fact {
+  display: block;
+  font-size: var(--v35-text-caption);
+  line-height: var(--v35-line-body);
+  color: var(--v35-ink-dim);
+  margin: var(--v35-space-0);
+}
+.v35-shortcut-go {
+  font-size: var(--v35-text-title);
+  color: var(--v35-accent);
+  line-height: var(--v35-line-tight);
+}
+
+/* ============ Live status with a face and plain words ============ */
+.v35-status {
+  display: flex;
+  align-items: center;
+  gap: var(--v35-space-12);
+  background: var(--v35-surface);
+  border: var(--v35-border-thin) solid var(--v35-border);
+  border-radius: var(--v35-radius-large);
+  padding: var(--v35-space-16);
+  margin: var(--v35-space-0) var(--v35-space-0) var(--v35-space-16);
+}
+.v35-status-face {
+  width: var(--v35-target);
+  height: var(--v35-target);
+  border-radius: var(--v35-radius-circle);
+  background: var(--v35-accent-deep);
+  color: var(--v35-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--v35-text-title);
+  flex: none;
+}
+.v35-status-words {
+  font-size: var(--v35-text-body);
+  font-weight: var(--v35-weight-semibold);
+  line-height: var(--v35-line-tight);
+  color: var(--v35-ink);
+  margin: var(--v35-space-0);
+}
+.v35-status-fact {
+  display: block;
+  font-size: var(--v35-text-caption);
+  line-height: var(--v35-line-body);
+  color: var(--v35-ink-dim);
+  margin: var(--v35-space-4) var(--v35-space-0) var(--v35-space-0);
+}
+
+/* ============ Dismissible announcement cards, calm time only ============ */
+/* Banned: never render this on a panic, crisis, breathing, or trip screen. */
+.v35-announce {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--v35-space-12);
+  background: var(--v35-surface-raised);
+  border: var(--v35-border-thin) solid var(--v35-border);
+  border-radius: var(--v35-radius-large);
+  padding: var(--v35-space-16);
+  margin: var(--v35-space-0) var(--v35-space-0) var(--v35-space-16);
+  box-shadow: var(--v35-shadow-card);
+}
+.v35-announce-text { flex: 1; }
+.v35-announce-title {
+  display: block;
+  font-size: var(--v35-text-body);
+  font-weight: var(--v35-weight-semibold);
+  line-height: var(--v35-line-tight);
+  color: var(--v35-ink);
+  margin: var(--v35-space-0) var(--v35-space-0) var(--v35-space-4);
+}
+.v35-announce-body {
+  display: block;
+  font-size: var(--v35-text-caption);
+  line-height: var(--v35-line-body);
+  color: var(--v35-ink-dim);
+  margin: var(--v35-space-0);
+}
+.v35-announce-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--v35-target);
+  height: var(--v35-target);
+  border-radius: var(--v35-radius-circle);
+  border: var(--v35-border-thin) solid var(--v35-border);
+  background: transparent;
+  color: var(--v35-ink);
+  cursor: pointer;
+  flex: none;
+  transition: transform var(--v35-dur-ui) var(--v35-curve);
+}
+.v35-announce-close:active { transform: var(--v35-press-close); }
+/* Visible glyph is 24 inside the 48 hit area. */
+.v35-announce-close span {
+  font-size: var(--v35-glyph);
+  line-height: var(--v35-line-tight);
+}
+
+/* ============ Focus: visible, never color alone ============ */
+.v35-card:focus-visible,
+.v35-chip:focus-visible,
+.v35-seeall:focus-visible,
+.v35-rec-card:focus-visible,
+.v35-loc-change:focus-visible,
+.v35-shortcut:focus-visible,
+.v35-announce-close:focus-visible {
+  outline: var(--v35-focus-width) solid var(--v35-focus);
+  outline-offset: var(--v35-space-4);
+}
+
+/* ============ Reduced motion: everywhere in this file ============ */
+@media (prefers-reduced-motion: reduce) {
+  .v35-card,
+  .v35-chip,
+  .v35-seeall,
+  .v35-rec-card,
+  .v35-loc-change,
+  .v35-shortcut,
+  .v35-announce-close {
+    transition-duration: var(--v35-dur-none);
+    transition-delay: var(--v35-dur-none);
+    animation: none;
+  }
+  .v35-card:active,
+  .v35-chip:active,
+  .v35-seeall:active,
+  .v35-rec-card:active,
+  .v35-loc-change:active,
+  .v35-shortcut:active,
+  .v35-announce-close:active {
+    transform: var(--v35-press-none);
+  }
+}

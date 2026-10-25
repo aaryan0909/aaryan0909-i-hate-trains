@@ -10,6 +10,10 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="v35-design.css">
+<link rel="stylesheet" href="v35-flow.css">
+<link rel="stylesheet" href="v35-pets.css">
+<link rel="stylesheet" href="v35-accounts.css">
 </head>
 <body>
 <main id="app">
@@ -164,6 +168,14 @@
         <button class="linklike quiet" id="btn-setup-dismiss">Not now</button>
       </div>
       <p class="fineprint rise d4">Free forever. Works offline where it matters. Even in a tunnel.</p>
+<button class="acct-profile" data-go="screen-account" type="button" aria-label="Open account options">
+  <span class="acct-petdot" aria-hidden="true" id="acct-home-petdot">^_^</span>
+  <span class="acct-profile-text">
+    <strong id="acct-home-title">Your account</strong>
+    <span id="acct-home-name">Guest. Tap to see account options. No account needed.</span>
+  </span>
+  <span class="acct-chevron" aria-hidden="true">›</span>
+</button>
       <div class="tools homenav rise d4">
         <button class="tool" data-go="screen-toolkit"><span class="tool-ic tic-toolkit" aria-hidden="true"><i></i><i></i><i></i></span>Toolkit</button>
         <button class="tool" data-go="screen-comfort" id="link-comfort-home"><span class="tool-ic tic-comfort" aria-hidden="true"><i></i></span>Comfort</button>
@@ -222,10 +234,6 @@
         <button class="segbtn" data-snd="both" aria-pressed="false">Both</button>
         <button class="segbtn" data-snd="off" aria-pressed="false">Off</button>
       </div>
-      <div class="setrow rise d2">
-        <button class="check" id="set-voice" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Mochi's voice</strong><em>Quiet count-ins during breathing, spoken on this phone only.</em></span></button>
-      </div>
-      <p class="fineprint" id="voice-hint">Spoken on this phone only. If you hear nothing, check the silent switch and volume.</p>
       <div class="petbreathe rise d2" id="pet-breathe" aria-hidden="true"></div>
       <p class="petbreathecap" id="pet-breathe-cap" aria-hidden="true">Mochi breathes with you</p>
       <p class="breathword" id="breath-word" aria-live="polite">…</p>
@@ -236,12 +244,12 @@
     </div>
   </section>
 
-  <!-- GUIDE — "Talk me through it": an eyes-free, voice-led rescue. One tap on the panic
+  <!-- GUIDE — "Talk me through it": an eyes-free rescue. One tap on the panic
        screen starts a scripted linear rescue (acceptance → 3 paced breaths with the pet
        visibly in sync → 5-4-3-2-1 grounding → close). The pet breathes in sync, the phase
-       word is the only thing on screen, the voice auto-enables inside this mode only
-       (the tap is the opt-in — the no-autoplay rule stays intact). One full-width
-       "I'm steadier" ends it at any moment; there is no menu, no reading, no decisions. -->
+       word is the only thing on screen, and the pet guides with on-screen text and
+       speech bubbles only. One full-width "I'm steadier" ends it at any moment;
+       there is no menu, no reading, no decisions. -->
   <section class="screen eyefree" id="screen-guide" aria-label="Guided rescue">
     <div class="wrap narrow center">
       <div class="petbreathe guidepet" id="guide-pet" aria-hidden="true"></div>
@@ -249,7 +257,6 @@
       <p class="guidesub" id="guide-sub"></p>
       <button class="btn ghost fullwidth guideend" id="btn-guide-end" type="button">I'm steadier</button>
       <button class="linklike quiet" id="btn-guide-ground" type="button">Try grounding instead</button>
-      <button class="linklike quiet" id="btn-guide-mute" type="button">Mute voice</button>
     </div>
   </section>
 
@@ -359,7 +366,11 @@
     </div>
   </section>
 
-  <!-- RIDE SETUP — location: try first, ask only if needed -->
+  <!-- RIDE SETUP (v35): taps, not typing. City, then that city's lines,
+       then that line's ordered stops. The three hidden inputs below keep
+       the canonical route values for the trip card, the map chooser, and
+       location lookup, which all read in-city / in-line / in-dest.
+       Uncovered cities fall back to the manual block, labeled honestly. -->
   <section class="screen" id="screen-setup" aria-label="Ride setup">
     <div class="wrap narrow">
       <p class="kicker rise d1">your ride</p>
@@ -367,26 +378,53 @@
       <div class="loccard rise d2" aria-live="polite">
         <p class="body" id="loc-status">Finding you…</p>
       </div>
+      <input id="in-city" type="hidden">
+      <input id="in-line" type="hidden">
+      <input id="in-dest" type="hidden">
+      <div id="setup-shortcuts" hidden>
+        <p class="flowchips-label" id="setup-shortcuts-label">Your shortcuts</p>
+        <div class="flowchips" id="setup-shortcut-chips"></div>
+      </div>
+      <button class="btn ghost rise d2" id="btn-repeat-ride" hidden>Repeat my last ride</button>
       <label class="field rise d3">City
-        <input id="in-city" type="text" inputmode="text" autocomplete="off" placeholder="Your city">
+        <select id="sel-city" aria-label="City"></select>
       </label>
       <label class="field rise d3">Line / train
-        <input id="in-line" type="text" inputmode="text" autocomplete="off" placeholder="Line 1">
+        <select id="sel-line" aria-label="Line or train" disabled></select>
       </label>
-      <div class="linechips" id="metro-lines" hidden></div>
+      <label class="field rise d3">Boarding stop
+        <select id="sel-from" aria-label="Boarding stop" disabled></select>
+      </label>
+      <label class="field rise d3">Destination stop
+        <select id="sel-dest" aria-label="Destination stop" disabled></select>
+      </label>
+      <p class="fineprint" id="setup-data-note" aria-live="polite"></p>
+      <div id="setup-manual" hidden>
+        <p class="body">This city is not covered yet, so the stops are counted by hand. Pick a city above when it is covered and the lists appear on their own.</p>
+        <label class="field rise d3">City
+          <input id="in-manual-city" type="text" inputmode="text" autocomplete="off" placeholder="Your city">
+        </label>
+        <label class="field rise d3">Line / train
+          <input id="in-manual-line" type="text" inputmode="text" autocomplete="off" placeholder="Line 1">
+        </label>
+        <label class="field rise d3">Destination
+          <input id="in-manual-dest" type="text" inputmode="text" autocomplete="off" placeholder="Your stop">
+        </label>
+      </div>
       <div id="linepick-mount"></div>
-      <label class="field rise d3">Destination
-        <input id="in-dest" type="text" inputmode="text" autocomplete="off" placeholder="Your stop">
-      </label>
       <div class="field rise d3">Stops to go
         <div class="stepper">
           <button id="stops-minus" aria-label="Fewer stops">−</button>
           <span id="stops-count" aria-live="polite">5</span>
           <button id="stops-plus" aria-label="More stops">+</button>
         </div>
+        <p class="fineprint" id="setup-stops-note">Pick your stops and the count works itself out.</p>
       </div>
-      <button class="check rise d4" id="set-stopheads" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Your stop, out loud</strong><em>The pet's voice says the heads-up at 2 stops and 1 stop out. Spoken on this phone only, set up here — never in a panic moment.</em></span></button>
-      <button class="check rise d4" id="set-stopheads-quiet" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Quiet stop alerts</strong><em>Pet pulse and screen flash instead of voice. For crowded trains.</em></span></button>
+      <div class="flowchips rise d3" id="setup-save-chips">
+        <button class="flowchip" type="button" id="btn-save-home">Save as Home</button>
+        <button class="flowchip" type="button" id="btn-save-work">Save as Work</button>
+      </div>
+      <button class="check rise d4" id="set-stopheads-quiet" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Quiet stop alerts</strong><em>Pet pulse, screen flash, and a gentle sound when your stop is near. For crowded trains.</em></span></button>
       <button class="btn calm big rise d4" id="btn-start-trip">Start trip</button>
       <button class="linklike quiet rise d4" id="btn-share-card">Send a trip card to someone you trust</button>
       <p class="fineprint" id="share-hint">Shares your route and ETA, while you still have signal.</p>
@@ -394,7 +432,9 @@
     </div>
   </section>
 
-  <!-- TRIP — the calm ritual -->
+  <!-- TRIP (v35): an active companion, not a countdown. Station names
+       and the next stop show wherever station data exists; the pet reacts
+       as stops pass. Without station data it is the old counter, honestly. -->
   <section class="screen" id="screen-trip" aria-label="On your trip">
     <div class="wrap narrow tripwrap">
       <p class="kicker rise d1" id="trip-route">On your way</p>
@@ -403,6 +443,9 @@
         <div class="counterlabel" id="stops-word">stops to go</div>
       </div>
       <div class="triptrack rise d2" aria-hidden="true"><div class="triptrack-line"></div><div class="triptrain" id="trip-train"><i class="tt-wheel"></i><i class="tt-wheel"></i></div></div>
+      <div class="tripstation-track rise d2" aria-hidden="true"><span id="trip-track-from"></span><span id="trip-track-to"></span></div>
+      <p class="tripstation rise d2" id="trip-now" aria-live="polite"></p>
+      <p class="tripstation-next rise d2" id="trip-next"></p>
       <button class="pettrip" id="pet-trip" aria-label="Your co-rider is riding with you"></button>
       <p class="petline" id="petline-trip"></p>
       <button class="tapbtn rise d3" id="btn-stop-tap">Tap at each stop</button>
@@ -411,7 +454,7 @@
       <div class="tools rise d3">
         <button class="tool" id="tool-breathe"><span class="tool-ic" aria-hidden="true">◯</span>Breathe</button>
         <button class="tool" id="tool-ground"><span class="tool-ic" aria-hidden="true">◎</span>Ground</button>
-        <button class="tool" id="tool-sound" aria-pressed="false"><span class="tool-ic" aria-hidden="true">〜</span><span id="sound-label">Hum off</span></button>
+        <button class="tool" id="tool-sound" aria-pressed="false"><span class="tool-ic" aria-hidden="true">〜</span><span id="sound-indicator" class="snd-ind" aria-hidden="true"></span><span id="sound-label">Ambient off</span></button>
       </div>
       <div class="tools tools2 rise d4">
         <button class="tool" data-go="screen-toolkit"><span class="tool-ic" aria-hidden="true">✦</span>Toolkit</button>
@@ -766,28 +809,19 @@
       <h2 class="serene rise d2">Privacy.</h2>
       <button class="petmini" id="pet-privacy" aria-label="Your co-rider"></button>
       <p class="petline" id="petline-privacy"></p>
-      <p class="body rise d3">Everything you put here — plans, reflections, notes, saved links — stays on this phone. There is no account, no server, no analytics, no tracking, no ads. Deleting the app deletes everything.</p>
+      <p class="body rise d3">Everything you put here — plans, reflections, notes, saved links — stays on this phone. There is no analytics, no tracking, no ads. Accounts for syncing are coming, and are never required. Deleting the app deletes everything.</p>
       <div class="setrow rise d3">
         <button class="check" id="set-haptics" aria-pressed="true"><span class="box" aria-hidden="true"></span><span><strong>Gentle vibrations</strong><em>Soft pulses during breathing. Android only — iPhones use sound cues instead.</em></span></button>
       </div>
       <p class="toolgroup rise d3">Breathing sounds</p>
       <div class="loccard rise d3">
-        <p class="body">Chimes mark each breath phase; ambient is a soft generative pad. Both work offline.</p>
+        <p class="body">Chimes mark each breath phase; ambient is a soft, clearly audible pad. Both work offline. On iPhone, the silent switch mutes sound from the phone: flip it off or use headphones to hear it.</p>
         <div class="seg" id="privacy-sound-seg" role="group" aria-label="Breathing sounds" style="margin-bottom:0">
           <button class="segbtn on" data-snd="chimes" aria-pressed="true">Chimes</button>
           <button class="segbtn" data-snd="ambient" aria-pressed="false">Ambient</button>
           <button class="segbtn" data-snd="both" aria-pressed="false">Both</button>
           <button class="segbtn" data-snd="off" aria-pressed="false">Off</button>
         </div>
-      </div>
-      <div class="setrow rise d3">
-        <button class="check" id="set-voice-2" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Mochi's voice</strong><em>Quiet count-ins during breathing, spoken on this phone only.</em></span></button>
-      </div>
-      <p class="toolgroup rise d3">Pet voice</p>
-      <div class="loccard rise d3">
-        <p class="body">Pick the voice that reads the calm cues. Australian voices show up here when your phone has them installed.</p>
-        <div id="voice-list"></div>
-        <p class="fineprint" id="voice-note"></p>
       </div>
       <p class="fineprint rise d3">The app respects your system's reduced-motion and large-text settings automatically.</p>
       <p class="toolgroup rise d4">Move to another browser</p>
@@ -882,10 +916,58 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 34</p>
+      <p class="fineprint rise d4" id="app-version">version 35</p>
     </div>
   </section>
 
+<section class="screen" id="screen-account" aria-label="Account">
+  <div class="wrap narrow">
+    <button class="panicbtn" data-go="screen-panic" type="button">I need help right now</button>
+    <p class="kicker rise d1">your account</p>
+    <h2 class="serene rise d2">Hello, rider.</h2>
+    <button class="petmini" id="pet-account" aria-label="Your co-rider"></button>
+    <p class="petline acct-greet" id="acct-greet">Hi there. Your co-rider is riding with you, account or no account.</p>
+    <p class="acct-sub" id="acct-sub">Accounts are for syncing across phones and keeping a backup. They are never required. Panic help always works without one.</p>
+
+    <div class="acct-preview" id="acct-preview-banner" hidden>
+      Local preview only. Not a real account. Nothing leaves this phone.
+    </div>
+
+    <div id="acct-guest-block">
+      <div class="acct-card">
+        <p><strong>Accounts are coming.</strong></p>
+        <p>Right now this app works fully as a guest, on this phone only. When accounts open, signing in will be one tap, and your co-rider, setup, and ride notes will follow you to a new phone.</p>
+        <p class="acct-note">No account, no problem. Nothing here is locked behind a login, and panic help never will be.</p>
+      </div>
+      <button class="acct-btn" data-acct-action="passkey" type="button">Use a passkey</button>
+      <p class="acct-note">Fastest return visit. Face ID or Touch ID on this phone, no password to remember. Offered first when accounts open.</p>
+      <button class="acct-btn acct-secondary" data-acct-action="apple" type="button">Continue with Apple</button>
+      <button class="acct-btn acct-secondary" data-acct-action="google" type="button">Continue with Google</button>
+      <form id="acct-magic-form">
+        <label class="acct-field">Or get a magic link by email
+          <input id="acct-magic-email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com">
+        </label>
+        <button class="acct-btn acct-secondary" data-acct-action="magic" type="submit">Send magic link</button>
+      </form>
+      <p class="acct-note">Magic link is the fallback when passkeys and Apple or Google are not handy. No password, ever.</p>
+      <p class="acct-status" id="acct-status" aria-live="polite"></p>
+    </div>
+
+    <div id="acct-signed-block" hidden>
+      <div class="acct-card">
+        <p><strong id="acct-who">Guest on this phone</strong></p>
+        <p class="acct-note">Your co-rider and setup can sync to your other phones from here once accounts are live. Your backup plan contact phone number never syncs. It stays on this phone only.</p>
+      </div>
+      <button class="acct-btn acct-secondary" data-acct-action="sync" type="button">Sync now</button>
+      <button class="acct-btn acct-quiet" data-acct-action="sign-out" type="button">Sign out</button>
+      <button class="acct-btn acct-danger" data-acct-action="delete-request" type="button">Request account deletion</button>
+      <p class="acct-note">Deletion requests queue your synced data for removal and sign you out. Data on this phone is erased separately from the Privacy screen.</p>
+    </div>
+
+    <button class="acct-btn" data-acct-action="continue-guest" type="button">Keep riding</button>
+    <button class="backlink" data-go="screen-home" type="button">Back home</button>
+  </div>
+</section>
 </main>
 <div class="petsheet-backdrop hidden" id="pet-sheet-back"></div>
 <section class="petsheet hidden" id="pet-sheet" aria-label="Your co-rider">
@@ -925,6 +1007,12 @@
     <button class="segbtn" data-acc="scarf" aria-pressed="false">Scarf</button>
     <button class="segbtn" data-acc="bow" aria-pressed="false">Bow</button>
   </div>
+  <div class="ps-preview" id="ps-preview">
+    <p class="ps-preview-kicker">Live preview</p>
+    <div class="ps-preview-pet" id="ps-preview-pet" role="img" aria-label="Live preview of your co-rider"></div>
+    <p class="ps-preview-note" id="ps-preview-note" aria-live="polite">Mochi · Blob · Classic · None</p>
+    <p class="ps-preview-hint">Tap a species, color, or accessory above and watch this pet change. It waves hello, then shows a happy face, so you can review it before you close the sheet.</p>
+  </div>
   <button class="linklike quiet" id="ps-close">Close</button>
 </section>
 <button id="sos-float" class="sosfloat" data-go="screen-panic" aria-label="Get help right now" hidden>SOS</button>
@@ -936,8 +1024,18 @@
 <script src="trimap.js"></script>
 <script src="crisis.js"></script>
 <script src="metros.js"></script>
+<script src="stations.js"></script>
+<script src="sound.js"></script>
 <script src="app.js"></script>
 <script src="stopheads.js"></script>
 <script src="guide.js"></script>
+<script>
+  window.IHT_ACCOUNT_CONFIG = {
+    supabaseUrl: 'https://YOUR-PROJECT.supabase.co',
+    supabaseAnonKey: 'YOUR-SUPABASE-ANON-KEY',
+    localPreview: false
+  };
+</script>
+<script src="auth.js"></script>
 </body>
 </html>

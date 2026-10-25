@@ -1,0 +1,37 @@
+{
+"city": "Turin",
+"updated": "2026-10-25",
+"source": "GTT (Gruppo Torinese Trasporti) GTFS via Mobility Database mirror (feed files dated 2026-05-30)",
+"lines": [
+{
+"id": "m1",
+"name": "Line 1",
+"color": "#e53935",
+"stations": [
+"Metro Bengasi",
+"Metro Italia61",
+"Metro Lingotto",
+"Metro Spezia",
+"Metro Carducci",
+"Metro Dante",
+"Metro Nizza",
+"Metro Marconi",
+"Stazione Porta Nuova",
+"Metro Re Umberto",
+"Metro Vinzaglio",
+"Stazione Porta Susa",
+"Metro Xviii Dicembre",
+"Metro Principi Acaja",
+"Metro Bernini",
+"Metro Racconigi",
+"Metro Rivoli",
+"Metro Monte Grappa",
+"Metro Pozzo Strada",
+"Metro Massaua",
+"Metro Marche",
+"Metro Paradiso",
+"Metro Fermi"
+]
+}
+]
+}

@@ -1,0 +1,101 @@
+/* v35 PETS: detailed pet rendering, idle life, and the live preview pane.
+   This file only styles pet rendering. It never changes layout widths, the
+   panic layout, breath timing, or any rule in styles.css: where a mount size
+   is set in styles.css, this file leaves it alone and only makes the SVG
+   inside it crisp and layered. Load order matters: this file loads after
+   styles.css, so same-specificity pet rules here win. The re-asserted
+   happy, celebrate, and spin animations below exist for that reason: a
+   wrapper carrying both pet-idle and pet-happy (a tap) must still wiggle. */
+
+/* Every pet SVG fills its mount. Before v35 only SVGs inside a .petsvg
+   wrapper got this rule, so mounts filled directly by petInto (trip, play,
+   sheet) could render at a default size. The mount widths stay untouched. */
+svg.petsvg { width: 100%; height: auto; display: block; overflow: visible; }
+
+/* Face layer and body layer: the face sits on the body, never baked into it,
+   so expressions, blush, and accessories swap without redrawing the pet. */
+.petsvg .pbody, .petsvg .pface { display: block; }
+
+/* Idle breathing: gentle scale from a bottom-anchored origin, combined with
+   the small bob so calm-time pets feel alive without a second loop. */
+.pet-idle .petsvg {
+  transform-origin: 50% 100%;
+  animation: petbreathe35 4.2s ease-in-out infinite;
+}
+@keyframes petbreathe35 {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-5px) scale(1.015, 1.045); }
+}
+.pet-sleepy .petsvg {
+  transform-origin: 50% 100%;
+  animation: petsleep35 5s ease-in-out infinite;
+}
+@keyframes petsleep35 {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(3px) scale(1.02, 0.98); }
+}
+
+/* Re-asserted so tap and play motion still wins over the idle rule above. */
+.pet-happy .petsvg { animation: petwiggle 0.65s ease; }
+.pet-celebrate .petsvg { animation: petjump 0.8s ease 2; }
+.pet-spin .petsvg { animation: petspin 0.8s ease; }
+
+/* The breath guide must never run a second loop: runPhase owns the wrapper
+   transform (inhale stretches it, exhale settles it), so the breathe pet
+   gets no SVG animation at all. The panic pet is frozen for the same reason. */
+#pet-breathe .petsvg { animation: none; }
+#pet-panic .petsvg { animation: none; transform: none; }
+
+/* Gaze shifts ease instead of jumping, so looking around reads as alive. */
+.peye-open { transition: transform 0.35s ease; }
+
+/* Celebrate arms, raised and still: the jump animation moves the whole pet. */
+.parm2 { transform-box: fill-box; transform-origin: 50% 90%; }
+
+/* Sleepy Zzz drifts gently upward. */
+.pzzz text { font-family: inherit; }
+.pzzz { animation: pzzzfloat 2.4s ease-in-out infinite; }
+@keyframes pzzzfloat {
+  0%, 100% { opacity: 0.55; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-2px); }
+}
+
+/* Trip pet: same detailed SVG, with a soft shadow for depth. No size change:
+   the trip screen owns its layout, and this file does not move it. */
+.pettrip .petsvg { filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3)); }
+
+/* Play screen pet: same detailed SVG, with a soft shadow for depth. */
+#screen-petplay .petstage .petsvg { filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35)); }
+
+/* Live preview pane in the pet sheet. The pet is the same detailed SVG as
+   everywhere else, at a reviewable size, with the cycle (wave, excited,
+   idle) driven by app.js. Tapping it gives hearts, same as the main pet. */
+.ps-preview {
+  margin: 22px 0 6px;
+  padding: 16px 16px 14px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  text-align: center;
+}
+.ps-preview-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.ps-preview-pet {
+  width: min(46vw, 170px);
+  margin: 0 auto;
+  position: relative;
+  cursor: pointer;
+}
+.ps-preview-pet .petsvg { filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35)); }
+.ps-preview-note { margin: 10px 0 4px; font-size: 14px; color: var(--ink); }
+.ps-preview-hint { margin: 0; font-size: 13px; color: var(--dim); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-idle .petsvg, .pet-sleepy .petsvg, .pzzz { animation: none !important; }
+  .peye-open { transition: none; }
+}

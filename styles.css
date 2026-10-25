@@ -225,6 +225,13 @@ em { font-style: normal; }
 .tool:active { transform: scale(.95); border-color: var(--calm); }
 .tool[aria-pressed="true"] { border-color: var(--calm); }
 .tool-ic { font-size: 22px; color: var(--dim); }
+/* v35: ambient playing indicator — a pulsing dot, never a label flip alone.
+   The dot pulses while the sound engine is playing; reduced-motion users
+   get a steady dot instead of animation. */
+.snd-ind { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--line); flex: none; }
+.snd-ind.playing { background: #93d3ab; animation: sndpulse 1.6s ease-in-out infinite; }
+@keyframes sndpulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { .snd-ind.playing { animation: none; } }
 
 /* breathing — slow by design */
 .patternchips { display: flex; gap: 10px; justify-content: center; margin: 0 0 8px; }
@@ -286,7 +293,7 @@ em { font-style: normal; }
 }
 .linkcard:active { transform: scale(.98); border-color: var(--calm); }
 .linkcard .go { margin-left: auto; color: var(--calm); }
-.linkcard .del { color: var(--dim); padding: 10px; font-size: 18px; }
+.linkcard .del { color: var(--dim); padding: 10px; font-size: 18px; min-width: 48px; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; }
 
 /* crisis */
 .crisislist { display: grid; gap: 12px; margin: 8px 0 22px; }
@@ -363,7 +370,8 @@ em { font-style: normal; }
 .calmart { width: min(72vw, 260px); aspect-ratio: 1; margin: 26px auto 30px; border-radius: 32px; overflow: hidden; box-shadow: 0 18px 60px rgba(0,0,0,.45); }
 .calmart svg { display: block; width: 100%; height: 100%; }
 #btn-one-comfort:disabled { opacity: .45; cursor: default; }
-.calmgrid.dim { opacity: .45; }
+/* v35 C1: never dim text for state; the offline state is already in plain words below the grid. */
+.calmgrid.dim { opacity: 1; }
 
 /* platform segmented control */
 .seg { display: flex; gap: 8px; margin: 0 0 14px; }
@@ -392,7 +400,7 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 /* update banner — calm, fixed, only ever shown on safe screens (home/settings/about/history/plan) */
 .update-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 90; display: flex; align-items: center; gap: 12px; padding: calc(10px + env(safe-area-inset-top)) 16px 10px; background: var(--surface); border-bottom: 1px solid var(--line); }
 .update-banner p { margin: 0; font-size: 14px; line-height: 1.35; color: var(--ink); flex: 1; }
-.update-banner .btn { padding: 10px 14px; font-size: 15px; min-height: 0; white-space: nowrap; flex: none; }
+.update-banner .btn { padding: 10px 14px; font-size: 15px; min-height: 48px; white-space: nowrap; flex: none; }
 
 /* setup portability (export/import) */
 .io-btnrow { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
@@ -457,7 +465,7 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 .po-ground .po-ic { background: rgba(169,182,232,.13); color: var(--lav); box-shadow: 0 0 24px rgba(169,182,232,.22); }
 .po-cute { border-color: rgba(232,184,111,.5); }
 .po-cute .po-ic { background: rgba(232,184,111,.13); color: var(--amber); box-shadow: 0 0 24px rgba(232,184,111,.22); }
-/* v27 "Talk me through it": visually distinct — near-black card, night voice, never confused with the three tool buttons */
+/* v27 "Talk me through it": visually distinct — near-black card, night styling, never confused with the three tool buttons */
 .po-guide { border-color: rgba(169,182,232,.35); background: linear-gradient(180deg, #0c0e16, #080a10); }
 .po-guide .po-ic { background: rgba(169,182,232,.1); color: var(--lav); box-shadow: 0 0 24px rgba(169,182,232,.18); }
 /* v29 panic hero: the eyes-free rescue takes the dominant first slot above the fold — larger,
@@ -698,7 +706,7 @@ body.pet-blink .peye-shut { display: block; }
 .pov-cute i { top: 50%; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: currentColor; opacity: .85; }
 .pov-cute i:nth-child(1) { left: 15px; animation: tvmerge 2.8s ease-in-out infinite; }
 .pov-cute i:nth-child(2) { left: 27px; animation: tvmerge 2.8s ease-in-out infinite reverse; }
-/* v27: voice icon — concentric night arcs, pulsing outward */
+/* v27: guide icon — concentric night arcs, pulsing outward */
 .pov-guide i { left: 50%; top: 50%; margin: -9px 0 0 -9px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid currentColor; animation: tvrings 3.2s ease-out infinite; }
 .pov-guide i:nth-child(2) { animation-delay: 1.07s; }
 .pov-guide i:nth-child(3) { animation-delay: 2.13s; }
@@ -784,8 +792,7 @@ body.pet-blink .peye-shut { display: block; }
    Only the pet, one word, and the safety line stay visible. */
 #screen-breathe.running .patternchips,
 #screen-breathe.running .segsound,
-#screen-breathe.running .setrow,
-#screen-breathe.running #voice-hint { display: none; }
+#screen-breathe.running .setrow { display: none; }
 
 /* Breathe + rescue pets are large: the pet IS the exercise, not a decoration. */
 .petbreathe { width: min(60vw, 240px); }
@@ -798,7 +805,7 @@ body.pet-blink .peye-shut { display: block; }
 .splashname { font-family: var(--font-display); font-size: 34px; font-style: italic; text-align: center; margin: 0 0 12px; }
 .splashpanic { margin-top: auto; }
 
-/* Quiet stop alerts: screen flash instead of public voice. */
+/* Quiet stop alerts: screen flash + gentle sound. */
 body.stopflash #app { animation: stopflash .9s ease; }
 @keyframes stopflash { 0%, 100% { filter: none; } 50% { filter: brightness(1.3); } }
 
@@ -860,8 +867,8 @@ body.stopflash #app { animation: stopflash .9s ease; }
 
 /* Customization rows: color dots + accessory segs, shared by sheet, About, onboarding. */
 .colordots { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 14px; }
-.cdot { width: 30px; height: 30px; border-radius: 50%; background: var(--sw); border: 2px solid rgba(255,255,255,.25); cursor: pointer; padding: 0; }
-.cdot.on { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.35); transform: scale(1.12); }
+.cdot { box-sizing: border-box; width: 48px; height: 48px; border-radius: 50%; background: var(--sw); background-clip: content-box; border: 2px solid rgba(255,255,255,.25); cursor: pointer; padding: 10px; }
+.cdot.on { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.35); transform: none; }
 .accseg { margin-bottom: 6px; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -870,7 +877,7 @@ body.stopflash #app { animation: stopflash .9s ease; }
   .petmini .petsvg, .ts-pet .petsvg { animation: none !important; }
 }
 
-/* ============ v34: expression system, play, trip train, line chips, voice picker ============ */
+/* ============ v34: expression system, play, trip train, line chips ============ */
 .parm { transform-box: fill-box; transform-origin: 50% 90%; }
 .pet-wave .parm { animation: parmw .5s ease-in-out infinite alternate; }
 @keyframes parmw { from { transform: rotate(-14deg); } to { transform: rotate(20deg); } }
@@ -879,7 +886,7 @@ body.stopflash #app { animation: stopflash .9s ease; }
 .playbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
 .playbtns .btn { margin: 0; }
 .fireflies { position: relative; height: 180px; margin: 6px 0 14px; border: 1px dashed var(--line); border-radius: 16px; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, rgba(147,211,171,.12), transparent 70%); }
-.firefly { position: absolute; width: 26px; height: 26px; border-radius: 50%; border: none; background: radial-gradient(circle, #ffe89a 0%, #f2d98c 55%, rgba(242,217,140,0) 75%); cursor: pointer; animation: fireflybob 1.6s ease-in-out infinite; }
+.firefly { position: absolute; width: 48px; height: 48px; border-radius: 50%; border: none; background: radial-gradient(circle, #ffe89a 0%, #f2d98c 55%, rgba(242,217,140,0) 75%); cursor: pointer; animation: fireflybob 1.6s ease-in-out infinite; }
 @keyframes fireflybob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 .triptrack { position: relative; height: 34px; margin: 6px 0 10px; }
 .triptrack-line { position: absolute; left: 0; right: 0; top: 16px; height: 3px; border-radius: 2px; background: var(--line); }
@@ -893,13 +900,13 @@ body.stopflash #app { animation: stopflash .9s ease; }
 .linechip i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .linechip em { font-style: normal; color: var(--dim); font-size: 12px; }
 .linechip.on { border-color: var(--calm); box-shadow: 0 0 0 2px rgba(147,211,171,.4); }
-.voicerow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-.voicerow:last-child { border-bottom: none; }
-.voicerow.on .voicename { font-weight: 700; }
-.voicename { background: none; border: none; color: var(--ink); font-size: 14px; text-align: left; cursor: pointer; padding: 4px 0; flex: 1; }
-.voicerow .btn { margin: 0; padding: 6px 12px; font-size: 13px; }
 
 @media (prefers-reduced-motion: reduce) {
   .pet-wave .parm, .pet-spin .petsvg, .firefly { animation: none !important; }
   .triptrain { transition: none; }
 }
+
+/* v35 F1: visible focus for calm-time controls only. Panic flow classes
+   (.panicbtn, .panicopt, .sosfloat) are deliberately excluded: the panic
+   screen is frozen and must not change. */
+.btn:focus-visible, .chip:focus-visible, .toolcard:focus-visible, .linkcard:focus-visible, .toptool:focus-visible, .segbtn:focus-visible, .v35-chip:focus-visible, .v35-seeall:focus-visible, .v35-shortcut:focus-visible, .v35-announce-close:focus-visible { outline: 2px solid var(--calm); outline-offset: 2px; }

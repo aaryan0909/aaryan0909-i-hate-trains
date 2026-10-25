@@ -41,7 +41,6 @@
     maybeShowUpdateBanner(); // update prompt only ever appears on calm, non-crisis screens
     if (id === 'screen-panic') { renderPanicPlan(); suppressCelebration = recentSteady(); armPanicFreeze(); } // v31: plan line + celebration cooldown + freeze auto-start
     if (id === 'screen-toolkit') { renderTopTools(); } // v31: "What has helped you" lives in the toolkit now, not home
-    if (id === 'screen-privacy') { renderVoiceList(); } // v34: voice picker lists real installed voices
     if (id !== 'screen-petplay') { fireflyActive = false; var fh = $('play-fireflies'); if (fh) { fh.classList.add('hidden'); } } // v34: leaving play ends the game
     mountScreenPets(); renderPetScreenLines(); // v33: the pet guides every screen
     if (id === 'screen-home' && cur && cur !== 'screen-home' && cur !== 'screen-splash' && cur !== 'screen-panic') { waveHomePet(); } // v34: home return gets a wave + hi
@@ -95,8 +94,6 @@
     prefs.breathSound = (prefs.sound === false) ? 'off' : 'chimes';
     try { delete prefs.sound; } catch (e) {}
   }
-  if (typeof prefs.breathVoice !== 'boolean') { prefs.breathVoice = false; } // v21: calm count-ins, off by default, opt-in only
-  if (typeof prefs.stopHeadsUp !== 'boolean') { prefs.stopHeadsUp = false; } // v26: spoken stop heads-up, off by default, opt-in only
   if (typeof prefs.theme !== 'string') { prefs.theme = 'auto'; } // auto | toronto | london | newyork | paris | tokyo | night
   if (!prefs.locale && navigator.language) { prefs.locale = navigator.language; } // locale hook: per-country copy variants later
   function savePrefs() { store('iht_prefs', JSON.stringify(prefs)); }
@@ -453,176 +450,24 @@
   function phaseCue(k) {
     var mode = prefs.breathSound || 'chimes';
     if (mode !== 'chimes' && mode !== 'both') { return; } // ambient/off: no chimes
-    if (k === 'in') { chime(523.25, 1.1, 0.10); }      // soft high chime: breathe in
-    else if (k === 'out') { chime(392.0, 1.4, 0.08); } // lower, softer: breathe out
-    else { chime(440, 0.5, 0.035); }                  // hold/rest: barely-there tick
+    if (window.__ihtSound) { // v35: breath swells (4s in / 6s out) from sound.js
+      try { if (window.__ihtSound.breath(k)) { return; } } catch (e) {}
+    }
+    if (k === 'in') { chime(523.25, 1.1, 0.10); }      // fallback: soft high chime
+    else if (k === 'out') { chime(392.0, 1.4, 0.08); } // fallback: lower, softer
+    else { chime(440, 0.5, 0.035); }                  // fallback: barely-there tick
   }
 
-  /* ---------- "a voice in the dark" (v21, hardened v22, humanized v23): opt-in calm voice-over via on-device speechSynthesis.
-     Off by default, toggled in calm-time settings (breathe screen + Privacy), never auto-plays,
-     soft guiding cues only, zero jokes. Fully offline — no audio files, no network. Pref is the opt-in:
-     speech only ever starts inside the breathing exercise the user already chose to run.
-     v22 iOS hardening: (1) warm the engine inside the toggle-on gesture — the user hears
-     "Voice on." immediately, which is instant proof it works and the gesture unlocks iOS speech;
-     (2) never cancel()+speak() in the same tick (iOS Safari swallows the utterance);
-     (3) resume() a paused engine before speaking. The iPhone silent switch still mutes
-     speech — the hint under the toggle says so honestly.
-     v23 humanization: the voice picker scores for the most human on-device voice
-     (enhanced/premium/natural/neural/Siri; compact robot voices rank last), prosody is
-     rate 0.75 / pitch 0.9, and the script is soft cues ("breathe in…", "and out…") —
-     the pet's visible breathing carries the timing, the voice just guides. ---------- */
-  var NUMW = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']; // v21 legacy, kept for reference; v23 speaks soft cues, never counts
-  function voiceLineFor(p) {
-    // v23: the pet's voice guides, softly — a whisper of a cue, never a counting
-    // machine. The pet's visible breathing carries the timing; the voice just
-    // tells you, gently, what to do.
-    if (p.k === 'in') { return 'breathe in\u2026'; }
-    if (p.k === 'out') { return 'and out\u2026'; }
-    if (p.k === 'hold') { return 'hold\u2026'; }
-    return 'rest\u2026';
-  }
-  var calmVoiceCache = null, calmVoiceTried = false;
-  function scoreCalmVoice(v) {
-    // v23: never the stock robot. Prefer the most human on-device voice available.
-    var score = 0;
-    try {
-      var name = (v.name || '').toLowerCase();
-      var l = (v.lang || '').toLowerCase();
-      var loc = (prefs.locale || (navigator.language || 'en')).toLowerCase();
-      if (l === loc) { score += 3; }
-      else if (l.indexOf('en') === 0) { score += 1; }
-      if (/enhanced|premium|natural|neural/.test(name)) { score += 5; } // the human ones
-      if (/samantha|siri/.test(name)) { score += 4; } // iOS enhanced Siri voices
-      if (l === 'en-au') { score += 2; } // v34: Boardy-style Australian warmth, when installed
-      if (/compact/.test(name)) { score -= 4; } // the stock robot — last resort only
-      if (v.localService) { score += 2; } // on-device: offline law, zero network
-      if (v.default) { score += 1; }
-    } catch (e) {}
-    return score;
-  }
-  function pickCalmVoice() {
-    if (calmVoiceTried) { return calmVoiceCache; }
-    calmVoiceTried = true;
-    try {
-      var vs = window.speechSynthesis.getVoices() || [];
-      var best = null, bestScore = -999;
-      if (prefs.voiceName) { // v34: the rider's explicit pick wins over scoring
-        for (var i = 0; i < vs.length; i++) { if (vs[i].name === prefs.voiceName) { best = vs[i]; break; } }
-      }
-      if (!best) {
-        vs.forEach(function (v) {
-          var s = scoreCalmVoice(v);
-          if (s > bestScore) { bestScore = s; best = v; }
-        });
-      }
-      calmVoiceCache = best || null; // graceful fallback: whatever the phone has
-    } catch (e) { calmVoiceCache = null; }
-    return calmVoiceCache;
-  }
-  try { // voices can arrive after boot (Chrome loads them async); refresh the pick when they do
-    if ('speechSynthesis' in window && typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
-      window.speechSynthesis.onvoiceschanged = function () { calmVoiceTried = false; renderVoiceList(); };
-    }
-  } catch (e) {}
-  function synthNow() {
-    try { return ('speechSynthesis' in window) ? window.speechSynthesis : null; } catch (e) { return null; }
-  }
-  function speakUtterance(text, opts) {
-    // Low-level speak with iOS Safari hardening. Returns false when there is no engine.
-    // opts.volume overrides the default (rescue uses a lower volume).
-    var synth = synthNow();
-    if (!synth || !text) { return false; }
-    try {
-      try { if (typeof synth.resume === 'function') { synth.resume(); } } catch (e) {} // unstick a paused iOS engine
-      var busy = false;
-      try { busy = !!(synth.speaking || synth.pending); } catch (e) {}
-      var u = new SpeechSynthesisUtterance(text);
-      u.rate = (opts && typeof opts.rate === 'number') ? opts.rate : 0.75; // v23: calm, unhurried, warm — never robotic
-      u.pitch = (opts && typeof opts.pitch === 'number') ? opts.pitch : 0.9;
-      u.volume = (opts && typeof opts.volume === 'number') ? opts.volume : 0.9;
-      try { if (prefs.locale) { u.lang = prefs.locale; } } catch (e) {}
-      var v = (opts && opts.voice) ? opts.voice : pickCalmVoice(); // v34: preview uses the tapped voice
-      if (v) { u.voice = v; }
-      if (busy) {
-        // iOS Safari swallows an utterance when cancel() and speak() run in the
-        // same tick — clear the stale line, then speak on the next tick.
-        try { synth.cancel(); } catch (e) {}
-        setTimeout(function () { try { synth.speak(u); } catch (e) {} }, 120);
-      } else {
-        synth.speak(u);
-      }
-      return true;
-    } catch (e) { return false; }
-  }
-  function warmVoice(phrase) {
-    // Called inside the toggle-on gesture: unlocks iOS speech and gives instant
-    // audible proof the voice works. If the user hears nothing here, it is the
-    // silent switch or volume — the hint under the toggle says so.
-    var synth = synthNow();
-    if (!synth) { return; }
-    try { synth.getVoices(); } catch (e) {} // eager voice load, inside the gesture
-    calmVoiceTried = false; pickCalmVoice();
-    speakUtterance(phrase || 'Voice on.');
-  }
-  function speakPhase(p) {
-    if (!prefs.breathVoice) { return; } // never without the opt-in
-    speakUtterance(voiceLineFor(p));
-  }
-  function stopVoice() {
-    try { var s = synthNow(); if (s) { s.cancel(); } } catch (e) {}
-  }
-
-  /* v26 "your stop, out loud": the pet voice + prefs surface stopheads.js needs.
-     advanceStop() calls window.__ihtStopHeadsUp(trip.left) defensively; the
-     toggle and the spoken lines live in stopheads.js (same split as crisis.js). */
-  window.__ihtVoice = {
-    speak: speakUtterance, warm: warmVoice, stop: stopVoice,
-    prefs: prefs, savePrefs: savePrefs,
-    score: scoreCalmVoice, pick: pickCalmVoice, list: listEnglishVoices
-  };
-  /* v34 voice casting: enumerate installed English voices, warmest first, so the
-     rider can pick one (including Australian voices when installed). Preview speaks
-     a real greeting in the tapped voice. Device voices only — no network, offline-safe. */
-  function listEnglishVoices() {
-    try {
-      var vs = window.speechSynthesis.getVoices() || [];
-      return vs.filter(function (v) { return (v.lang || '').toLowerCase().indexOf('en') === 0; })
-        .sort(function (a, b) { return scoreCalmVoice(b) - scoreCalmVoice(a); });
-    } catch (e) { return []; }
-  }
-  function renderVoiceList() {
-    var host = $('voice-list'); if (!host) { return; }
-    var vs = listEnglishVoices();
-    host.innerHTML = '';
-    var note = $('voice-note');
-    if (!vs.length) {
-      if (note) { note.textContent = 'No English voices found on this phone yet. The pet will use whatever voice is available.'; }
-      return;
-    }
-    if (note) { note.textContent = 'Tap a voice to choose it, then Preview to hear it. Australian voices appear here when installed.'; }
-    var chosen = pickCalmVoice();
-    vs.forEach(function (v) {
-      var row = document.createElement('div');
-      row.className = 'voicerow' + ((prefs.voiceName === v.name) || (!prefs.voiceName && chosen && v.name === chosen.name) ? ' on' : '');
-      var label = document.createElement('button'); label.className = 'voicename'; label.type = 'button';
-      label.textContent = v.name + ' (' + v.lang + ')';
-      label.addEventListener('click', function () {
-        tick(); prefs.voiceName = v.name; savePrefs();
-        calmVoiceTried = false; pickCalmVoice(); renderVoiceList();
-      });
-      var pv = document.createElement('button'); pv.className = 'btn ghost'; pv.type = 'button'; pv.textContent = 'Preview';
-      pv.addEventListener('click', function () {
-        tick();
-        speakUtterance('Hi, I am ' + petName() + '. Let us take a breath together… nice and slow.', { voice: v, rate: 0.8, pitch: 1.0, volume: 0.9 });
-      });
-      row.appendChild(label); row.appendChild(pv); host.appendChild(row);
-    });
-  }
+  /* ---------- v35: removed. The pet guides with on-screen text and bubbles only;
+     all sound now comes from sound.js (window.__ihtSound). See REPORT.md. ---------- */
 
   /* ---------- generative ambient pad: soft detuned oscillators through a lowpass, slow-evolving warm chord.
      Synthesized live with Web Audio — zero files, works fully offline, iOS-safe after the tap gesture. ---------- */
   var ambState = null;
   function ambientStart() {
+    if (window.__ihtSound) { // v35: clearly audible pad + playing indicator
+      try { window.__ihtSound.setMode(prefs.breathSound || 'chimes'); return window.__ihtSound.ambientStart(); } catch (e) {}
+    }
     var ctx = ensureAudio();
     if (!ctx) { return; }
     ambientStop();
@@ -652,6 +497,10 @@
     } catch (e) { ambState = null; }
   }
   function ambientStop() {
+    if (window.__ihtSound) { // v35: paired with the delegated ambientStart above
+      try { window.__ihtSound.ambientStop(); } catch (e) {}
+      return;
+    }
     try { if (window.Drift && typeof window.Drift.stop === 'function') { window.Drift.stop(); } } catch (e) {}
     var s = ambState; ambState = null;
     if (!s) { return; }
@@ -729,7 +578,6 @@
     }
     breathHaptic(p.k);
     phaseCue(p.k);
-    speakPhase(p); // v23: the pet's voice guides softly, only when the user opted in
     breathTimer = setTimeout(function () { runPhase(phases, i + 1); }, p.secs * 1000);
   }
   /* the co-rider breathes with you: caption names the companion so the moment is unmistakable */
@@ -741,6 +589,7 @@
     breatheReturn = returnTo || 'screen-home';
     stopBreathe();
     ensureAudio(); // first user gesture: safe to init audio on iOS
+    try { if (window.__ihtSound) { window.__ihtSound.unlock(); window.__ihtSound.setMode(prefs.breathSound || 'chimes'); } } catch (e) {}
     petInto($('pet-breathe'), 'sleepy'); // the guide settles in, calm and ready
     renderBreatheCap();
     var nm0 = pet.name || 'Mochi';
@@ -763,9 +612,9 @@
     petBreathIn = false;
     var sc = $('screen-breathe');
     if (sc) { sc.classList.remove('running'); }
-    stopVoice(); ambientStop();
+    ambientStop();
   }
-  /* v31: one quiet "Options" tap reveals the pattern/sound/voice settings mid-exercise. */
+  /* v31: one quiet "Options" tap reveals the pattern/sound settings mid-exercise. */
   (function () {
     var b = $('btn-breathe-opts');
     if (!b) { return; }
@@ -777,7 +626,16 @@
   })();
   var stopHold = function () {}; // replaced by the hold-to-steady tool below; go() calls it so a mid-hold navigation never leaves the tone droning
   var stopMuscleHold = function () {}; // replaced by the muscle-release hold ring below (same reason: never leave a rAF loop running on a hidden screen)
-  $('btn-breathe-end').addEventListener('click', function () { tick(); stopBreathe(); markSteady(); go(breatheReturn); });
+  $('btn-breathe-end').addEventListener('click', function () { tick(); stopBreathe(); markSteady();
+    /* v35: completion chime for calm-time breathing only. The panic flow
+       returns to screen-panic and stays silent: no chirpy sound after panic. */
+    try {
+      if (breatheReturn !== 'screen-panic') {
+        var cm = prefs.breathSound || 'chimes';
+        if ((cm === 'chimes' || cm === 'both') && window.__ihtSound) { window.__ihtSound.completion(); }
+      }
+    } catch (e) {}
+    go(breatheReturn); });
   /* v31: guide-end lives in guide.js; this second listener only stamps the
      celebration-cooldown clock. Multiple listeners on one button are fine. */
   (function () {
@@ -951,40 +809,20 @@
   $('tool-breathe').addEventListener('click', function () { startBreathe('gentle', 'screen-trip', false); });
   $('tool-ground').addEventListener('click', function () { openTool('five-senses', 'screen-trip'); });
 
-  /* ---------- ambient hum (Web Audio, generated on-device, offline) ---------- */
-  var actx = null, noiseNode = null, soundOn = false;
-  function brownNoiseBuffer(ctx) {
-    var len = ctx.sampleRate * 3, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0), last = 0;
-    for (var i = 0; i < len; i++) {
-      var w = Math.random() * 2 - 1;
-      last = (last + 0.02 * w) / 1.02;
-      d[i] = last * 3.2;
-    }
-    return buf;
-  }
+  /* ---------- trip ambient (v35): delegated to sound.js. The replaced block
+     played one quiet low-filtered noise bed with only a label flip as feedback
+     (nearly inaudible on a phone). The new ambient is a pitched pad at
+     a real level with a pulsing playing indicator; sound.js owns the indicator
+     and the label. This handler only unlocks (inside the tap), confirms with a
+     soft tap, and toggles. The trip tool is independent of prefs.breathSound. ---------- */
   $('tool-sound').addEventListener('click', function () {
     tick();
-    var btn = $('tool-sound');
-    if (!soundOn) {
-      try {
-        if (!actx) { actx = new (window.AudioContext || window.webkitAudioContext)(); }
-        if (actx.state === 'suspended') { actx.resume(); }
-        var src = actx.createBufferSource();
-        src.buffer = brownNoiseBuffer(actx); src.loop = true;
-        var filt = actx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 320;
-        var gain = actx.createGain(); gain.gain.value = 0.1;
-        src.connect(filt); filt.connect(gain); gain.connect(actx.destination);
-        src.start();
-        noiseNode = src; soundOn = true;
-        btn.setAttribute('aria-pressed', 'true');
-        $('sound-label').textContent = 'Hum on';
-      } catch (e) { $('sound-label').textContent = 'Hum n/a'; }
-    } else {
-      try { if (noiseNode) { noiseNode.stop(); } } catch (e) {}
-      noiseNode = null; soundOn = false;
-      btn.setAttribute('aria-pressed', 'false');
-      $('sound-label').textContent = 'Hum off';
-    }
+    if (!window.__ihtSound) { $('sound-label').textContent = 'Ambient n/a'; return; }
+    try {
+      window.__ihtSound.unlock(); // gesture unlock for iOS
+      window.__ihtSound.tap(); // audible confirmation, calm-time trip screen only
+      window.__ihtSound.toggleAmbient(); // sound.js syncs indicator + label
+    } catch (e) { $('sound-label').textContent = 'Ambient n/a'; }
   });
 
   /* ---------- pre-ride check-in ---------- */
@@ -1031,6 +869,304 @@
   $('stops-minus').addEventListener('click', function () { tick(); if (setupStops > 1) { setupStops--; renderSetupStops(); } });
   $('stops-plus').addEventListener('click', function () { tick(); if (setupStops < 40) { setupStops++; renderSetupStops(); } });
   renderSetupStops();
+
+  /* ---------- v35 ride setup: cascading dropdowns, taps not typing.
+       City -> that city's lines (metros.js) -> that line's ordered stops
+       (stations.js contract; null means manual fallback). The hidden
+       in-city / in-line / in-dest inputs keep the canonical route for the
+       trip card, the map chooser, and location lookup. Shortcuts and the
+       last ride live on-device only (iht_shortcuts, iht_last_ride).
+       Storage migration: nothing old is deleted; profile.city / profile.line
+       still prefill, now through the dropdowns. ---------- */
+  var setupCityId = null, setupLineId = null, setupLineName = '';
+  var setupStationData = null, setupStations = null;
+  var setupFromIdx = -1, setupDestIdx = -1, setupManualMode = false;
+  var setupStationToken = 0, setupCitiesFilled = false;
+  function setupEl(id) { return $(id); }
+  function setupFillSelect(sel, items, placeholder) {
+    if (!sel) { return; }
+    sel.innerHTML = '';
+    var ph = document.createElement('option'); ph.value = ''; ph.textContent = placeholder;
+    sel.appendChild(ph);
+    items.forEach(function (it) {
+      var o = document.createElement('option'); o.value = it.v; o.textContent = it.l; sel.appendChild(o);
+    });
+  }
+  function setupMetroLines() {
+    if (!setupCityId || !window.__ihtMetros) { return []; }
+    var c = window.__ihtMetros.cities[setupCityId];
+    return c ? c.lines : [];
+  }
+  function setupInvalidateMap() { if (window.TriMap) { TriMap.current = null; } }
+  function setupSyncHidden() {
+    var cityEl = $('in-city'), lineEl = $('in-line'), destEl = $('in-dest');
+    if (setupManualMode) {
+      if (cityEl) { cityEl.value = ($('in-manual-city') && $('in-manual-city').value) || ''; }
+      if (lineEl) { lineEl.value = ($('in-manual-line') && $('in-manual-line').value) || ''; }
+      if (destEl) { destEl.value = ($('in-manual-dest') && $('in-manual-dest').value) || ''; }
+    } else {
+      /* Preserve a value we do not own (e.g. a map-chooser pick on a line
+         with no station list yet); only overwrite with a known value. */
+      if (cityEl && setupCityId && window.__ihtMetros && window.__ihtMetros.cities[setupCityId]) { cityEl.value = window.__ihtMetros.cities[setupCityId].label; }
+      if (lineEl && setupLineName) { lineEl.value = setupLineName; }
+      if (destEl && setupStations && setupDestIdx >= 0) { destEl.value = setupStations[setupDestIdx]; }
+    }
+    try { if (cityEl) { cityEl.dispatchEvent(new Event('change')); } } catch (e) {}
+  }
+  function setupStopsNote() {
+    var note = $('setup-stops-note'); if (!note) { return; }
+    var start = $('btn-start-trip');
+    if (setupManualMode) {
+      note.textContent = 'Counted by hand. The stepper is yours.';
+      if (start) { start.disabled = false; }
+      return;
+    }
+    if (setupStations && setupFromIdx >= 0 && setupDestIdx >= 0) {
+      if (setupFromIdx === setupDestIdx) {
+        note.textContent = 'Boarding and destination are the same stop. Pick a different stop.';
+        if (start) { start.disabled = true; }
+      } else {
+        note.textContent = setupStops + (setupStops === 1 ? ' stop, from ' : ' stops, from ')
+          + setupStations[setupFromIdx] + ' to ' + setupStations[setupDestIdx] + '. Counted from the line order.';
+        if (start) { start.disabled = false; }
+      }
+    } else if (setupStations) {
+      note.textContent = 'Pick your boarding stop and destination and the count works itself out.';
+      if (start) { start.disabled = false; }
+    } else if (setupCityId && setupLineId) {
+      note.textContent = 'Station lists are not in yet for this line, so the stops are counted by hand with the stepper.';
+      if (start) { start.disabled = false; }
+    } else {
+      note.textContent = 'Pick your stops and the count works itself out.';
+      if (start) { start.disabled = false; }
+    }
+  }
+  function setupApplyRoute() {
+    setupSyncHidden();
+    if (!setupManualMode && setupStations && setupFromIdx >= 0 && setupDestIdx >= 0 && setupFromIdx !== setupDestIdx) {
+      var n = window.IHTStations ? window.IHTStations.stopsBetween(setupStations, setupStations[setupFromIdx], setupStations[setupDestIdx]) : null;
+      if (n != null) { setupStops = n; renderSetupStops(); }
+    }
+    setupStopsNote();
+  }
+  function setupFillStopSelects() {
+    var from = $('sel-from'), dest = $('sel-dest');
+    if (!setupStations) {
+      if (from) { setupFillSelect(from, [], 'Station lists are not in yet'); from.disabled = true; }
+      if (dest) { setupFillSelect(dest, [], 'Station lists are not in yet'); dest.disabled = true; }
+      setupFromIdx = -1; setupDestIdx = -1;
+      return;
+    }
+    var items = setupStations.map(function (s, i) { return { v: String(i), l: s }; });
+    if (from) { setupFillSelect(from, items, 'Where do you board?'); from.disabled = false; }
+    if (dest) { setupFillSelect(dest, items, 'Where do you get off?'); dest.disabled = false; }
+    if (from && setupFromIdx >= 0) { from.value = String(setupFromIdx); }
+    if (dest && setupDestIdx >= 0) { dest.value = String(setupDestIdx); }
+  }
+  function setupDataNote() {
+    var note = $('setup-data-note'); if (!note) { return; }
+    if (setupManualMode) { note.textContent = ''; }
+    else if (setupStationData) { note.textContent = 'Station list for ' + (setupStationData.city || '') + '. Taps only, no typing.'; }
+    else if (setupCityId && setupLineId) { note.textContent = 'Station lists are not in yet for this line. The stepper below counts by hand.'; }
+    else if (setupCityId) { note.textContent = ''; }
+    else { note.textContent = ''; }
+  }
+  function setupLoadStations(cityId, then) {
+    if (!window.IHTStations) { if (then) { then(null); } return; }
+    var tok = ++setupStationToken;
+    window.IHTStations.load(cityId).then(function (d) {
+      if (tok !== setupStationToken) { return; }
+      setupStationData = d;
+      var line = d ? window.IHTStations.findLine(d, setupLineId, setupLineName) : null;
+      setupStations = line ? line.stations : null;
+      setupFromIdx = -1; setupDestIdx = -1;
+      setupFillStopSelects();
+      setupDataNote();
+      setupApplyRoute();
+      if (then) { then(d); }
+    });
+  }
+  function setupOnCity() {
+    var sel = $('sel-city'); if (!sel) { return; }
+    setupInvalidateMap();
+    var v = sel.value;
+    var manual = $('setup-manual');
+    if (!v || v === '__other') {
+      setupCityId = null; setupLineId = null; setupLineName = '';
+      setupStationData = null; setupStations = null; setupFromIdx = -1; setupDestIdx = -1;
+      setupManualMode = true;
+      if (manual) { manual.hidden = false; }
+      var ls = $('sel-line'); if (ls) { setupFillSelect(ls, [], 'Pick a city first'); ls.disabled = true; }
+      setupFillStopSelects(); setupDataNote(); setupSyncHidden(); setupStopsNote();
+      return;
+    }
+    setupManualMode = false;
+    if (manual) { manual.hidden = true; }
+    setupCityId = v;
+    var lines = setupMetroLines();
+    var ls2 = $('sel-line');
+    if (ls2) { setupFillSelect(ls2, lines.map(function (l) { return { v: l.id, l: l.name }; }), 'Pick a line'); ls2.disabled = false; }
+    setupLineId = null; setupLineName = ''; setupStations = null; setupStationData = null;
+    if ($('in-line')) { $('in-line').value = ''; }
+    if ($('in-dest')) { $('in-dest').value = ''; }
+    setupFillStopSelects();
+    setupLoadStations(v);
+    setupSyncHidden(); setupStopsNote();
+  }
+  function setupOnLine() {
+    var sel = $('sel-line'); if (!sel) { return; }
+    setupInvalidateMap();
+    setupLineId = sel.value || null;
+    var lines = setupMetroLines(), found = null;
+    lines.forEach(function (l) { if (l.id === setupLineId) { found = l; } });
+    setupLineName = found ? found.name : '';
+    if (setupStationData) {
+      var line = window.IHTStations ? window.IHTStations.findLine(setupStationData, setupLineId, setupLineName) : null;
+      setupStations = line ? line.stations : null;
+    } else { setupStations = null; }
+    setupFromIdx = -1; setupDestIdx = -1;
+    if ($('in-dest')) { $('in-dest').value = ''; }
+    setupFillStopSelects(); setupDataNote(); setupApplyRoute();
+  }
+  function setupOnStop() {
+    setupInvalidateMap();
+    var f = $('sel-from'), d = $('sel-dest');
+    setupFromIdx = f && f.value !== '' ? parseInt(f.value, 10) : -1;
+    setupDestIdx = d && d.value !== '' ? parseInt(d.value, 10) : -1;
+    setupApplyRoute();
+  }
+  function setupFillCities() {
+    if (setupCitiesFilled) { return; }
+    var sel = $('sel-city'); if (!sel || !window.__ihtMetros) { return; }
+    var items = Object.keys(window.__ihtMetros.cities).map(function (k) { return { v: k, l: window.__ihtMetros.cities[k].label }; });
+    items.push({ v: '__other', l: 'Somewhere else' });
+    setupFillSelect(sel, items, 'Pick a city');
+    setupCitiesFilled = true;
+  }
+  function setupCurrentRoute() {
+    return { cityId: setupCityId || null, city: ($('in-city') && $('in-city').value) || '',
+      lineId: setupLineId || null, line: setupLineName || (($('in-line') && $('in-line').value) || ''),
+      from: (setupStations && setupFromIdx >= 0) ? setupStations[setupFromIdx] : '',
+      dest: ($('in-dest') && $('in-dest').value) || '', stops: setupStops };
+  }
+  function setupShortcuts() { return readJSON('iht_shortcuts', null) || { home: null, work: null, frequent: [] }; }
+  function setupSaveShortcuts(s) { store('iht_shortcuts', JSON.stringify(s)); }
+  function setupApplySaved(r, done) {
+    if (!r) { return; }
+    setupFillCities();
+    var citySel = $('sel-city');
+    if (r.cityId && window.__ihtMetros && window.__ihtMetros.cities[r.cityId]) {
+      citySel.value = r.cityId; setupOnCity();
+      var lines = setupMetroLines(), lineId = r.lineId;
+      if (!lineId) { lines.forEach(function (l) { if (l.name === r.line) { lineId = l.id; } }); }
+      var applyLine = function () {
+        var ls = $('sel-line');
+        if (ls && lineId) { ls.value = lineId; setupOnLine(); }
+        if (setupStations && r.from && r.dest) {
+          setupFromIdx = setupStations.indexOf(r.from); setupDestIdx = setupStations.indexOf(r.dest);
+          setupFillStopSelects(); setupApplyRoute();
+        } else if (r.dest) {
+          setupManualMode = true;
+          var m = $('setup-manual'); if (m) { m.hidden = false; }
+          if ($('in-manual-city')) { $('in-manual-city').value = r.city || ''; }
+          if ($('in-manual-dest')) { $('in-manual-dest').value = r.dest; }
+          if ($('in-manual-line')) { $('in-manual-line').value = r.line || ''; }
+          setupApplyRoute();
+        }
+        if (done) { done(); }
+      };
+      /* Always through the load callback: a synchronous apply would run
+         before the cached load resolves and lose the station selects. */
+      setupLoadStations(r.cityId, applyLine);
+    } else {
+      citySel.value = '__other'; setupOnCity();
+      if ($('in-manual-city')) { $('in-manual-city').value = r.city || ''; }
+      if ($('in-manual-line')) { $('in-manual-line').value = r.line || ''; }
+      if ($('in-manual-dest')) { $('in-manual-dest').value = r.dest || ''; }
+      setupSyncHidden();
+      if (done) { done(); }
+    }
+  }
+  function setupRenderShortcuts() {
+    var host = $('setup-shortcut-chips'), wrap = $('setup-shortcuts');
+    if (!host || !wrap) { return; }
+    var s = setupShortcuts(), chips = [];
+    host.innerHTML = '';
+    function mk(label, fn, saved) {
+      var b = document.createElement('button'); b.className = 'flowchip' + (saved ? ' saved' : ''); b.type = 'button';
+      b.textContent = label; b.addEventListener('click', function () { tick(); fn(); });
+      host.appendChild(b);
+    }
+    mk(s.home ? 'Home: ' + (s.home.dest || s.home.line || '') : 'Set Home', function () {
+      var cur = setupShortcuts();
+      if (cur.home) { setupApplySaved(cur.home); }
+      else { var r = setupCurrentRoute(); if (r.dest) { cur.home = r; setupSaveShortcuts(cur); setupRenderShortcuts(); } }
+    }, !!s.home);
+    mk(s.work ? 'Work: ' + (s.work.dest || s.work.line || '') : 'Set Work', function () {
+      var cur = setupShortcuts();
+      if (cur.work) { setupApplySaved(cur.work); }
+      else { var r = setupCurrentRoute(); if (r.dest) { cur.work = r; setupSaveShortcuts(cur); setupRenderShortcuts(); } }
+    }, !!s.work);
+    (s.frequent || []).forEach(function (f) {
+      mk((f.dest || '') + ' (' + (f.line || '') + ')', function () { setupApplySaved(f); });
+    });
+    var any = !!(s.home || s.work || (s.frequent && s.frequent.length));
+    wrap.hidden = !any;
+    var rep = $('btn-repeat-ride');
+    if (rep) { rep.hidden = !read('iht_last_ride'); }
+  }
+  function setupEnter() {
+    setupFillCities();
+    var sel = $('sel-city');
+    if (sel && !sel.value) {
+      var pre = profile.city || '';
+      var cid = pre && window.__ihtMetros ? window.__ihtMetros.cityFor(pre) : null;
+      if (cid) {
+        sel.value = cid; setupOnCity();
+        var pl = profile.line || '';
+        if (pl) {
+          var lines = setupMetroLines(), lid = null;
+          lines.forEach(function (l) { if (l.name === pl) { lid = l.id; } });
+          if (lid) { var ls = $('sel-line'); if (ls) { ls.value = lid; setupOnLine(); } }
+        }
+      } else if (pre) {
+        sel.value = '__other'; setupOnCity();
+        if ($('in-manual-city')) { $('in-manual-city').value = pre; }
+        if ($('in-manual-line')) { $('in-manual-line').value = profile.line || ''; }
+        setupSyncHidden();
+      }
+    }
+    setupRenderShortcuts(); setupStopsNote();
+    setTimeout(function () {
+      tryLocate({ status: $('loc-status'), city: $('in-city'), onceKey: 'setup',
+        onFound: function (city) {
+          var cid = window.__ihtMetros ? window.__ihtMetros.cityFor(city) : null;
+          var st = $('loc-status');
+          if (cid) {
+            var cs = $('sel-city');
+            if (cs && cs.value !== cid) { cs.value = cid; setupOnCity(); }
+            if (st) { st.textContent = 'Looks like you are near ' + city + '. I picked it below. Change it if I am wrong.'; }
+          } else {
+            var cs2 = $('sel-city');
+            if (cs2 && !cs2.value) { cs2.value = '__other'; setupOnCity(); if ($('in-manual-city')) { $('in-manual-city').value = city; } setupSyncHidden(); }
+            if (st) { st.textContent = 'Looks like you are near ' + city + '. It is not covered yet, so the manual stops below are yours.'; }
+          }
+        }
+      });
+    }, 350);
+  }
+  (function setupWire() {
+    var c = $('sel-city'); if (c) { c.addEventListener('change', function () { tick(); setupOnCity(); }); }
+    var l = $('sel-line'); if (l) { l.addEventListener('change', function () { tick(); setupOnLine(); }); }
+    var f = $('sel-from'); if (f) { f.addEventListener('change', function () { tick(); setupOnStop(); }); }
+    var d = $('sel-dest'); if (d) { d.addEventListener('change', function () { tick(); setupOnStop(); }); }
+    ['in-manual-city', 'in-manual-line', 'in-manual-dest'].forEach(function (id) {
+      var el = $(id); if (el) { el.addEventListener('input', function () { setupInvalidateMap(); setupSyncHidden(); }); }
+    });
+    var sh = $('btn-save-home'); if (sh) { sh.addEventListener('click', function () { tick(); var s = setupShortcuts(), r = setupCurrentRoute(); if (r.dest) { s.home = r; setupSaveShortcuts(s); setupRenderShortcuts(); } }); }
+    var sw = $('btn-save-work'); if (sw) { sw.addEventListener('click', function () { tick(); var s = setupShortcuts(), r = setupCurrentRoute(); if (r.dest) { s.work = r; setupSaveShortcuts(s); setupRenderShortcuts(); } }); }
+    var rp = $('btn-repeat-ride'); if (rp) { rp.addEventListener('click', function () { tick(); var r = readJSON('iht_last_ride', null); if (r) { setupApplySaved(r); } }); }
+  })();
 
   /* ---------- location: try first, ask only if needed. Always visible, never silent. ---------- */
   function reverseGeocode(lat, lon, o) {
@@ -1098,12 +1234,13 @@
       }
     }, { timeout: 7900, maximumAge: 600000 });
   }
-  /* ride setup: prefill from profile, then attempt location once per session */
+  /* v35 ride setup entry: dropdowns prefill from profile, then location
+     is attempted once per session (setupEnter handles both). The map
+     chooser still mounts into linepick-mount; its pick is reflected back
+     into the dropdowns so the visible route and the trip always agree. */
   $all('[data-go="screen-setup"]').forEach(function (b) {
     b.addEventListener('click', function () {
-      if (!$('in-city').value && profile.city) { $('in-city').value = profile.city; }
-      if (!$('in-line').value && profile.line) { $('in-line').value = profile.line; }
-      renderMetroLines(); // v34: line chips for the prefilled city
+      setupEnter();
       if (window.TriMap && $('linepick-mount')) {
         TriMap.mountChooser($('linepick-mount'), {
           cityEl: $('in-city'),
@@ -1113,45 +1250,25 @@
             $('in-line').value = sel.lineName;
             $('in-dest').value = sel.dest;
             window.__ihtSetStops(sel.stopsToGo);
+            var ls = $('sel-line'), lines = setupMetroLines(), lid = null;
+            lines.forEach(function (l) { if (l.name === sel.lineName) { lid = l.id; } });
+            if (ls && lid) {
+              ls.value = lid; setupOnLine();
+              if (setupStations) {
+                var oi = (typeof sel.originIdx === 'number') ? sel.originIdx : -1;
+                var di = (typeof sel.destIdx === 'number') ? sel.destIdx : -1;
+                if (oi >= 0 && oi < setupStations.length) { setupFromIdx = oi; }
+                if (di >= 0 && di < setupStations.length) { setupDestIdx = di; }
+                setupFillStopSelects();
+                setupStops = sel.stopsToGo; renderSetupStops(); setupStopsNote();
+              }
+            }
+            setupSyncHidden();
           }
         });
       }
-      setTimeout(function () { tryLocate({ status: $('loc-status'), city: $('in-city'), onceKey: 'setup' }); }, 350);
     });
   });
-  /* TriMap: a manual edit after a chooser pick invalidates the pick, so
-     the map button never offers a map for a trip it doesn't describe. */
-  ['in-line', 'in-dest', 'in-city'].forEach(function (id) {
-    $(id).addEventListener('input', function () {
-      if (window.TriMap) { TriMap.current = null; }
-    });
-  });
-  /* v34: real line chips for covered metros (metros.js). Tap a chip to fill the
-     line field; anything not covered falls back to manual entry, as before. */
-  function renderMetroLines() {
-    var host = $('metro-lines'); if (!host) { return; }
-    var city = ($('in-city') && $('in-city').value) || profile.city || '';
-    var lines = (window.__ihtMetros && window.__ihtMetros.linesFor(city)) || [];
-    host.innerHTML = '';
-    if (!lines.length) { host.hidden = true; return; }
-    host.hidden = false;
-    var mk = window.__ihtMetros.cityFor(city);
-    var label = mk ? window.__ihtMetros.cities[mk].label : city;
-    var cap = document.createElement('p'); cap.className = 'fineprint';
-    cap.textContent = 'Real lines in ' + label + ' — tap one (colors are approximate):';
-    host.appendChild(cap);
-    lines.forEach(function (l) {
-      var b = document.createElement('button'); b.className = 'linechip'; b.type = 'button';
-      b.innerHTML = '<i style="background:' + l.color + '"></i>' + l.name + (l.termini ? '<em>' + l.termini + '</em>' : '');
-      b.addEventListener('click', function () {
-        tick(); $('in-line').value = l.name;
-        host.querySelectorAll('.linechip').forEach(function (x) { x.classList.remove('on'); });
-        b.classList.add('on');
-      });
-      host.appendChild(b);
-    });
-  }
-  $('in-city').addEventListener('input', function () { renderMetroLines(); });
   $('stops-minus').addEventListener('click', function () {
     if (window.TriMap) { TriMap.current = null; }
   });
@@ -1159,10 +1276,18 @@
     if (window.TriMap) { TriMap.current = null; }
   });
 
-  var trip = { city: '', line: '', dest: '', left: 0, total: 0 };
+  /* v35: trip carries its station list so the screen can name stations
+     instead of only counting. stations null means the old counter. */
+  var trip = { city: '', line: '', dest: '', left: 0, total: 0, from: '', fromIdx: -1, destIdx: -1, stations: null, cityId: null, lineId: null };
   var tripCardSent = false;
   function arrivedNote() {
     petInto($('pet-arrived'), suppressCelebration ? 'idle' : 'celebrate', null, suppressCelebration ? 'idle' : 'celebrate'); // steady, not chirpy, on a second panic
+    if (!suppressCelebration) { // v35: arrival sound, only when the celebration itself plays
+      try {
+        var am = prefs.breathSound || 'chimes';
+        if ((am === 'chimes' || am === 'both') && window.__ihtSound) { window.__ihtSound.arrival(); }
+      } catch (e) {}
+    }
     $('home-note').textContent = tripCardSent
       ? 'Your person has your trip card with the ETA.'
       : 'Take a breath. You\u2019re off the train.';
@@ -1174,6 +1299,23 @@
     trip.dest = $('in-dest').value.trim();
     trip.total = setupStops;
     trip.left = setupStops;
+    trip.cityId = setupCityId; trip.lineId = setupLineId;
+    trip.stations = setupStations || null;
+    trip.fromIdx = setupFromIdx; trip.destIdx = setupDestIdx;
+    trip.from = (setupStations && setupFromIdx >= 0) ? setupStations[setupFromIdx] : '';
+    /* v35: one-tap repeat + frequent stops, on-device only. */
+    try {
+      var rr = setupCurrentRoute();
+      if (rr.dest) {
+        store('iht_last_ride', JSON.stringify(rr));
+        var sc = setupShortcuts();
+        sc.frequent = sc.frequent || [];
+        sc.frequent = sc.frequent.filter(function (f) { return !(f.city === rr.city && f.line === rr.line && f.from === rr.from && f.dest === rr.dest); });
+        sc.frequent.unshift(rr);
+        sc.frequent = sc.frequent.slice(0, 4);
+        setupSaveShortcuts(sc);
+      }
+    } catch (e) {}
     tripCardSent = false;
     tripActive = true;
     applyTheme(); // ride city can differ from home base (hello, Italy)
@@ -1189,6 +1331,15 @@
     var showMap = !!(window.TriMap && TriMap.current && TriMap.current.useMap && navigator.onLine);
     $('btn-show-map').hidden = !showMap;
     go('screen-trip');
+    /* v35: after go() (which refreshes the generic pet line), set the
+       station-aware companion state: names, next stop, tap wording. */
+    renderTripStation();
+    renderTripPetLine();
+    var tap = $('btn-stop-tap');
+    if (tap) { tap.textContent = trip.stations ? 'We passed a stop' : 'Tap at each stop'; }
+    $('trip-fine').textContent = trip.stations
+      ? 'Tap when the train leaves a station. The station names carry the count, so you never have to count.'
+      : (nm ? ('One tap per stop, ' + nm + '. That\u2019s all you have to do.') : 'One tap per stop. That\u2019s all you have to do.');
   });
 
   /* ---------- stop counter: the calm ritual ---------- */
@@ -1196,6 +1347,7 @@
     $('stops-left').textContent = trip.left;
     $('stops-word').textContent = trip.left === 1 ? 'stop to go' : 'stops to go';
     renderTripTrain();
+    renderTripStation();
   }
   /* v34: a little train that crawls across the trip screen as stops pass —
      same craft as the intro scene, quiet enough for a ride. */
@@ -1203,10 +1355,13 @@
     var t = $('trip-train'); if (!t) { return; }
     var total = trip.total || 0, left = trip.left || 0;
     var pct = total > 0 ? Math.max(0, Math.min(100, (1 - left / total) * 100)) : 0;
-    t.style.left = 'calc(' + pct.toFixed(1) + '% - 14px)';
+    t.style.left = 'calc(' + pct.toFixed(1) + '% - 32px)'; /* v35: the train graphic is 64px wide now */
   }
   /* The ONE stop counter. Manual taps and the map's auto-advance both
      come through here — never a parallel counter. */
+  /* v35: the pet reacts as stops pass. Celebrate per stop, proud when one
+     stop is left (near arrival). The reaction lives here so map auto-advance
+     and the tap both get it, never a parallel reaction. */
   function advanceStop() {
     buzz(25);
     var n = $('stops-left');
@@ -1214,9 +1369,15 @@
     if (trip.left > 0) { trip.left--; renderStops(); if (window.__ihtStopHeadsUp) { try { window.__ihtStopHeadsUp(trip.left); } catch (e) {} } } // v26: spoken heads-up at 2 and 1, opt-in only (stopheads.js)
     if (trip.left === 0) {
       if (window.TriMap) { TriMap.closeMap(); }
-      setTimeout(function () { arrivedNote(); go('screen-arrived'); }, 600); }
+      setTimeout(function () { arrivedNote(); go('screen-arrived'); }, 600);
+    } else if (trip.left === 1) {
+      try { petInto($('pet-trip'), 'idle', null, 'proud'); } catch (e) {}
+    } else {
+      try { petInto($('pet-trip'), 'celebrate', null, 'celebrate'); setTimeout(function () { petInto($('pet-trip'), 'idle'); }, 900); } catch (e) {}
+    }
+    renderTripPetLine();
   }
-  $('btn-stop-tap').addEventListener('click', function () { advanceStop(); renderTripPetLine(); try { petInto($('pet-trip'), 'celebrate', null, 'celebrate'); setTimeout(function () { petInto($('pet-trip'), 'idle'); }, 900); } catch (e) {} });
+  $('btn-stop-tap').addEventListener('click', function () { advanceStop(); });
   $('btn-show-map').addEventListener('click', function () {
     tick();
     var s = window.TriMap && TriMap.current;
@@ -1752,7 +1913,10 @@
       var grow = (p.k === 'in');
       pb.style.transition = reducedMotion ? 'opacity 1.2s ease' : 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
       if (reducedMotion) { pb.style.transform = 'none'; pb.style.opacity = grow ? '1' : '0.55'; }
-      else { pb.style.transform = grow ? 'scale(0.94, 1.2)' : 'scale(1, 1)'; }
+      /* v35 belly breathing: bottom-anchored (v35-flow.css sets the origin),
+         so the body visibly expands outward on inhale and settles on exhale.
+         The old scale(0.94, 1.2) was a vertical stretch from the center. */
+      else { pb.style.transform = grow ? 'scale(1.16, 1.10)' : 'scale(1, 1)'; }
       try { phaseCue(p.k); } catch (e) {}
     }
     if (i + 1 >= phases.length) {
@@ -1776,7 +1940,10 @@
        Next hidden. Otherwise a warm reload or swipe-back could land on a stale
        "Nice." state with an empty pet mount. Idempotent; safe to call twice. */
     stopObBreath();
-    try { petInto($('pet-ob0'), 'sleepy'); } catch (e) {}
+    /* v35: the guide has OPEN eyes and looks at the rider. The old 'sleepy'
+       mount hid the open eyes (pet-sleepy CSS) so the guide breathed with
+       its eyes shut. 'idle' keeps open eyes plus the blink loop. */
+    try { petInto($('pet-ob0'), 'idle', null, 'idle'); } catch (e) {}
     var ln = $('ob0-line');
     if (ln) { ln.textContent = 'Hi, I\u2019m ' + ((pet && pet.name) || 'Mochi') + '. Let\u2019s take one breath together.'; }
     var w = $('ob0-word'); if (w) { w.textContent = '…'; }
@@ -1880,31 +2047,8 @@
     savePrefs(); renderHaptics(); tick();
   });
   renderHaptics();
-  /* ---------- privacy + breathe screen: the pet's voice toggle (v21, v22). Off by default.
-     Flipping it ON warms the speech engine inside the gesture and speaks "Voice on." —
-     instant proof it works (v22 iOS fix). The voice never counts along until the user
-     starts a breathing session. ---------- */
-  function renderVoice() {
-    var nm = pet.name || 'Mochi';
-    ['set-voice', 'set-voice-2'].forEach(function (id) {
-      var b = $(id);
-      if (!b) { return; }
-      b.classList.toggle('done', !!prefs.breathVoice);
-      b.setAttribute('aria-pressed', prefs.breathVoice ? 'true' : 'false');
-      var st = b.querySelector('strong'); // v22: the calm voice is the pet's voice now
-      if (st) { st.textContent = nm + '\u2019s voice'; }
-    });
-  }
-  ['set-voice', 'set-voice-2'].forEach(function (id) {
-    var b = $(id);
-    if (b) {
-      b.addEventListener('click', function () {
-        prefs.breathVoice = !prefs.breathVoice;
-        savePrefs(); renderVoice(); tick();
-        if (prefs.breathVoice) { warmVoice(); } else { stopVoice(); } // v22: warm inside the gesture
-      });
-    }
-  });
+  /* ---------- v35: removed (see REPORT.md). Breathing sounds live in the
+     sound picker above; the pet guides with on-screen text only. ---------- */
   /* boot render happens at the bottom with the pet section, after pet init */
   /* ---------- privacy: breathing sound picker (mirrors the one on the breathing screen) ---------- */
   function renderSoundSegs() {
@@ -1920,6 +2064,7 @@
       tick();
       prefs.breathSound = b.getAttribute('data-snd');
       savePrefs(); renderSoundSegs();
+      try { if (window.__ihtSound) { window.__ihtSound.setMode(prefs.breathSound); } } catch (e) {}
       var mode = prefs.breathSound;
       if (mode === 'chimes' || mode === 'both') { ensureAudio(); chime(523.25, 0.6, 0.08); } // confirm the chimes are on
       if ((mode === 'ambient' || mode === 'both') && $('screen-breathe').classList.contains('active')) { ambientStart(); }
@@ -2255,10 +2400,11 @@
     });
     return out + '</g>';
   }
-  function petBlush(spots) {
+  function petBlush(spots, strength) {
+    var st = strength || 1;
     var out = '';
     spots.forEach(function (p) {
-      out += '<ellipse cx="' + p[0] + '" cy="' + p[1] + '" rx="5" ry="3.5" fill="#d98a9e" opacity=".55"/>';
+      out += '<ellipse cx="' + p[0] + '" cy="' + p[1] + '" rx="' + (st >= 1.5 ? 6.5 : 5) + '" ry="3.5" fill="#d98a9e" opacity="' + Math.min(0.9, 0.55 * st).toFixed(2) + '"/>';
     });
     return out;
   }
@@ -2298,8 +2444,7 @@
       body: function (c) {
         return '<ellipse cx="60" cy="104" rx="30" ry="7" fill="rgba(0,0,0,.28)"/>'
           + '<path d="M60 22 C36 22 26 44 26 66 C26 90 40 100 60 100 C80 100 94 90 94 66 C94 44 84 22 60 22 Z" fill="' + c.main + '"/>'
-          + '<ellipse cx="45" cy="46" rx="10" ry="15" fill="#ffffff" opacity=".16" transform="rotate(-18 45 46)"/>'
-          + '<path d="M54 76 q6 5 12 0" stroke="#10141b" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+          + '<ellipse cx="45" cy="46" rx="10" ry="15" fill="#ffffff" opacity=".16" transform="rotate(-18 45 46)"/>';
       }
     },
     bird: {
@@ -2333,7 +2478,7 @@
           + '<circle cx="60" cy="66" r="30" fill="' + c.main + '"/>'
           + '<ellipse cx="60" cy="79" rx="16" ry="11" fill="#fdf6ec"/>'
           + '<ellipse cx="60" cy="74" rx="4" ry="3.5" fill="#2b2b33"/>'
-          + '<path d="M60 78 L60 82 M60 82 q-4 3 -8 1 M60 82 q4 3 8 1" stroke="#2b2b33" stroke-width="2" fill="none" stroke-linecap="round"/>';
+          + '<path d="M60 78 L60 82" stroke="#2b2b33" stroke-width="2" fill="none" stroke-linecap="round"/>';
       }
     },
     frog: {
@@ -2341,8 +2486,7 @@
       body: function (c) {
         return '<circle cx="42" cy="34" r="13" fill="' + c.main + '"/><circle cx="78" cy="34" r="13" fill="' + c.main + '"/>'
           + '<circle cx="60" cy="70" r="32" fill="' + c.main + '"/>'
-          + '<ellipse cx="60" cy="82" rx="18" ry="13" fill="#ffffff" opacity=".25"/>'
-          + '<path d="M46 82 q14 10 28 0" stroke="' + c.dark + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+          + '<ellipse cx="60" cy="82" rx="18" ry="13" fill="#ffffff" opacity=".25"/>';
       }
     },
     panda: {
@@ -2380,10 +2524,68 @@
      support every expression. Open-eye expressions keep BOTH eye groups so the
      global blink loop (body.pet-blink) still works; happy/celebrate faces simply
      do not blink, which reads as a smile held. */
-  var PET_MOUTH = { blob: [60, 78], bird: null, cat: [60, 80], fox: [60, 84], frog: [60, 84], panda: [60, 80], bunny: [60, 80] };
+  var PET_MOUTH = { blob: [60, 78], bird: [66, 74], cat: [60, 80], fox: [60, 84], frog: [60, 84], panda: [60, 80], bunny: [60, 90] };
+  /* v35: blush strength by expression, so joy reads stronger than worry at phone size. */
+  var PET_BLUSH = { idle: 1, happy: 1.2, worried: 0.6, proud: 1.1, sleepy: 0.7, celebrate: 1.5, curious: 1, wave: 1.2, excited: 1.6, calm: 1.1 };
+  /* v35 BROWS: every open-eyed expression gets brows, shaped by feeling. Raised
+     arcs read happy, flat high brows read proud, inner-down slants read worried,
+     one raised brow reads curious, low soft lines read calm. */
+  function petBrows(expr, sp) {
+    if (expr === 'idle' || expr === 'sleepy') { return ''; }
+    var out = '<g stroke="#10141b" stroke-width="2.5" stroke-linecap="round" fill="none">';
+    sp.eyes.forEach(function (e, i) {
+      var x = e[0], y = e[1] - 14;
+      if (expr === 'worried') {
+        if (sp.eyes.length === 1) { out += '<path d="M' + (x - 9) + ' ' + y + ' L' + (x + 9) + ' ' + y + '"/>'; }
+        else if (i === 0) { out += '<path d="M' + (x - 8) + ' ' + y + ' L' + (x + 8) + ' ' + (y + 5) + '"/>'; }
+        else { out += '<path d="M' + (x - 8) + ' ' + (y + 5) + ' L' + (x + 8) + ' ' + y + '"/>'; }
+      } else if (expr === 'curious') {
+        if (i === 0) { out += '<path d="M' + (x - 8) + ' ' + (y - 4) + ' L' + (x + 8) + ' ' + (y - 4) + '"/>'; }
+        else { out += '<path d="M' + (x - 8) + ' ' + (y + 1) + ' L' + (x + 8) + ' ' + (y + 1) + '"/>'; }
+      } else if (expr === 'proud') {
+        out += '<path d="M' + (x - 8) + ' ' + (y - 3) + ' L' + (x + 8) + ' ' + (y - 3) + '"/>';
+      } else if (expr === 'calm') {
+        out += '<path d="M' + (x - 7) + ' ' + (y + 2) + ' L' + (x + 7) + ' ' + (y + 2) + '"/>';
+      } else if (expr === 'excited' || expr === 'celebrate') {
+        out += '<path d="M' + (x - 8) + ' ' + y + ' q8 -7 16 0"/>';
+      } else {
+        out += '<path d="M' + (x - 8) + ' ' + y + ' q8 -5 16 0"/>';
+      }
+    });
+    return out + '</g>';
+  }
+  /* v35 MOUTHS: one mouth per feeling, drawn by the face (body mouths were
+     removed so no pet shows two mouths). Open mouths carry a tongue; worry is
+     a wavy frown; curiosity and sleep are small round mouths. */
+  function petMouthPath(expr, m) {
+    if (!m) { return ''; }
+    var x = m[0], y = m[1];
+    var st = ' stroke="#10141b" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+    if (expr === 'celebrate') { return '<path d="M' + (x - 9) + ' ' + y + ' q9 11 18 0 Z" fill="#7a2e2e"/><ellipse cx="' + x + '" cy="' + (y + 6) + '" rx="4" ry="2.5" fill="#d98a9e"/>'; }
+    if (expr === 'excited') { return '<path d="M' + (x - 10) + ' ' + y + ' q10 13 20 0 Z" fill="#7a2e2e"/><ellipse cx="' + x + '" cy="' + (y + 7) + '" rx="4.5" ry="3" fill="#d98a9e"/>'; }
+    if (expr === 'worried') { return '<path d="M' + (x - 8) + ' ' + (y + 2) + ' q8 -7 16 0"' + st; }
+    if (expr === 'sleepy') { return '<circle cx="' + x + '" cy="' + (y + 1) + '" r="3.5"' + st; }
+    if (expr === 'curious') { return '<circle cx="' + x + '" cy="' + (y + 1) + '" r="4"' + st; }
+    if (expr === 'happy') { return '<path d="M' + (x - 9) + ' ' + y + ' q9 8 18 0"' + st; }
+    if (expr === 'wave') { return '<path d="M' + (x - 8) + ' ' + y + ' q8 6 16 0"' + st; }
+    if (expr === 'proud') { return '<path d="M' + (x - 6) + ' ' + y + ' q6 4 12 0"' + st; }
+    if (expr === 'calm') { return '<path d="M' + (x - 6) + ' ' + y + ' q6 3 12 0"' + st; }
+    return '<path d="M' + (x - 7) + ' ' + y + ' q7 5 14 0"' + st;
+  }
+  /* v35 FACE: 10 expressions, all supported on all 7 species. How they differ
+     at phone size: happy and celebrate close the eyes into arcs (celebrate
+     adds both arms up and a big open mouth); proud keeps eyes open with flat
+     high brows; worried shrinks pupils with inner-down brows and a wavy
+     frown; sleepy shuts the eyes with Zzz; curious raises one brow with a
+     round mouth; excited widens the pupils with high brows, a big open
+     mouth and sparkles; calm half-closes the eyes under low soft brows.
+     Open-eye expressions keep BOTH eye groups so the global blink loop
+     (body.pet-blink) still works; closed faces simply do not blink. */
   function petFace(expr, sp, c, mouth) {
+    var known = { idle: 1, happy: 1, worried: 1, proud: 1, sleepy: 1, celebrate: 1, curious: 1, wave: 1, excited: 1, calm: 1 };
+    if (!known[expr]) { expr = 'idle'; }
     var out = '';
-    if (expr === 'happy' || expr === 'proud' || expr === 'celebrate') {
+    if (expr === 'happy' || expr === 'celebrate') {
       out += '<g class="peye peye-happy">';
       sp.eyes.forEach(function (e) {
         out += '<path d="M' + (e[0] - 7) + ' ' + (e[1] + 2) + ' q7 -8 14 0" stroke="#10141b" stroke-width="3" fill="none" stroke-linecap="round"/>';
@@ -2391,41 +2593,35 @@
       out += '</g>';
     } else if (expr === 'sleepy') {
       out += petEyesShut(sp.eyes);
+      out += '<g class="pzzz"><text x="92" y="26" font-size="15" font-weight="700" fill="#8a94a6">z</text><text x="101" y="14" font-size="11" font-weight="700" fill="#8a94a6">z</text></g>';
+    } else if (expr === 'calm') {
+      out += '<g class="peye peye-open">';
+      sp.eyes.forEach(function (e) {
+        out += '<path d="M' + (e[0] - 7) + ' ' + (e[1] - 1) + ' q7 -6 14 0" stroke="#10141b" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+        out += '<circle cx="' + e[0] + '" cy="' + (e[1] + 2) + '" r="3" fill="#10141b"/><circle cx="' + (e[0] + 1) + '" cy="' + e[1] + '" r="1.2" fill="#fff"/>';
+      });
+      out += '</g>';
+      out += petEyesShut(sp.eyes);
     } else {
-      var r = expr === 'worried' ? 4 : 5.5; // worried pupils shrink
+      var r = expr === 'worried' ? 4 : expr === 'excited' ? 7 : expr === 'curious' ? 6 : 5.5;
       out += '<g class="peye peye-open">';
       sp.eyes.forEach(function (e) {
         out += '<circle cx="' + e[0] + '" cy="' + e[1] + '" r="' + r + '" fill="#10141b"/><circle cx="' + (e[0] + 2) + '" cy="' + (e[1] - 2) + '" r="1.8" fill="#fff"/>';
       });
       out += '</g>';
-      out += petEyesShut(sp.eyes); // blink partner, hidden by CSS until body.pet-blink
+      out += petEyesShut(sp.eyes);
     }
-    if (expr === 'worried') { // brows angle down toward the middle
-      out += '<g stroke="#10141b" stroke-width="2.5" stroke-linecap="round" fill="none">';
-      sp.eyes.forEach(function (e, i) {
-        if (sp.eyes.length === 1) {
-          out += '<path d="M' + (e[0] - 9) + ' ' + (e[1] - 14) + ' L' + (e[0] + 9) + ' ' + (e[1] - 14) + '"/>';
-        } else if (i === 0) {
-          out += '<path d="M' + (e[0] - 8) + ' ' + (e[1] - 14) + ' L' + (e[0] + 8) + ' ' + (e[1] - 9) + '"/>';
-        } else {
-          out += '<path d="M' + (e[0] - 8) + ' ' + (e[1] - 9) + ' L' + (e[0] + 8) + ' ' + (e[1] - 14) + '"/>';
-        }
-      });
-      out += '</g>';
-    }
-    if (expr === 'curious' && sp.eyes.length > 1) { // one brow raised
-      var e0 = sp.eyes[0];
-      out += '<path d="M' + (e0[0] - 8) + ' ' + (e0[1] - 17) + ' L' + (e0[0] + 8) + ' ' + (e0[1] - 17) + '" stroke="#10141b" stroke-width="2.5" stroke-linecap="round"/>';
-    }
-    if (mouth) {
-      if (expr === 'celebrate') {
-        out += '<path d="M' + (mouth[0] - 9) + ' ' + mouth[1] + ' q9 11 18 0 Z" fill="#7a2e2e"/>';
-      } else if (expr === 'worried') {
-        out += '<path d="M' + (mouth[0] - 8) + ' ' + (mouth[1] + 2) + ' q8 -7 16 0" stroke="#10141b" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
-      }
-    }
-    if (expr === 'wave') { // one arm up, waving (CSS animates .parm)
+    out += petBrows(expr, sp);
+    out += petMouthPath(expr, mouth);
+    if (expr === 'wave') {
       out += '<g class="parm"><path d="M88 68 q14 -2 15 -20" stroke="' + c.dark + '" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="104" cy="45" r="7" fill="' + c.main + '" stroke="' + c.dark + '" stroke-width="2"/></g>';
+    }
+    if (expr === 'celebrate') {
+      out += '<g class="parm2" stroke="' + c.dark + '" stroke-width="9" fill="none" stroke-linecap="round"><path d="M32 68 q-14 -2 -15 -20"/><path d="M88 68 q14 -2 15 -20"/></g>';
+      out += '<g fill="' + c.main + '" stroke="' + c.dark + '" stroke-width="2"><circle cx="16" cy="45" r="7"/><circle cx="104" cy="45" r="7"/></g>';
+    }
+    if (expr === 'excited' || expr === 'celebrate') {
+      out += '<g fill="#f2d98c"><path d="M16 78 l1.8 4.2 4.2 1.8 -4.2 1.8 -1.8 4.2 -1.8 -4.2 -4.2 -1.8 4.2 -1.8 Z"/><path d="M104 78 l1.8 4.2 4.2 1.8 -4.2 1.8 -1.8 4.2 -1.8 -4.2 -4.2 -1.8 4.2 -1.8 Z"/></g>';
     }
     return out;
   }
@@ -2442,24 +2638,43 @@
     var c = petResolve(cl[0], cl[1], color);
     if (type === 'panda' && color && color !== 'classic' && PET_PALETTE[color]) { c = { main: '#f5f2ea', dark: PET_PALETTE[color].dark, patch: PET_PALETTE[color].dark }; }
     if (type === 'panda') { c.patch = c.dark; }
-    return '<svg viewBox="0 0 120 120" class="petsvg" aria-hidden="true">'
-      + sp.body(c) + petFace(expr || 'idle', sp, c, PET_MOUTH[type] || null) + petBlush(sp.blush)
+    var ex = expr || 'idle';
+    return '<svg viewBox="0 0 120 120" class="petsvg pexpr-' + ex + '" data-expr="' + ex + '" aria-hidden="true">'
+      + '<g class="pbody">' + sp.body(c) + '</g>'
+      + '<g class="pface">' + petFace(ex, sp, c, PET_MOUTH[type] || null) + petBlush(sp.blush, PET_BLUSH[ex] || 1) + '</g>'
       + petAccSVG(accessory || 'none', sp) + petBubbleSVG(bubble) + '</svg>';
   }
   /* tiny hook so automated checks can verify pet rendering without a real browser */
   window.__ihtPetTest = {
     svg: function (t, c, a, e, b) { return petSVG(t, c, a, e, b); },
-    exprs: ['idle', 'happy', 'worried', 'proud', 'sleepy', 'celebrate', 'curious', 'wave'],
+    exprs: ['idle', 'happy', 'worried', 'proud', 'sleepy', 'celebrate', 'curious', 'wave', 'excited', 'calm'],
+    species: PET_SPECIES,
     get: function () { return { type: pet.type, name: pet.name, color: pet.color, accessory: pet.accessory }; }
   };
   function petInto(el, mode, forceType, expr, bubble) {
     if (!el) { return; }
     el.innerHTML = petSVG(forceType || pet.type, pet.color, pet.accessory, expr || 'idle', bubble || null);
-    var wrap = (el.closest && el.closest('.pethome,.petstage,.pettrip,.petbreathe,.petarrived,.petprev,.petcomfort,.ps-pet,.petmini')) || el;
+    var wrap = (el.closest && el.closest('.pethome,.petstage,.pettrip,.petbreathe,.petarrived,.petprev,.petcomfort,.ps-pet,.petmini,.ps-preview-pet')) || el;
     wrap.classList.remove('pet-idle', 'pet-happy', 'pet-celebrate', 'pet-sleepy', 'pet-wave');
     wrap.classList.add(mode === 'sleepy' ? 'pet-sleepy' : mode === 'celebrate' ? 'pet-celebrate' : 'pet-idle');
     if (expr === 'wave') { wrap.classList.add('pet-wave'); }
   }
+  /* v35 TRIP HOOK: the trip screen owns its layout; this is the clean way for
+     it (or any caller) to re-render the trip pet with a new expression without
+     touching petInto internals. renderTripPet('celebrate') on a stop tap,
+     renderTripPet() to settle back to idle. Existing petInto trip call sites
+     keep working unchanged. */
+  function renderTripPet(expr) {
+    var el = $('pet-trip');
+    if (!el) { return null; }
+    petInto(el, 'idle', null, expr || 'idle');
+    return el.innerHTML;
+  }
+  window.__ihtTripPet = {
+    render: renderTripPet,
+    element: function () { return $('pet-trip'); }
+  };
+  window.__ihtPetTest.trip = function (e) { return renderTripPet(e); };
   /* v34: home return greeting — wave + speech bubble, then back to idle. */
   var homeWaveTimer = null;
   function waveHomePet() {
@@ -2474,6 +2689,35 @@
       }, 2600);
     } catch (e) {}
   }
+  /* v35 IDLE LIFE, calm time only: the pet looks around and waves on its own.
+     Looking reuses petGaze (pupils shift, then ease back), so no new gaze state.
+     Guards: never on the panic screen, never while a breath is running, never
+     while the tab is hidden, never under reduced motion for the wave. The
+     breathe pet is untouched here: runPhase owns its wrapper transform, and
+     v35-pets.css gives #pet-breathe no idle animation, so there is no second
+     loop fighting breath sync. */
+  var petLookTimer = null, petWaveTimer = null;
+  function petIdleLookTick() {
+    try {
+      var sc = currentScreen();
+      if (!document.hidden && sc !== 'screen-panic' && sc !== 'screen-breathe') {
+        var dx = (Math.random() < 0.5 ? -1 : 1) * (0.25 + Math.random() * 0.45);
+        var dy = (Math.random() < 0.5 ? -1 : 1) * Math.random() * 0.3;
+        petGaze(window.innerWidth / 2 + dx * window.innerWidth / 2, window.innerHeight / 2 + dy * window.innerHeight / 2);
+      }
+    } catch (e) {}
+    petLookTimer = setTimeout(petIdleLookTick, 9000 + Math.random() * 7000);
+  }
+  function petIdleWaveTick() {
+    try {
+      var sh = $('pet-sheet');
+      var sheetOpen = !!(sh && sh.classList.contains('open'));
+      if (!document.hidden && !reducedMotion && !sheetOpen && currentScreen() === 'screen-home') { waveHomePet(); }
+    } catch (e) {}
+    petWaveTimer = setTimeout(petIdleWaveTick, 45000 + Math.random() * 30000);
+  }
+  petLookTimer = setTimeout(petIdleLookTick, 9000 + Math.random() * 7000);
+  petWaveTimer = setTimeout(petIdleWaveTick, 45000 + Math.random() * 30000);
   /* v27: the eyes-free rescue module (guide.js) needs the pet mount + name, same split pattern as crisis.js / stopheads.js. */
   window.__ihtGuidePet = {
     mount: function (el) { petInto(el, 'sleepy'); },
@@ -2534,7 +2778,6 @@
     petInto($('pet-about'), 'idle');
     renderPetScreenLines();
     renderBreatheCap();
-    renderVoice(); // v22: the voice toggle carries the pet's name
   }
   /* pet play */
   var petPlayReturn = 'screen-home';
@@ -2741,6 +2984,47 @@
     var el = $(id);
     if (el) { el.addEventListener('click', mountComfortPet); }
   });
+  /* v35 LIVE PREVIEW: the pet sheet preview pane shows the pet with the
+     currently selected species, color, and accessory, and cycles wave, then
+     excited, then idle so the rider can review it before leaving the sheet.
+     Taps already save to the same iht_pet key as v34 (same fields, same
+     migration: old profiles keep color classic and accessory none until the
+     rider changes them); the preview only ever renders, it never writes, so
+     saving cannot touch history or trip keys. The cycle starts when the
+     sheet opens and stops when it closes. */
+  var PET_COLOR_LABEL = { classic: 'Classic', mint: 'Mint', peach: 'Peach', lilac: 'Lilac', sky: 'Sky', butter: 'Butter' };
+  var petPreviewTimer = null, petPreviewStep = 0;
+  function petPreviewShow() {
+    var el = $('ps-preview-pet');
+    if (!el) { return; }
+    var seq = ['wave', 'excited', 'idle'];
+    var ex = seq[petPreviewStep % seq.length];
+    if (reducedMotion && ex === 'wave') { ex = 'happy'; }
+    petInto(el, 'idle', null, ex, ex === 'wave' ? 'Hi!' : null);
+    var note = $('ps-preview-note');
+    if (note) {
+      note.textContent = (pet.name || 'Mochi') + ' · ' + (PET_SPECIES_LABEL[pet.type] || 'Blob')
+        + ' · ' + (PET_COLOR_LABEL[pet.color] || 'Classic')
+        + ' · ' + (PET_ACCESSORY_LABEL[pet.accessory] || 'None');
+    }
+  }
+  function renderPetPreview() {
+    var sh = $('pet-sheet');
+    if (!sh || !sh.classList.contains('open')) { return; }
+    petPreviewShow();
+  }
+  function startPetPreviewCycle() {
+    stopPetPreviewCycle();
+    petPreviewStep = 0;
+    petPreviewShow();
+    petPreviewTimer = setInterval(function () {
+      var sh = $('pet-sheet');
+      if (sh && sh.classList.contains('open') && !document.hidden) { petPreviewStep++; petPreviewShow(); }
+    }, 3600);
+  }
+  function stopPetPreviewCycle() {
+    if (petPreviewTimer) { clearInterval(petPreviewTimer); petPreviewTimer = null; }
+  }
   function openPetSheet() {
     try { clearPanicFreeze(); } catch (e) {}
     petSheetReturn = currentScreen() || 'screen-home';
@@ -2756,10 +3040,11 @@
     $('pet-sheet-back').classList.remove('hidden');
     var sh = $('pet-sheet');
     sh.classList.remove('hidden');
-    requestAnimationFrame(function () { requestAnimationFrame(function () { sh.classList.add('open'); }); });
+    requestAnimationFrame(function () { requestAnimationFrame(function () { sh.classList.add('open'); startPetPreviewCycle(); }); });
     petTap($('pet-sheet-svg')); // a little hello
   }
   function closePetSheet() {
+    stopPetPreviewCycle();
     var sh = $('pet-sheet');
     sh.classList.remove('open');
     setTimeout(function () { sh.classList.add('hidden'); $('pet-sheet-back').classList.add('hidden'); }, 330);
@@ -2771,6 +3056,7 @@
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
+    renderPetPreview();
   }
   function setPetType(t) {
     if (!t) { return; }
@@ -2810,6 +3096,7 @@
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
+    renderPetPreview();
   }
   function renderPetAccSegs() {
     $all('.accseg .segbtn').forEach(function (b) {
@@ -2817,6 +3104,7 @@
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
+    renderPetPreview();
   }
   /* v33 PET EVERYWHERE — the pet is the guide of the whole app, not decoration.
      Each screen below gets a small pet mount (tap opens the pet sheet) plus a
@@ -2860,6 +3148,27 @@
     });
     petInto($('pet-panic'), 'idle');
   }
+  /* v35: station names on the trip screen. Current station is derived from
+     stops passed (total minus left), so it can never drift from the count.
+     Without station data both lines stay empty and the counter stands. */
+  function renderTripStation() {
+    var now = $('trip-now'), next = $('trip-next');
+    var tf = $('trip-track-from'), tt = $('trip-track-to');
+    try {
+      if (tf) { tf.textContent = trip.from || ''; }
+      if (tt) { tt.textContent = trip.dest || ''; }
+    } catch (e) {}
+    if (!now || !next) { return; }
+    try {
+      if (trip.stations && trip.fromIdx >= 0 && trip.destIdx >= 0 && window.IHTStations) {
+        var passed = (trip.total || 0) - (trip.left || 0);
+        var cur = window.IHTStations.stationAt(trip.stations, trip.fromIdx, trip.destIdx, passed);
+        var nxt = trip.left > 0 ? window.IHTStations.stationAt(trip.stations, trip.fromIdx, trip.destIdx, passed + 1) : null;
+        now.textContent = cur ? 'Now at ' + cur : '';
+        next.textContent = trip.left === 0 ? 'You are here. Well done.' : (nxt ? 'Next: ' + nxt : '');
+      } else { now.textContent = ''; next.textContent = ''; }
+    } catch (e) { now.textContent = ''; next.textContent = ''; }
+  }
   function renderTripPetLine() {
     var tl = $('petline-trip');
     if (!tl) { return; }
@@ -2868,6 +3177,11 @@
       var left = (typeof trip !== 'undefined' && trip) ? trip.left : null;
       if (left === 1) { tl.textContent = nm + ' says: next stop is yours. You have got this.'; }
       else if (left === 2) { tl.textContent = nm + ' says: two stops to go. Almost there.'; }
+      else if (trip.stations && trip.fromIdx >= 0 && trip.destIdx >= 0 && window.IHTStations) {
+        var passed = (trip.total || 0) - (trip.left || 0);
+        var nxt = window.IHTStations.stationAt(trip.stations, trip.fromIdx, trip.destIdx, passed + 1);
+        tl.textContent = nxt ? nm + ' is riding with you. Next: ' + nxt + '.' : nm + ' is riding with you.';
+      }
       else { tl.textContent = nm + ' is riding with you.'; }
     } catch (e) { tl.textContent = nm + ' is riding with you.'; }
   }
@@ -2891,6 +3205,10 @@
     var nm = pet.name || 'Mochi';
     $('pet-sheet-line').textContent = nm + ' ' + PET_LINES[Math.floor(Math.random() * PET_LINES.length)];
   });
+  (function () {
+    var pv = $('ps-preview-pet');
+    if (pv) { pv.addEventListener('click', function () { petTap(pv); }); }
+  })();
   $('ps-play').addEventListener('click', function () { closePetSheet(); setTimeout(function () { openPetPlay(petSheetReturn); }, 140); });
   $('ps-pick').addEventListener('click', function () { closePetSheet(); setTimeout(petPicks, 140); });
   $('ps-name').addEventListener('change', function () { setPetName($('ps-name').value); });
@@ -3332,6 +3650,9 @@
      still complete silent — the pet and the name carry it. */
   function splashMotif() {
     try {
+      if (window.__ihtSound) { // v35: same 4-note motif character, from sound.js
+        try { if (window.__ihtSound.motif()) { return; } } catch (e) {}
+      }
       var ctx = ensureAudio();
       if (!ctx) { return; }
       if (ctx.state === 'suspended') { ctx.resume(); }
@@ -3413,7 +3734,6 @@
   renderHomePet();
   petInto($('pet-breathe'), 'sleepy');
   renderBreatheCap();
-  renderVoice(); // v22: after pet init — the toggle carries the pet's name
   if (window.__ihtCrisis) { window.__ihtCrisis.renderQuiet(); window.__ihtCrisis.renderLocale(); } // v24: locale-aware crisis line (crisis.js)
   (function boot() {
     var target = read('iht_onboarded') ? 'screen-home' : 'screen-ob0';

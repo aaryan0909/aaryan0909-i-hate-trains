@@ -1,0 +1,162 @@
+/* I Hate Trains v35 accounts. New file only. No existing styles.css rules changed.
+   Calm dark, one quiet action per area. Panic help is never inside this UI:
+   the account screen carries its own "I need help right now" escape. */
+
+.acct-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 14px;
+  margin: 0 0 14px 0;
+  text-align: left;
+  color: #f2f4f0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.acct-profile:focus-visible,
+.acct-btn:focus-visible,
+.acct-link:focus-visible {
+  outline: 3px solid #ffd166;
+  outline-offset: 3px;
+}
+
+.acct-petdot {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  font-size: 22px;
+  background: rgba(147, 211, 171, 0.22);
+  border-radius: 50%;
+}
+
+.acct-profile-text { flex: 1 1 auto; min-width: 0; }
+.acct-profile-text strong { display: block; font-size: 16px; line-height: 1.3; }
+.acct-profile-text span { display: block; font-size: 13px; line-height: 1.4; opacity: 0.75; }
+.acct-chevron { flex: 0 0 auto; font-size: 20px; opacity: 0.6; }
+
+.acct-greet { font-size: 18px; line-height: 1.45; margin: 8px 0 4px 0; }
+.acct-sub { font-size: 15px; line-height: 1.5; opacity: 0.8; margin: 0 0 18px 0; }
+
+.acct-btn {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  margin: 0 0 10px 0;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0c0e13;
+  background: #93d3ab;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.acct-btn.acct-secondary {
+  color: #f2f4f0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.acct-btn.acct-quiet {
+  color: #f2f4f0;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.acct-btn.acct-danger {
+  color: #ffd9d9;
+  background: rgba(217, 95, 95, 0.18);
+  border: 1px solid rgba(217, 95, 95, 0.5);
+}
+
+.acct-btn:disabled,
+.acct-btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.acct-soon {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0c0e13;
+  background: #ffd166;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.acct-note {
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.8;
+  margin: 0 0 14px 0;
+}
+
+.acct-preview {
+  padding: 12px 14px;
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #ffe9a8;
+  background: rgba(255, 209, 102, 0.12);
+  border: 1px solid rgba(255, 209, 102, 0.5);
+  border-radius: 12px;
+}
+
+.acct-card {
+  padding: 14px;
+  margin: 0 0 16px 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+}
+
+.acct-card p { margin: 0 0 8px 0; font-size: 15px; line-height: 1.5; }
+.acct-card p:last-child { margin-bottom: 0; }
+
+.acct-field { display: block; margin: 0 0 14px 0; font-size: 14px; font-weight: 600; }
+.acct-field input {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 14px;
+  margin-top: 6px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  color: #f2f4f0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+}
+
+.acct-link {
+  display: inline-block;
+  min-height: 48px;
+  line-height: 48px;
+  padding: 0 6px;
+  color: #93d3ab;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.acct-status { min-height: 22px; font-size: 14px; line-height: 1.5; opacity: 0.85; }
+
+@media (prefers-reduced-motion: reduce) {
+  .acct-profile, .acct-btn { transition: none; }
+}

@@ -1,0 +1,50 @@
+{
+"city": "Naples",
+"updated": "2026-10-25",
+"source": "ANM (Azienda Napoletana Mobilita) GTFS static feed",
+"lines": [
+{
+"id": "l1",
+"name": "Line 1",
+"color": "#f3bc62",
+"stations": [
+"Piscinola",
+"Chiaiano",
+"Frullone",
+"Colli Aminei",
+"Policlinico",
+"Rione Alto",
+"Montedonzelli",
+"Medaglie D'Oro",
+"Vanvitelli",
+"Quattro Giornate",
+"S. Rosa",
+"Materdei",
+"Museo",
+"Dante",
+"Toledo",
+"Municipio",
+"Universita'",
+"Duomo",
+"Garibaldi",
+"Centro Direzionale",
+"Tribunale"
+]
+},
+{
+"id": "l6",
+"name": "Line 6",
+"color": "#0057a8",
+"stations": [
+"Mostra",
+"Augusto",
+"Lala",
+"Mergellina",
+"Arco Mirelli",
+"San Pasquale",
+"Chiaia",
+"Municipio"
+]
+}
+]
+}

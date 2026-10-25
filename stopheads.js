@@ -1,3 +1,7 @@
+/* v35: spoken stop alerts REMOVED by owner decision (see REPORT.md). The quiet
+ * alert (pulse + screen flash + gentle sound) is now the only stop alert. The
+ * spoken branch below is inert (the bridge it called is gone) and is kept
+ * only so old stored prefs can never throw; the coordinator may strip it. */
 /* "Your stop, out loud" (v26) — opt-in spoken stop heads-up during trips.
  *
  * Companion module to app.js, loaded after it. app.js exposes one surface:
@@ -68,7 +72,7 @@
 
   window.__ihtStopHeadsUp = function (left) {
     var a = app();
-    if (!prefs().stopHeadsUp || !a) { return; } // never without the opt-in
+    if (!prefs().stopHeadsUp && !prefs().stopHeadsQuiet) { return; } // v35: spoken alerts removed; quiet alerts run without any bridge
     /* v31 audit: quiet mode is first-class, not a buried toggle. Pet pulse plus
        screen flash, no public voice — embarrassment is a real barrier on a
        crowded train. */
@@ -78,9 +82,12 @@
         document.body.classList.add('stopflash');
         setTimeout(function () { document.body.classList.remove('stopflash'); }, 900);
       } catch (e) {}
+      try { if (window.__ihtSound) { window.__ihtSound.stopAlert(); } } catch (e) {} // v35: gentle sound, not speech
       return;
     }
-    if (left === 2) { a.speak('Two stops to go. You\u2019re doing great.'); }
-    else if (left === 1) { a.speak('Next stop is yours. Take a breath.'); }
+    if (a) { // v35: bridge is gone, so this branch is inert; kept so old prefs can never throw
+      if (left === 2) { a.speak('Two stops to go. You\u2019re doing great.'); }
+      else if (left === 1) { a.speak('Next stop is yours. Take a breath.'); }
+    }
   };
 })();
