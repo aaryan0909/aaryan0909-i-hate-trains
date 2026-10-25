@@ -7,8 +7,9 @@
    v26: precaches stopheads.js (spoken stop heads-up module).
    v27: precaches guide.js (eyes-free guided rescue module).
    v29: panic-screen hero reorder + instant render — installed phones must re-cache.
-   v30: home-screen "what has helped you" top-tools card — installed phones must re-cache. */
-var CACHE = 'iht-v33';
+   v30: home-screen "what has helped you" top-tools card — installed phones must re-cache.
+   v34: precaches metros.js (line-level metro directory for London, NYC, Paris, Rome, Milan, Naples, Turin). */
+var CACHE = 'iht-v34';
 var ASSETS = [
   './',
   'index.html',
@@ -20,6 +21,7 @@ var ASSETS = [
   'drift.js',
   'trimap.js',
   'ttc.json',
+  'metros.js',
   'manifest.webmanifest',
   'icon.svg'
 ];

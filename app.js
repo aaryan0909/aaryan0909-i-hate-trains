@@ -41,7 +41,10 @@
     maybeShowUpdateBanner(); // update prompt only ever appears on calm, non-crisis screens
     if (id === 'screen-panic') { renderPanicPlan(); suppressCelebration = recentSteady(); armPanicFreeze(); } // v31: plan line + celebration cooldown + freeze auto-start
     if (id === 'screen-toolkit') { renderTopTools(); } // v31: "What has helped you" lives in the toolkit now, not home
+    if (id === 'screen-privacy') { renderVoiceList(); } // v34: voice picker lists real installed voices
+    if (id !== 'screen-petplay') { fireflyActive = false; var fh = $('play-fireflies'); if (fh) { fh.classList.add('hidden'); } } // v34: leaving play ends the game
     mountScreenPets(); renderPetScreenLines(); // v33: the pet guides every screen
+    if (id === 'screen-home' && cur && cur !== 'screen-home' && cur !== 'screen-splash' && cur !== 'screen-panic') { waveHomePet(); } // v34: home return gets a wave + hi
   }
   function navGoBack() { var p = navBack.pop(); if (!p) { return; } navFwd.push(currentScreen()); tick(); go(p, { keep: true }); }
   function navGoFwd() { var n = navFwd.pop(); if (!n) { return; } var c = currentScreen(); if (c) { navBack.push(c); } tick(); go(n, { keep: true }); }
@@ -126,6 +129,11 @@
       lede: 'Same. One with the rush-hour crowd. Breathe anyway.',
       checkin: 'Rush hour can wait.',
       arrived: 'That took courage. Otsukaresama — you rode it out.' },
+    rome: { nick: 'La metro', match: ['rome', 'roma'], lede: 'You are riding the Eternal City.', checkin: 'How are you feeling in Rome?', arrived: 'You made it through Rome.' },
+    milan: { nick: 'La metro', match: ['milan', 'milano'], lede: 'You are riding Milan.', checkin: 'How are you feeling in Milan?', arrived: 'You made it through Milan.' },
+    naples: { nick: 'La metro', match: ['naples', 'napoli'], lede: 'You are riding Naples.', checkin: 'How are you feeling in Naples?', arrived: 'You made it through Naples.' },
+    turin: { nick: 'La metro', match: ['turin', 'torino'], lede: 'You are riding Turin.', checkin: 'How are you feeling in Turin?', arrived: 'You made it through Turin.' },
+    mumbai: { nick: 'Local life', match: ['mumbai', 'bombay'], lede: 'You are riding Mumbai.', checkin: 'How are you feeling in Mumbai?', arrived: 'You made it through Mumbai.' },
     night: { nick: 'Somewhere underground', match: [],
       lede: 'Same. Let\u2019s get through this ride together.',
       checkin: '',
@@ -485,6 +493,7 @@
       else if (l.indexOf('en') === 0) { score += 1; }
       if (/enhanced|premium|natural|neural/.test(name)) { score += 5; } // the human ones
       if (/samantha|siri/.test(name)) { score += 4; } // iOS enhanced Siri voices
+      if (l === 'en-au') { score += 2; } // v34: Boardy-style Australian warmth, when installed
       if (/compact/.test(name)) { score -= 4; } // the stock robot — last resort only
       if (v.localService) { score += 2; } // on-device: offline law, zero network
       if (v.default) { score += 1; }
@@ -497,17 +506,22 @@
     try {
       var vs = window.speechSynthesis.getVoices() || [];
       var best = null, bestScore = -999;
-      vs.forEach(function (v) {
-        var s = scoreCalmVoice(v);
-        if (s > bestScore) { bestScore = s; best = v; }
-      });
+      if (prefs.voiceName) { // v34: the rider's explicit pick wins over scoring
+        for (var i = 0; i < vs.length; i++) { if (vs[i].name === prefs.voiceName) { best = vs[i]; break; } }
+      }
+      if (!best) {
+        vs.forEach(function (v) {
+          var s = scoreCalmVoice(v);
+          if (s > bestScore) { bestScore = s; best = v; }
+        });
+      }
       calmVoiceCache = best || null; // graceful fallback: whatever the phone has
     } catch (e) { calmVoiceCache = null; }
     return calmVoiceCache;
   }
   try { // voices can arrive after boot (Chrome loads them async); refresh the pick when they do
     if ('speechSynthesis' in window && typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
-      window.speechSynthesis.onvoiceschanged = function () { calmVoiceTried = false; };
+      window.speechSynthesis.onvoiceschanged = function () { calmVoiceTried = false; renderVoiceList(); };
     }
   } catch (e) {}
   function synthNow() {
@@ -523,9 +537,11 @@
       var busy = false;
       try { busy = !!(synth.speaking || synth.pending); } catch (e) {}
       var u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.75; u.pitch = 0.9; u.volume = (opts && typeof opts.volume === 'number') ? opts.volume : 0.9; // v23: calm, unhurried, warm — never robotic
+      u.rate = (opts && typeof opts.rate === 'number') ? opts.rate : 0.75; // v23: calm, unhurried, warm — never robotic
+      u.pitch = (opts && typeof opts.pitch === 'number') ? opts.pitch : 0.9;
+      u.volume = (opts && typeof opts.volume === 'number') ? opts.volume : 0.9;
       try { if (prefs.locale) { u.lang = prefs.locale; } } catch (e) {}
-      var v = pickCalmVoice();
+      var v = (opts && opts.voice) ? opts.voice : pickCalmVoice(); // v34: preview uses the tapped voice
       if (v) { u.voice = v; }
       if (busy) {
         // iOS Safari swallows an utterance when cancel() and speak() run in the
@@ -561,8 +577,47 @@
      toggle and the spoken lines live in stopheads.js (same split as crisis.js). */
   window.__ihtVoice = {
     speak: speakUtterance, warm: warmVoice, stop: stopVoice,
-    prefs: prefs, savePrefs: savePrefs
+    prefs: prefs, savePrefs: savePrefs,
+    score: scoreCalmVoice, pick: pickCalmVoice, list: listEnglishVoices
   };
+  /* v34 voice casting: enumerate installed English voices, warmest first, so the
+     rider can pick one (including Australian voices when installed). Preview speaks
+     a real greeting in the tapped voice. Device voices only — no network, offline-safe. */
+  function listEnglishVoices() {
+    try {
+      var vs = window.speechSynthesis.getVoices() || [];
+      return vs.filter(function (v) { return (v.lang || '').toLowerCase().indexOf('en') === 0; })
+        .sort(function (a, b) { return scoreCalmVoice(b) - scoreCalmVoice(a); });
+    } catch (e) { return []; }
+  }
+  function renderVoiceList() {
+    var host = $('voice-list'); if (!host) { return; }
+    var vs = listEnglishVoices();
+    host.innerHTML = '';
+    var note = $('voice-note');
+    if (!vs.length) {
+      if (note) { note.textContent = 'No English voices found on this phone yet. The pet will use whatever voice is available.'; }
+      return;
+    }
+    if (note) { note.textContent = 'Tap a voice to choose it, then Preview to hear it. Australian voices appear here when installed.'; }
+    var chosen = pickCalmVoice();
+    vs.forEach(function (v) {
+      var row = document.createElement('div');
+      row.className = 'voicerow' + ((prefs.voiceName === v.name) || (!prefs.voiceName && chosen && v.name === chosen.name) ? ' on' : '');
+      var label = document.createElement('button'); label.className = 'voicename'; label.type = 'button';
+      label.textContent = v.name + ' (' + v.lang + ')';
+      label.addEventListener('click', function () {
+        tick(); prefs.voiceName = v.name; savePrefs();
+        calmVoiceTried = false; pickCalmVoice(); renderVoiceList();
+      });
+      var pv = document.createElement('button'); pv.className = 'btn ghost'; pv.type = 'button'; pv.textContent = 'Preview';
+      pv.addEventListener('click', function () {
+        tick();
+        speakUtterance('Hi, I am ' + petName() + '. Let us take a breath together… nice and slow.', { voice: v, rate: 0.8, pitch: 1.0, volume: 0.9 });
+      });
+      row.appendChild(label); row.appendChild(pv); host.appendChild(row);
+    });
+  }
 
   /* ---------- generative ambient pad: soft detuned oscillators through a lowpass, slow-evolving warm chord.
      Synthesized live with Web Audio — zero files, works fully offline, iOS-safe after the tap gesture. ---------- */
@@ -950,6 +1005,7 @@
       $('btn-checkin-breathe').hidden = checkinFeel !== 'spiraling';
       $('btn-checkin-continue').textContent = checkinFeel === 'spiraling' ? 'Start the ride anyway' : 'Continue';
       petMood = checkinFeel === 'spiraling' ? 'soft' : null; // v12: the co-rider notices how you feel
+      try { petInto($('pet-checkin'), 'idle', null, checkinFeel === 'steady' ? 'happy' : 'worried'); } catch (e) {} // v34: the face matches the feeling
       renderHomePet();
     });
   });
@@ -1047,6 +1103,7 @@
     b.addEventListener('click', function () {
       if (!$('in-city').value && profile.city) { $('in-city').value = profile.city; }
       if (!$('in-line').value && profile.line) { $('in-line').value = profile.line; }
+      renderMetroLines(); // v34: line chips for the prefilled city
       if (window.TriMap && $('linepick-mount')) {
         TriMap.mountChooser($('linepick-mount'), {
           cityEl: $('in-city'),
@@ -1069,6 +1126,32 @@
       if (window.TriMap) { TriMap.current = null; }
     });
   });
+  /* v34: real line chips for covered metros (metros.js). Tap a chip to fill the
+     line field; anything not covered falls back to manual entry, as before. */
+  function renderMetroLines() {
+    var host = $('metro-lines'); if (!host) { return; }
+    var city = ($('in-city') && $('in-city').value) || profile.city || '';
+    var lines = (window.__ihtMetros && window.__ihtMetros.linesFor(city)) || [];
+    host.innerHTML = '';
+    if (!lines.length) { host.hidden = true; return; }
+    host.hidden = false;
+    var mk = window.__ihtMetros.cityFor(city);
+    var label = mk ? window.__ihtMetros.cities[mk].label : city;
+    var cap = document.createElement('p'); cap.className = 'fineprint';
+    cap.textContent = 'Real lines in ' + label + ' — tap one (colors are approximate):';
+    host.appendChild(cap);
+    lines.forEach(function (l) {
+      var b = document.createElement('button'); b.className = 'linechip'; b.type = 'button';
+      b.innerHTML = '<i style="background:' + l.color + '"></i>' + l.name + (l.termini ? '<em>' + l.termini + '</em>' : '');
+      b.addEventListener('click', function () {
+        tick(); $('in-line').value = l.name;
+        host.querySelectorAll('.linechip').forEach(function (x) { x.classList.remove('on'); });
+        b.classList.add('on');
+      });
+      host.appendChild(b);
+    });
+  }
+  $('in-city').addEventListener('input', function () { renderMetroLines(); });
   $('stops-minus').addEventListener('click', function () {
     if (window.TriMap) { TriMap.current = null; }
   });
@@ -1079,7 +1162,7 @@
   var trip = { city: '', line: '', dest: '', left: 0, total: 0 };
   var tripCardSent = false;
   function arrivedNote() {
-    petInto($('pet-arrived'), suppressCelebration ? 'idle' : 'celebrate'); // steady, not chirpy, on a second panic
+    petInto($('pet-arrived'), suppressCelebration ? 'idle' : 'celebrate', null, suppressCelebration ? 'idle' : 'celebrate'); // steady, not chirpy, on a second panic
     $('home-note').textContent = tripCardSent
       ? 'Your person has your trip card with the ETA.'
       : 'Take a breath. You\u2019re off the train.';
@@ -1096,7 +1179,8 @@
     applyTheme(); // ride city can differ from home base (hello, Italy)
     var route = (trip.city ? trip.city + ' · ' : '') + (trip.line ? trip.line + ' \u2192 ' : '') + (trip.dest ? trip.dest : 'On your way');
     $('trip-route').textContent = route;
-    petInto($('pet-trip'), 'idle'); // the co-rider rides along
+    petInto($('pet-trip'), 'idle', null, checkinFeel === 'spiraling' ? 'worried' : 'idle'); // the co-rider rides along
+    renderTripTrain(); // v34: the little train starts at the left
     var nm = (profile.name || '').trim();
     $('trip-fine').textContent = nm
       ? ('One tap per stop, ' + nm + '. That\u2019s all you have to do.')
@@ -1111,6 +1195,15 @@
   function renderStops() {
     $('stops-left').textContent = trip.left;
     $('stops-word').textContent = trip.left === 1 ? 'stop to go' : 'stops to go';
+    renderTripTrain();
+  }
+  /* v34: a little train that crawls across the trip screen as stops pass —
+     same craft as the intro scene, quiet enough for a ride. */
+  function renderTripTrain() {
+    var t = $('trip-train'); if (!t) { return; }
+    var total = trip.total || 0, left = trip.left || 0;
+    var pct = total > 0 ? Math.max(0, Math.min(100, (1 - left / total) * 100)) : 0;
+    t.style.left = 'calc(' + pct.toFixed(1) + '% - 14px)';
   }
   /* The ONE stop counter. Manual taps and the map's auto-advance both
      come through here — never a parallel counter. */
@@ -1123,7 +1216,7 @@
       if (window.TriMap) { TriMap.closeMap(); }
       setTimeout(function () { arrivedNote(); go('screen-arrived'); }, 600); }
   }
-  $('btn-stop-tap').addEventListener('click', function () { advanceStop(); renderTripPetLine(); try { petInto($('pet-trip'), 'celebrate'); setTimeout(function () { petInto($('pet-trip'), 'idle'); }, 900); } catch (e) {} });
+  $('btn-stop-tap').addEventListener('click', function () { advanceStop(); renderTripPetLine(); try { petInto($('pet-trip'), 'celebrate', null, 'celebrate'); setTimeout(function () { petInto($('pet-trip'), 'idle'); }, 900); } catch (e) {} });
   $('btn-show-map').addEventListener('click', function () {
     tick();
     var s = window.TriMap && TriMap.current;
@@ -2281,27 +2374,105 @@
     fox: ['#e89a4a', '#c97a2e'], frog: ['#7cc47f', '#5aa75e'], panda: ['#f5f2ea', '#2b2b33'],
     bunny: ['#f2ede6', '#e8a0b4']
   };
-  function petSVG(type, color, accessory) {
+  /* v34 EXPRESSION SYSTEM: the pet is a friend, not a blob. Faces are layered SVG
+     (eyes, brows, mouth, wave arm, speech bubble) driven by app state — check-in
+     feeling, tool completion, ride events — never random timers. All 7 species
+     support every expression. Open-eye expressions keep BOTH eye groups so the
+     global blink loop (body.pet-blink) still works; happy/celebrate faces simply
+     do not blink, which reads as a smile held. */
+  var PET_MOUTH = { blob: [60, 78], bird: null, cat: [60, 80], fox: [60, 84], frog: [60, 84], panda: [60, 80], bunny: [60, 80] };
+  function petFace(expr, sp, c, mouth) {
+    var out = '';
+    if (expr === 'happy' || expr === 'proud' || expr === 'celebrate') {
+      out += '<g class="peye peye-happy">';
+      sp.eyes.forEach(function (e) {
+        out += '<path d="M' + (e[0] - 7) + ' ' + (e[1] + 2) + ' q7 -8 14 0" stroke="#10141b" stroke-width="3" fill="none" stroke-linecap="round"/>';
+      });
+      out += '</g>';
+    } else if (expr === 'sleepy') {
+      out += petEyesShut(sp.eyes);
+    } else {
+      var r = expr === 'worried' ? 4 : 5.5; // worried pupils shrink
+      out += '<g class="peye peye-open">';
+      sp.eyes.forEach(function (e) {
+        out += '<circle cx="' + e[0] + '" cy="' + e[1] + '" r="' + r + '" fill="#10141b"/><circle cx="' + (e[0] + 2) + '" cy="' + (e[1] - 2) + '" r="1.8" fill="#fff"/>';
+      });
+      out += '</g>';
+      out += petEyesShut(sp.eyes); // blink partner, hidden by CSS until body.pet-blink
+    }
+    if (expr === 'worried') { // brows angle down toward the middle
+      out += '<g stroke="#10141b" stroke-width="2.5" stroke-linecap="round" fill="none">';
+      sp.eyes.forEach(function (e, i) {
+        if (sp.eyes.length === 1) {
+          out += '<path d="M' + (e[0] - 9) + ' ' + (e[1] - 14) + ' L' + (e[0] + 9) + ' ' + (e[1] - 14) + '"/>';
+        } else if (i === 0) {
+          out += '<path d="M' + (e[0] - 8) + ' ' + (e[1] - 14) + ' L' + (e[0] + 8) + ' ' + (e[1] - 9) + '"/>';
+        } else {
+          out += '<path d="M' + (e[0] - 8) + ' ' + (e[1] - 9) + ' L' + (e[0] + 8) + ' ' + (e[1] - 14) + '"/>';
+        }
+      });
+      out += '</g>';
+    }
+    if (expr === 'curious' && sp.eyes.length > 1) { // one brow raised
+      var e0 = sp.eyes[0];
+      out += '<path d="M' + (e0[0] - 8) + ' ' + (e0[1] - 17) + ' L' + (e0[0] + 8) + ' ' + (e0[1] - 17) + '" stroke="#10141b" stroke-width="2.5" stroke-linecap="round"/>';
+    }
+    if (mouth) {
+      if (expr === 'celebrate') {
+        out += '<path d="M' + (mouth[0] - 9) + ' ' + mouth[1] + ' q9 11 18 0 Z" fill="#7a2e2e"/>';
+      } else if (expr === 'worried') {
+        out += '<path d="M' + (mouth[0] - 8) + ' ' + (mouth[1] + 2) + ' q8 -7 16 0" stroke="#10141b" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+      }
+    }
+    if (expr === 'wave') { // one arm up, waving (CSS animates .parm)
+      out += '<g class="parm"><path d="M88 68 q14 -2 15 -20" stroke="' + c.dark + '" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="104" cy="45" r="7" fill="' + c.main + '" stroke="' + c.dark + '" stroke-width="2"/></g>';
+    }
+    return out;
+  }
+  function petBubbleSVG(text) {
+    if (!text) { return ''; }
+    var t = String(text).slice(0, 16).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    var w = Math.max(34, t.length * 8 + 18);
+    var x = Math.max(2, 60 - w / 2);
+    return '<g class="pbubble"><rect x="' + x + '" y="1" width="' + w + '" height="21" rx="10.5" fill="#ffffff" stroke="#e5e0d8"/><path d="M54 22 l6 7 l6 -7 Z" fill="#ffffff" stroke="#e5e0d8" stroke-linejoin="round"/><text x="60" y="16" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d2430" font-family="inherit">' + t + '</text></g>';
+  }
+  function petSVG(type, color, accessory, expr, bubble) {
     var sp = PET_DEFS[type] || PET_DEFS.blob;
     var cl = PET_CLASSIC[type] || PET_CLASSIC.blob;
     var c = petResolve(cl[0], cl[1], color);
     if (type === 'panda' && color && color !== 'classic' && PET_PALETTE[color]) { c = { main: '#f5f2ea', dark: PET_PALETTE[color].dark, patch: PET_PALETTE[color].dark }; }
     if (type === 'panda') { c.patch = c.dark; }
     return '<svg viewBox="0 0 120 120" class="petsvg" aria-hidden="true">'
-      + sp.body(c) + petEyesOpen(sp.eyes) + petEyesShut(sp.eyes) + petBlush(sp.blush)
-      + petAccSVG(accessory || 'none', sp) + '</svg>';
+      + sp.body(c) + petFace(expr || 'idle', sp, c, PET_MOUTH[type] || null) + petBlush(sp.blush)
+      + petAccSVG(accessory || 'none', sp) + petBubbleSVG(bubble) + '</svg>';
   }
   /* tiny hook so automated checks can verify pet rendering without a real browser */
   window.__ihtPetTest = {
-    svg: function (t, c, a) { return petSVG(t, c, a); },
+    svg: function (t, c, a, e, b) { return petSVG(t, c, a, e, b); },
+    exprs: ['idle', 'happy', 'worried', 'proud', 'sleepy', 'celebrate', 'curious', 'wave'],
     get: function () { return { type: pet.type, name: pet.name, color: pet.color, accessory: pet.accessory }; }
   };
-  function petInto(el, mode, forceType) {
+  function petInto(el, mode, forceType, expr, bubble) {
     if (!el) { return; }
-    el.innerHTML = petSVG(forceType || pet.type, pet.color, pet.accessory);
+    el.innerHTML = petSVG(forceType || pet.type, pet.color, pet.accessory, expr || 'idle', bubble || null);
     var wrap = (el.closest && el.closest('.pethome,.petstage,.pettrip,.petbreathe,.petarrived,.petprev,.petcomfort,.ps-pet,.petmini')) || el;
-    wrap.classList.remove('pet-idle', 'pet-happy', 'pet-celebrate', 'pet-sleepy');
+    wrap.classList.remove('pet-idle', 'pet-happy', 'pet-celebrate', 'pet-sleepy', 'pet-wave');
     wrap.classList.add(mode === 'sleepy' ? 'pet-sleepy' : mode === 'celebrate' ? 'pet-celebrate' : 'pet-idle');
+    if (expr === 'wave') { wrap.classList.add('pet-wave'); }
+  }
+  /* v34: home return greeting — wave + speech bubble, then back to idle. */
+  var homeWaveTimer = null;
+  function waveHomePet() {
+    try {
+      var nm = petName();
+      petInto($('pet-home-svg'), 'idle', null, 'wave', 'Hi!');
+      var cap = document.querySelector('#pet-home .petcap em');
+      if (cap) { cap.textContent = nm + ' says hi!'; }
+      if (homeWaveTimer) { clearTimeout(homeWaveTimer); }
+      homeWaveTimer = setTimeout(function () {
+        if (currentScreen() === 'screen-home') { renderHomePet(); }
+      }, 2600);
+    } catch (e) {}
   }
   /* v27: the eyes-free rescue module (guide.js) needs the pet mount + name, same split pattern as crisis.js / stopheads.js. */
   window.__ihtGuidePet = {
@@ -2336,7 +2507,7 @@
     $('pet-home-name').textContent = nm;
     var cap = document.querySelector('#pet-home .petcap em');
     if (petMood === 'proud' && !suppressCelebration) {
-      petInto($('pet-home-svg'), 'celebrate');
+      petInto($('pet-home-svg'), 'celebrate', null, 'proud');
       if (cap) { cap.textContent = nm + ' is proud of you'; }
       setTimeout(function () {
         petMood = null;
@@ -2374,13 +2545,23 @@
     'purrs quietly.',
     'wants you to know: you\u2019ve got this.'
   ];
+  var PLAY_GREETINGS = [
+    'waves at you. Hi!',
+    'is so glad you came to play.',
+    'wants to show you a trick.',
+    'says: the train can wait, let us play.'
+  ];
+  var playGreetIdx = 0;
+  var fireflyTotal = 5, fireflyCaught = 0, fireflyActive = false;
   function openPetPlay(returnTo) {
     petPlayReturn = returnTo || 'screen-home';
     var nm = pet.name || 'Mochi';
     $('petplay-name').textContent = nm;
     var n2 = $('petplay-name2'); if (n2) { n2.textContent = nm; }
-    petInto($('petplay-stage'), 'idle');
-    $('petplay-line').textContent = 'Tap to give some love.';
+    petInto($('petplay-stage'), 'idle', null, 'wave', 'Hi!');
+    $('petplay-line').textContent = nm + ' ' + PLAY_GREETINGS[playGreetIdx % PLAY_GREETINGS.length];
+    playGreetIdx++;
+    setTimeout(function () { if (currentScreen() === 'screen-petplay') { petInto($('petplay-stage'), 'idle'); } }, 2600);
     tick(); go('screen-petplay');
   }
   function petPat() {
@@ -2388,6 +2569,69 @@
     petTap(st);
     $('petplay-line').textContent = (pet.name || 'Mochi') + ' ' + PET_LINES[Math.floor(Math.random() * PET_LINES.length)];
   }
+  function playSetLine(t) { var l = $('petplay-line'); if (l) { l.textContent = t; } }
+  function playSpin() {
+    var st = $('petplay-stage'); if (!st) { return; }
+    tick();
+    var wrap = (st.closest && st.closest('.petstage')) || st;
+    wrap.classList.remove('pet-spin'); void wrap.offsetWidth; wrap.classList.add('pet-spin');
+    playSetLine((pet.name || 'Mochi') + ' spins around!');
+    setTimeout(function () { wrap.classList.remove('pet-spin'); }, 900);
+  }
+  function playJump() {
+    var st = $('petplay-stage'); if (!st) { return; }
+    tick();
+    petInto(st, 'celebrate', null, 'celebrate');
+    playSetLine((pet.name || 'Mochi') + ' jumps for joy!');
+    setTimeout(function () { if (currentScreen() === 'screen-petplay') { petInto(st, 'idle'); } }, 1600);
+  }
+  function playWave() {
+    var st = $('petplay-stage'); if (!st) { return; }
+    tick();
+    petInto(st, 'idle', null, 'wave', 'Hi!');
+    playSetLine((pet.name || 'Mochi') + ' waves back!');
+    setTimeout(function () { if (currentScreen() === 'screen-petplay') { petInto(st, 'idle'); } }, 2600);
+  }
+  function playFireflies() {
+    var host = $('play-fireflies'); if (!host) { return; }
+    tick();
+    host.classList.remove('hidden'); host.innerHTML = '';
+    fireflyCaught = 0; fireflyActive = true;
+    playSetLine('Catch the fireflies! Tap each one.');
+    spawnFirefly();
+  }
+  function spawnFirefly() {
+    var host = $('play-fireflies'); if (!host || !fireflyActive) { return; }
+    if (fireflyCaught >= fireflyTotal) {
+      fireflyActive = false; host.classList.add('hidden');
+      petInto($('petplay-stage'), 'celebrate', null, 'celebrate');
+      playSetLine('We caught them all! ' + (pet.name || 'Mochi') + ' is very proud.');
+      setTimeout(function () { if (currentScreen() === 'screen-petplay') { petInto($('petplay-stage'), 'idle'); } }, 1600);
+      return;
+    }
+    var f = document.createElement('button');
+    f.className = 'firefly'; f.setAttribute('aria-label', 'Firefly');
+    f.style.left = (8 + Math.random() * 76) + '%';
+    f.style.top = (10 + Math.random() * 70) + '%';
+    f.addEventListener('click', function () {
+      tick(); fireflyCaught++;
+      petTap($('petplay-stage'));
+      host.innerHTML = '';
+      playSetLine(fireflyCaught + ' of ' + fireflyTotal + ' caught…');
+      setTimeout(spawnFirefly, 250);
+    });
+    host.appendChild(f);
+  }
+  function playSurprise() {
+    var acts = [playSpin, playJump, playWave, playFireflies];
+    acts[Math.floor(Math.random() * acts.length)]();
+  }
+  $('btn-play-pet').addEventListener('click', function () { petPat(); });
+  $('btn-play-spin').addEventListener('click', function () { playSpin(); });
+  $('btn-play-jump').addEventListener('click', function () { playJump(); });
+  $('btn-play-wave').addEventListener('click', function () { playWave(); });
+  $('btn-play-fireflies').addEventListener('click', function () { playFireflies(); });
+  $('btn-play-surprise').addEventListener('click', function () { playSurprise(); });
   /* onboarding: meet your co-rider */
   var obPetType = 'blob';
   var obPetColor = 'classic';
@@ -2428,7 +2672,7 @@
     var nm = ($('ob-pet-name').value || '').trim().slice(0, 24);
     pet.name = nm || PET_DEFAULTS[obPetType];
     savePet();
-    try { localStorage.setItem('iht_onboarded', '1'); } catch (e) {}
+    try { localStorage.setItem('iht_onboarded', '1'); localStorage.setItem('iht_setup_version', 'v32 experience-first'); } catch (e) {} // v34: setup version note
     applyProfileToHome();
     renderPetEverywhere(); // every mount, not just home — the chosen pet must appear everywhere
     go('screen-home');
@@ -2436,6 +2680,16 @@
   $('btn-ob2-done').addEventListener('click', function () { tick(); finishOnboarding(); });
   $('btn-ob2-skip').addEventListener('click', function () { tick(); obPetType = 'blob'; var i = $('ob-pet-name'); if (i) { i.value = ''; } finishOnboarding(); });
   $('btn-ob2-back').addEventListener('click', function () { tick(); go('screen-ob1'); });
+  /* v34: Replay setup — re-runs the v32 experience-first flow WITHOUT deleting
+     profile, pet, or history. Only the onboarded flag is cleared. */
+  var rb = $('btn-replay-setup');
+  if (rb) { rb.addEventListener('click', function () {
+    tick();
+    try { localStorage.removeItem('iht_onboarded'); } catch (e) {}
+    go('screen-ob0');
+  }); }
+  var svn = $('setup-version-note');
+  if (svn) { svn.textContent = 'Setup version: ' + (read('iht_setup_version') || 'v32 experience-first'); }
   /* About: co-rider settings */
   function renderPetSeg() {
     $all('#pet-seg .segbtn').forEach(function (b) {
@@ -2586,6 +2840,8 @@
   };
   function renderPetScreenLines() {
     var nm = petName();
+    var hr = $('home-cute-pet'); if (hr) { hr.textContent = nm; } // v34: pet-recommended cute row
+    var cr = $('comfort-rec-pet'); if (cr) { cr.textContent = nm; } // v34: pet-recommended banner
     Object.keys(PET_SCREEN_LINES).forEach(function (key) {
       var el = $('petline-' + key);
       if (!el) { return; }
@@ -2599,7 +2855,8 @@
   }
   function mountScreenPets() {
     Object.keys(PET_SCREEN_MOUNTS).forEach(function (screen) {
-      petInto($(PET_SCREEN_MOUNTS[screen]), 'idle');
+      var ex = (screen === 'screen-toolkit' || screen === 'screen-learn') ? 'curious' : 'idle'; // v34: curious face where you learn
+      petInto($(PET_SCREEN_MOUNTS[screen]), 'idle', null, ex);
     });
     petInto($('pet-panic'), 'idle');
   }

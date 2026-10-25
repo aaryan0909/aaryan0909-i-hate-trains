@@ -1,0 +1,102 @@
+/* I Hate Trains — metro directory (v34).
+   Line-level data only: official line names and approximate official map colors.
+   Station-level data is NOT included here (except Toronto, which lives in ttc.json
+   and is already verified). Anything not listed here falls back to manual entry.
+   Sources for the Italian systems were checked Oct 2026: Turin Line 1 Fermi-Bengasi;
+   Naples Line 1 yellow Piscinola Scampia-Centro Direzionale, Line 6 blue
+   Municipio-Mostra. Other lines are stable public map facts. If a line is wrong,
+   fix this file, not the app code. Exposed as window.__ihtMetros. */
+(function () {
+  var METRO_CITIES = {
+    toronto: { label: 'Toronto', match: ['toronto'],
+      lines: [
+        { id: '1', name: 'Line 1', color: '#e59a86' },
+        { id: '2', name: 'Line 2', color: '#9dc4a8' },
+        { id: '4', name: 'Line 4', color: '#b9a8d6' },
+        { id: '5', name: 'Line 5', color: '#eec39a' },
+        { id: '6', name: 'Line 6', color: '#c3cbd6' }
+      ] },
+    london: { label: 'London', match: ['london'],
+      lines: [
+        { id: 'bakerloo', name: 'Bakerloo', color: '#b36305' },
+        { id: 'central', name: 'Central', color: '#e32037' },
+        { id: 'circle', name: 'Circle', color: '#ffd300' },
+        { id: 'district', name: 'District', color: '#00782a' },
+        { id: 'hammersmith', name: 'Hammersmith & City', color: '#f3a9bb' },
+        { id: 'jubilee', name: 'Jubilee', color: '#a0a5a9' },
+        { id: 'metropolitan', name: 'Metropolitan', color: '#9b0056' },
+        { id: 'northern', name: 'Northern', color: '#000000' },
+        { id: 'piccadilly', name: 'Piccadilly', color: '#003688' },
+        { id: 'victoria', name: 'Victoria', color: '#0098d4' },
+        { id: 'waterloo', name: 'Waterloo & City', color: '#95cdba' },
+        { id: 'elizabeth', name: 'Elizabeth', color: '#6950a1' }
+      ] },
+    newyork: { label: 'New York', match: ['new york', 'nyc'],
+      lines: [
+        { id: '1', name: '1', color: '#ee352e' }, { id: '2', name: '2', color: '#ee352e' },
+        { id: '3', name: '3', color: '#ee352e' }, { id: '4', name: '4', color: '#00933c' },
+        { id: '5', name: '5', color: '#00933c' }, { id: '6', name: '6', color: '#00933c' },
+        { id: '7', name: '7', color: '#b933ad' }, { id: 'a', name: 'A', color: '#0039a6' },
+        { id: 'c', name: 'C', color: '#0039a6' }, { id: 'e', name: 'E', color: '#0039a6' },
+        { id: 'b', name: 'B', color: '#ff6319' }, { id: 'd', name: 'D', color: '#ff6319' },
+        { id: 'f', name: 'F', color: '#ff6319' }, { id: 'm', name: 'M', color: '#ff6319' },
+        { id: 'g', name: 'G', color: '#6cbe45' }, { id: 'j', name: 'J', color: '#996633' },
+        { id: 'z', name: 'Z', color: '#996633' }, { id: 'l', name: 'L', color: '#a7a9ac' },
+        { id: 'n', name: 'N', color: '#fccc0a' }, { id: 'q', name: 'Q', color: '#fccc0a' },
+        { id: 'r', name: 'R', color: '#fccc0a' }, { id: 'w', name: 'W', color: '#fccc0a' },
+        { id: 's', name: 'S', color: '#808183' }
+      ] },
+    paris: { label: 'Paris', match: ['paris'],
+      lines: [
+        { id: 'm1', name: 'M1', color: '#ffcd00' }, { id: 'm2', name: 'M2', color: '#003ca6' },
+        { id: 'm3', name: 'M3', color: '#837902' }, { id: 'm4', name: 'M4', color: '#cf009e' },
+        { id: 'm5', name: 'M5', color: '#ff7e2e' }, { id: 'm6', name: 'M6', color: '#6eca97' },
+        { id: 'm7', name: 'M7', color: '#f5a9b8' }, { id: 'm8', name: 'M8', color: '#c6a8d8' },
+        { id: 'm9', name: 'M9', color: '#b6bd00' }, { id: 'm10', name: 'M10', color: '#e4b400' },
+        { id: 'm11', name: 'M11', color: '#704b00' }, { id: 'm12', name: 'M12', color: '#007852' },
+        { id: 'm13', name: 'M13', color: '#6ec1e4' }, { id: 'm14', name: 'M14', color: '#62259d' }
+      ] },
+    rome: { label: 'Rome', match: ['rome', 'roma'],
+      lines: [
+        { id: 'a', name: 'Line A', color: '#f58634', termini: 'Battistini – Anagnina' },
+        { id: 'b', name: 'Line B', color: '#0057a8', termini: 'Rebibbia – Laurentina' },
+        { id: 'c', name: 'Line C', color: '#00913a', termini: 'Monte Compatri-Pantano – San Giovanni' }
+      ] },
+    milan: { label: 'Milan', match: ['milan', 'milano'],
+      lines: [
+        { id: 'm1', name: 'M1', color: '#ee1c25' }, { id: 'm2', name: 'M2', color: '#009a44' },
+        { id: 'm3', name: 'M3', color: '#ffd400' },
+        { id: 'm4', name: 'M4', color: '#0072bc', termini: 'Linate Aeroporto – San Cristoforo' },
+        { id: 'm5', name: 'M5', color: '#9b26b6', termini: 'Bignami – San Siro Stadio' }
+      ] },
+    naples: { label: 'Naples', match: ['naples', 'napoli'],
+      lines: [
+        { id: 'l1', name: 'Line 1', color: '#f3bc62', termini: 'Piscinola Scampia – Centro Direzionale' },
+        { id: 'l6', name: 'Line 6', color: '#0057a8', termini: 'Municipio – Mostra' },
+        { id: 'l11', name: 'Line 11 (Rainbow)', color: '#e87722', termini: 'Piscinola – Aversa' }
+      ] },
+    turin: { label: 'Turin', match: ['turin', 'torino'],
+      lines: [
+        { id: 'm1', name: 'Line 1', color: '#e53935', termini: 'Fermi – Bengasi' }
+      ] }
+  };
+  function cityFor(text) {
+    var s = (text || '').toLowerCase();
+    var keys = Object.keys(METRO_CITIES);
+    for (var i = 0; i < keys.length; i++) {
+      var c = METRO_CITIES[keys[i]];
+      for (var j = 0; j < c.match.length; j++) {
+        if (s.indexOf(c.match[j]) !== -1) { return keys[i]; }
+      }
+    }
+    return null;
+  }
+  window.__ihtMetros = {
+    cities: METRO_CITIES,
+    cityFor: cityFor,
+    linesFor: function (text) {
+      var k = cityFor(text);
+      return k ? METRO_CITIES[k].lines : [];
+    }
+  };
+})();

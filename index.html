@@ -145,6 +145,11 @@
         <p class="body" id="home-ride-line">Your ride</p>
         <button class="btn calm big" id="btn-start-ride" data-go="screen-checkin" style="margin-bottom:0">Start a ride</button>
       </div>
+      <div class="ridecard rise d4" id="home-cute-rec">
+        <p class="kicker small">recommended breather</p>
+        <p class="body"><strong>Something cute?</strong> <span id="home-cute-pet">Mochi</span> recommends YouTube — no login needed.</p>
+        <button class="btn calm" data-go="screen-comfort" style="margin-bottom:0">Watch something cute</button>
+      </div>
       <div class="ridecard rise d4" id="home-finish-setup" hidden>
         <p class="kicker small">optional, whenever</p>
         <p class="body"><strong>Make this yours?</strong></p>
@@ -368,6 +373,7 @@
       <label class="field rise d3">Line / train
         <input id="in-line" type="text" inputmode="text" autocomplete="off" placeholder="Line 1">
       </label>
+      <div class="linechips" id="metro-lines" hidden></div>
       <div id="linepick-mount"></div>
       <label class="field rise d3">Destination
         <input id="in-dest" type="text" inputmode="text" autocomplete="off" placeholder="Your stop">
@@ -396,6 +402,7 @@
         <div class="counternum" id="stops-left" aria-live="polite">5</div>
         <div class="counterlabel" id="stops-word">stops to go</div>
       </div>
+      <div class="triptrack rise d2" aria-hidden="true"><div class="triptrack-line"></div><div class="triptrain" id="trip-train"><i class="tt-wheel"></i><i class="tt-wheel"></i></div></div>
       <button class="pettrip" id="pet-trip" aria-label="Your co-rider is riding with you"></button>
       <p class="petline" id="petline-trip"></p>
       <button class="tapbtn rise d3" id="btn-stop-tap">Tap at each stop</button>
@@ -523,6 +530,7 @@
       <div class="calmgrid rise d3" id="calm-grid"></div>
       <p class="toolgroup rise d3">Cute things, one tap</p>
       <p class="body rise d3">Pick a platform, then a mood. Zero searching.</p>
+      <div class="loccard rise d3" id="comfort-rec"><p class="body"><strong id="comfort-rec-pet">Mochi</strong> recommends: YouTube, no login needed. Pick a mood below.</p></div>
       <div class="seg rise d3" id="social-seg" role="group" aria-label="Platform">
         <button class="segbtn on" data-plat="yt" aria-pressed="true">YouTube</button>
         <button class="segbtn" data-plat="tt" aria-pressed="false">TikTok</button>
@@ -714,6 +722,15 @@
       <h2 class="serene" id="petplay-name">Mochi</h2>
       <div class="petstage" id="petplay-stage" role="button" tabindex="0" aria-label="Pet your co-rider"></div>
       <p class="body" id="petplay-line" aria-live="polite">Tap to give some love.</p>
+      <div class="playbtns rise d3">
+        <button class="btn calm" id="btn-play-pet">Pet</button>
+        <button class="btn calm" id="btn-play-spin">Spin</button>
+        <button class="btn calm" id="btn-play-jump">Jump</button>
+        <button class="btn calm" id="btn-play-wave">Wave hello</button>
+        <button class="btn calm" id="btn-play-fireflies">Catch fireflies</button>
+        <button class="btn calm" id="btn-play-surprise">Surprise me</button>
+      </div>
+      <div class="fireflies hidden" id="play-fireflies" aria-label="Firefly game"></div>
       <button class="linklike quiet" id="btn-petplay-done">Back</button>
     </div>
   </section>
@@ -766,6 +783,12 @@
       <div class="setrow rise d3">
         <button class="check" id="set-voice-2" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Mochi's voice</strong><em>Quiet count-ins during breathing, spoken on this phone only.</em></span></button>
       </div>
+      <p class="toolgroup rise d3">Pet voice</p>
+      <div class="loccard rise d3">
+        <p class="body">Pick the voice that reads the calm cues. Australian voices show up here when your phone has them installed.</p>
+        <div id="voice-list"></div>
+        <p class="fineprint" id="voice-note"></p>
+      </div>
       <p class="fineprint rise d3">The app respects your system's reduced-motion and large-text settings automatically.</p>
       <p class="toolgroup rise d4">Move to another browser</p>
       <div class="loccard rise d4">
@@ -814,6 +837,11 @@
           <button class="segbtn" data-theme="newyork" aria-pressed="false">NYC</button>
           <button class="segbtn" data-theme="paris" aria-pressed="false">Paris</button>
           <button class="segbtn" data-theme="tokyo" aria-pressed="false">Tokyo</button>
+          <button class="segbtn" data-theme="rome" aria-pressed="false">Rome</button>
+          <button class="segbtn" data-theme="milan" aria-pressed="false">Milan</button>
+          <button class="segbtn" data-theme="naples" aria-pressed="false">Naples</button>
+          <button class="segbtn" data-theme="turin" aria-pressed="false">Turin</button>
+          <button class="segbtn" data-theme="mumbai" aria-pressed="false">Mumbai</button>
           <button class="segbtn" data-theme="night" aria-pressed="false">Night</button>
         </div>
       </div>
@@ -852,7 +880,9 @@
         </label>
       </div>
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
-      <p class="fineprint rise d4" id="app-version">version 33</p>
+      <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
+      <p class="fineprint rise d4" id="setup-version-note"></p>
+      <p class="fineprint rise d4" id="app-version">version 34</p>
     </div>
   </section>
 
@@ -905,6 +935,7 @@
 <script src="drift.js"></script>
 <script src="trimap.js"></script>
 <script src="crisis.js"></script>
+<script src="metros.js"></script>
 <script src="app.js"></script>
 <script src="stopheads.js"></script>
 <script src="guide.js"></script>
