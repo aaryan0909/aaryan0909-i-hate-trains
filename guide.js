@@ -100,7 +100,10 @@
   if (end) {
     end.addEventListener('click', function () {
       stop();
-      try { if (window.__ihtUpdate && window.__ihtUpdate.go) { window.__ihtUpdate.go('screen-panic'); } } catch (e) {}
+      try {
+        if (window.__ihtReentry && window.__ihtReentry.show) { window.__ihtReentry.show(); }
+        else if (window.__ihtUpdate && window.__ihtUpdate.go) { window.__ihtUpdate.go('screen-panic'); }
+      } catch (e) {}
     });
   }
   var muteBtn = $('btn-guide-mute');

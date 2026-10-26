@@ -1,5 +1,9 @@
 # CHANGELOG — I Hate Trains
 
+## v36 (2026-10-26 — Forge)
+- **Re-entry beat after "I'm feeling steadier".** The two explicit steadier exits (breathe, guided rescue) no longer dump the rider back on the panic menu: a one-beat screen with the pet calm, "That took work. You're still here.", one primary action — "Back to my ride" when a trip is running, else "Back home" — a quiet "Not quite — show me options again" door back to the panic menu, and a quiet crisis door one tap away. Calm-time breathe completion is untouched (still returns to its origin screen), as are walk/tool returns, which still go back to the screen that launched the tool. Scope note: the backlog item also named walk close/done and tool-done returns; those are tool completions, not steadier declarations, so they keep their origin return.
+- SW bumped to `iht-v36`; About reads "version 36". Verified: node --check clean on app.js/guide.js; new tools/tests/test-reentry.js 22/22 (breathe→reentry→home, guide→reentry→options→panic, crisis door, pet mounted, trip branch, version markers). NOT verified on a real phone: the re-entry screen at phone width still needs the owner's real-phone pass, like v35's open items.
+
 ## v35 (2026-10-25 — major bundle, Axle)
 
 Owner direction (2026-10-25, GO): the full feedback batch as ONE major release. Onboarding breath is wrong; pets still not detailed or alive enough; customization must be reviewable; ride setup must be dropdowns, not type boxes; station data is the critical path; voices OUT completely; sound pack must work every time; trip screen does nothing for him; accounts are coming; and the Oct 25 design-systems standard is the bar.

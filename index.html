@@ -260,6 +260,21 @@
     </div>
   </section>
 
+  <!-- REENTRY — one beat after "I'm feeling steadier": closure, not the panic
+       menu again. The pet sits calm, one primary action returns to the ride
+       (or home when no ride is running), a quiet door leads back to the panic
+       options, and reaching someone stays one tap away. -->
+  <section class="screen" id="screen-reentry" aria-label="Steadier now">
+    <div class="wrap narrow center">
+      <button class="petmini" id="pet-reentry" aria-label="Your co-rider is here"></button>
+      <h2 class="serene">That took work. You're still here.</h2>
+      <p class="lede soft">No rush. One step back to what you were doing.</p>
+      <button class="btn ghost fullwidth" id="btn-reentry-primary" type="button">Back home</button>
+      <button class="linklike quiet" id="btn-reentry-options" type="button">Not quite — show me options again</button>
+      <button class="linklike quiet" data-go="screen-crisis" type="button">If it ever gets really bad: reach someone</button>
+    </div>
+  </section>
+
   <!-- NON-BREATH — Manus's honest entry, surfaced first -->
   <section class="screen" id="screen-nonbreath" aria-label="Without breathing">
     <div class="wrap narrow">
@@ -916,7 +931,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 35</p>
+      <p class="fineprint rise d4" id="app-version">version 36</p>
     </div>
   </section>
 

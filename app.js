@@ -635,7 +635,30 @@
         if ((cm === 'chimes' || cm === 'both') && window.__ihtSound) { window.__ihtSound.completion(); }
       }
     } catch (e) {}
-    go(breatheReturn); });
+    if (breatheReturn === 'screen-panic') { showReentry(); } else { go(breatheReturn); } });
+  /* v36: re-entry beat after "I'm feeling steadier". A user who just steadied
+     is not handed the panic menu again: one calm screen, pet present, one
+     primary action back to the ride (or home when no ride is running), a
+     quiet door back to the panic options, and the crisis screen one tap away.
+     Breathe-end routes here when it came from panic; guide-end calls
+     window.__ihtReentry.show() (guide.js). Calm-time breathe completion
+     (breatheReturn !== screen-panic) is untouched, as are walk/tool returns,
+     which go back to the screen that launched the tool. */
+  var reentryTarget = 'screen-home';
+  function renderReentry() {
+    reentryTarget = tripActive ? 'screen-trip' : 'screen-home';
+    var b = $('btn-reentry-primary');
+    if (b) { b.textContent = tripActive ? 'Back to my ride' : 'Back home'; }
+  }
+  function showReentry() { renderReentry(); go('screen-reentry'); }
+  window.__ihtReentry = { show: showReentry, render: renderReentry };
+  (function () {
+    var p = $('btn-reentry-primary');
+    if (p) { p.addEventListener('click', function () { tick(); go(reentryTarget); }); }
+    var o = $('btn-reentry-options');
+    if (o) { o.addEventListener('click', function () { tick(); go('screen-panic'); }); }
+  })();
+
   /* v31: guide-end lives in guide.js; this second listener only stamps the
      celebration-cooldown clock. Multiple listeners on one button are fine. */
   (function () {
@@ -3147,6 +3170,7 @@
       petInto($(PET_SCREEN_MOUNTS[screen]), 'idle', null, ex);
     });
     petInto($('pet-panic'), 'idle');
+    petInto($('pet-reentry'), 'idle');
   }
   /* v35: station names on the trip screen. Current station is derived from
      stops passed (total minus left), so it can never drift from the count.
