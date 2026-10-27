@@ -319,9 +319,77 @@
       <button class="petmini" id="pet-learn" aria-label="Your co-rider"></button>
       <p class="petline" id="petline-learn"></p>
       <p class="lede soft rise d3">Short, honest reads on how panic works — for between rides, so the tools land harder during them. Coping tools, not treatment.</p>
+      <button class="toolcard rise d3" data-go="screen-scenarios" type="button"><strong>Rehearse the hard moments</strong><p>Three scariest ride moments, rehearsed in calm time: what actually happens next, which tool to reach for, and a 30-second run-through.</p></button>
       <div id="learn-list" class="toolcards rise d3"></div>
       <div id="learn-read" class="rise d3" hidden></div>
       <button class="backlink rise d4" data-go="screen-home" id="learn-back-home">← back</button>
+    </div>
+  </section>
+
+  <!-- SCENARIOS — "Rehearse the worst 90 seconds" (v37). Calm-time only:
+       the only entry is the Learn screen. Never linked from the panic flow,
+       the crisis screens, or any tool. Each card is one scary moment: what
+       actually happens next (plain, general facts — no system promises),
+       which existing tool to reach for, and a 30-second mental rehearsal.
+       Coping tools, not treatment. -->
+  <section class="screen" id="screen-scenarios" aria-label="Rehearse the hard moments">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">rehearse, in calm time</p>
+      <h2 class="serene rise d2">The worst 90 seconds, rehearsed.</h2>
+      <p class="lede soft rise d3">Read one now, while you are calm, so it is familiar later. Nothing here is a promise about a specific train — systems differ, and the driver will tell you what is happening on yours.</p>
+      <div class="toolcards rise d3">
+        <details class="scen">
+          <summary><strong>Stopped between stations</strong><span>What happens, and what to do</span></summary>
+          <div class="scen-body">
+            <p class="scen-h">What actually happens next</p>
+            <p>Trains stop between stations most often for a signal, traffic ahead, or a door issue. The lights stay on, the doors stay shut, and the driver usually announces what is happening and how long the wait is expected to be. The train moves again when the way ahead is clear. You are not stuck because something went wrong with you.</p>
+            <p class="scen-h">Reach for</p>
+            <p>Breathe with me for slow breaths, or 5–4–3–2–1 grounding in the toolkit to anchor on what is around you.</p>
+            <p class="scen-h">30-second rehearsal</p>
+            <ol>
+              <li>Picture the stop. Say to yourself: “This is a signal wait. It will pass.”</li>
+              <li>Feet on the floor, one slow breath in, one longer breath out.</li>
+              <li>Name two things you can see and one you can feel, then listen for the announcement.</li>
+            </ol>
+            <button class="btn ghost" data-go="screen-breathe" type="button">Try the breathing tool</button>
+          </div>
+        </details>
+        <details class="scen">
+          <summary><strong>Missed my stop</strong><span>It is a detour, not a disaster</span></summary>
+          <div class="scen-body">
+            <p class="scen-h">What actually happens next</p>
+            <p>You ride to the next station, get off there, and cross to a train going back — usually one stop the other way. It costs a few minutes, not the ride. Nothing about missing a stop changes where you were going.</p>
+            <p class="scen-h">Reach for</p>
+            <p>Your ride backup plan if you wrote one, or the toolkit for a grounding tool while you wait for the return train.</p>
+            <p class="scen-h">30-second rehearsal</p>
+            <ol>
+              <li>Picture passing your stop. Say to yourself: “Next station, cross over, one stop back.”</li>
+              <li>Stay on the train. Do not rush for the doors.</li>
+              <li>At the next station, step off, find the other direction, and breathe once before boarding.</li>
+            </ol>
+            <button class="btn ghost" data-go="screen-toolkit" type="button">Open the toolkit</button>
+          </div>
+        </details>
+        <details class="scen">
+          <summary><strong>Crush-loaded car</strong><span>When there is no room to move</span></summary>
+          <div class="scen-body">
+            <p class="scen-h">What actually happens next</p>
+            <p>The car stays crowded until the next station, where people get off and space opens up. You can also step off at the next station, let a train or two pass, and board a quieter one. Standing close to strangers is uncomfortable, not dangerous, and the doors will open again at the next stop.</p>
+            <p class="scen-h">Reach for</p>
+            <p>5–4–3–2–1 grounding in the toolkit — it needs no space and no sound — or Breathe with me once you have room.</p>
+            <p class="scen-h">30-second rehearsal</p>
+            <ol>
+              <li>Picture the doors closing on a full car. Say to yourself: “Next stop, space opens up.”</li>
+              <li>Plant your feet, loosen your shoulders, and notice one thing you can hear.</li>
+              <li>Decide now: ride it out, or step off at the next stop and wait for a quieter train. Either choice is fine.</li>
+            </ol>
+            <button class="btn ghost" data-go="screen-toolkit" type="button">Open the toolkit</button>
+          </div>
+        </details>
+      </div>
+      <p class="fineprint rise d4">Coping tools, not treatment. If it ever gets really bad, reach someone.</p>
+      <button class="linklike quiet" data-go="screen-crisis" type="button">If it ever gets really bad: reach someone</button>
+      <button class="backlink rise d4" data-go="screen-learn">← back to calm facts</button>
     </div>
   </section>
 
@@ -931,7 +999,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 36</p>
+      <p class="fineprint rise d4" id="app-version">version 37</p>
     </div>
   </section>
 

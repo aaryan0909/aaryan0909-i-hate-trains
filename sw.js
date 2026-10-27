@@ -10,7 +10,7 @@
    v30: home-screen "what has helped you" top-tools card — installed phones must re-cache.
    v34: precaches metros.js (line-level metro directory for London, NYC, Paris, Rome, Milan, Naples, Turin).
    v35: precaches v35-*.css, sound.js, stations.js, auth.js, metros.js updates; station JSONs are runtime-cached on first fetch (offline after first use). */
-var CACHE = 'iht-v36';
+var CACHE = 'iht-v37';
 var ASSETS = [
   './',
   'index.html',

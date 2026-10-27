@@ -273,6 +273,20 @@ em { font-style: normal; }
 .toolcard .tmeta { font-size: 13px; color: var(--dim); letter-spacing: .06em; margin-bottom: 6px; }
 .toolcard p { margin: 0; font-size: 15px; color: var(--dim); line-height: 1.55; }
 
+/* scenarios (v37) — calm-time rehearsal cards; native <details>, no JS */
+.scen { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.scen summary { cursor: pointer; padding: 18px; min-height: 64px; display: flex; flex-direction: column; justify-content: center; gap: 4px; list-style: none; }
+.scen summary::-webkit-details-marker { display: none; }
+.scen summary strong { font-size: 18px; font-weight: 600; }
+.scen summary span { font-size: 14px; color: var(--dim); }
+.scen[open] summary { border-bottom: 1.5px solid var(--line); }
+.scen-body { padding: 18px; }
+.scen-body p { margin: 0 0 14px; font-size: 15px; color: var(--dim); line-height: 1.55; }
+.scen-body .scen-h { margin: 18px 0 6px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); }
+.scen-body .scen-h:first-child { margin-top: 0; }
+.scen-body ol { margin: 0 0 18px; padding-left: 22px; font-size: 15px; color: var(--dim); line-height: 1.6; }
+.scen-body ol li { margin-bottom: 8px; }
+
 /* chips + add rows */
 .chipgrid, .chiplist { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 18px; }
 .chip {

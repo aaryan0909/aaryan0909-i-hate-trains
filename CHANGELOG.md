@@ -1,5 +1,9 @@
 # CHANGELOG — I Hate Trains
 
+## v37 (2026-10-27 — Pilot)
+- **Rehearse the worst 90 seconds.** Calm-time scenario prep, entered only from the Learn screen (never the panic flow, crisis screens, or any tool): three cards — stopped between stations, missed my stop, crush-loaded car — each with what actually happens next in plain general terms, which existing tool to reach for, and a 30-second mental rehearsal. Native details/summary cards, no new storage, no JS changes to the sacred flow; entry card on the Learn screen, tool buttons into Breathe and the Toolkit.
+- SW bumped to `iht-v37`; About reads "version 37".
+
 ## v36 (2026-10-26 — Forge)
 - **Re-entry beat after "I'm feeling steadier".** The two explicit steadier exits (breathe, guided rescue) no longer dump the rider back on the panic menu: a one-beat screen with the pet calm, "That took work. You're still here.", one primary action — "Back to my ride" when a trip is running, else "Back home" — a quiet "Not quite — show me options again" door back to the panic menu, and a quiet crisis door one tap away. Calm-time breathe completion is untouched (still returns to its origin screen), as are walk/tool returns, which still go back to the screen that launched the tool. Scope note: the backlog item also named walk close/done and tool-done returns; those are tool completions, not steadier declarations, so they keep their origin return.
 - SW bumped to `iht-v36`; About reads "version 36". Verified: node --check clean on app.js/guide.js; new tools/tests/test-reentry.js 22/22 (breathe→reentry→home, guide→reentry→options→panic, crisis door, pet mounted, trip branch, version markers). NOT verified on a real phone: the re-entry screen at phone width still needs the owner's real-phone pass, like v35's open items.

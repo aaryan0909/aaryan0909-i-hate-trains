@@ -102,8 +102,8 @@ ok(!!d.getElementById('btn-panic-guide'), 'panic hero still present');
 ok(!!d.getElementById('crisis-quiet'), 'panic 988 quiet line still present');
 
 console.log('version markers:');
-ok(d.getElementById('app-version').textContent.trim() === 'version 36', 'About reads version 36');
-ok(/var CACHE = 'iht-v36'/.test(sw), 'sw.js cache is iht-v36');
+ok(d.getElementById('app-version').textContent.trim() === 'version 37', 'About reads version 37');
+ok(/var CACHE = 'iht-v37'/.test(sw), 'sw.js cache is iht-v37');
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
