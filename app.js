@@ -689,6 +689,7 @@
       tick();
       more.hidden = !more.hidden;
       b.textContent = more.hidden ? 'More' : 'Less';
+      b.setAttribute('aria-expanded', String(!more.hidden));
     });
   })();
   /* v31: toolkit groups collapse to one open section at a time (spec phase 2).

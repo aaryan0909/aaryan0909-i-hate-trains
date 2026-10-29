@@ -47,8 +47,8 @@ console.log('styles + version:');
 ok(css.includes('.scen summary'), 'scenario summary CSS present');
 ok(css.includes('.scen-body ol'), 'rehearsal list CSS present');
 ok(css.includes('min-height: 64px'), 'summary tap target >= 64px');
-ok(html.includes('version 37'), 'About reads version 37');
-ok(/var CACHE = 'iht-v37'/.test(sw), 'sw.js cache is iht-v37');
+ok(html.includes('version 39'), 'About reads version 39');
+ok(/var CACHE = 'iht-v39'/.test(sw), 'sw.js cache is iht-v39');
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

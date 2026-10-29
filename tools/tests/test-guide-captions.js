@@ -87,8 +87,8 @@ console.log('stop + version markers:');
 w.__ihtGuide.start();
 w.__ihtGuide.stop();
 ok(queue.length === 0, 'stop() clears all pending timers');
-ok(/version 38/.test(html), 'About reads version 38');
-ok(/var CACHE = 'iht-v38'/.test(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8')), 'sw.js cache is iht-v38');
+ok(/version 39/.test(html), 'About reads version 39');
+ok(/var CACHE = 'iht-v39'/.test(fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8')), 'sw.js cache is iht-v39');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

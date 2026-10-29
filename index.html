@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="v35-flow.css">
 <link rel="stylesheet" href="v35-pets.css">
 <link rel="stylesheet" href="v35-accounts.css">
+<link rel="stylesheet" href="v39-design.css">
 </head>
 <body>
 <main id="app">
@@ -110,7 +111,7 @@
       <p class="toolgroup rise d3">Color</p>
       <div class="colordots rise d3" id="ob-color-dots" role="group" aria-label="Pick a color">
         <button class="cdot on" data-color="classic" aria-pressed="true" aria-label="Classic color" style="--sw:#93d3ab"></button>
-        <button class="cdot" data-color="mint" aria-pressed="false" aria-label="Mint" style="--sw:#93d3ab"></button>
+        <button class="cdot" data-color="mint" aria-pressed="false" aria-label="Mint" style="--sw:#7fd4b2"></button>
         <button class="cdot" data-color="peach" aria-pressed="false" aria-label="Peach" style="--sw:#f2b880"></button>
         <button class="cdot" data-color="lilac" aria-pressed="false" aria-label="Lilac" style="--sw:#c3aed6"></button>
         <button class="cdot" data-color="sky" aria-pressed="false" aria-label="Sky" style="--sw:#9cc8e8"></button>
@@ -152,7 +153,7 @@
       <div class="ridecard rise d4" id="home-cute-rec">
         <p class="kicker small">recommended breather</p>
         <p class="body"><strong>Something cute?</strong> <span id="home-cute-pet">Mochi</span> recommends YouTube — no login needed.</p>
-        <button class="btn calm" data-go="screen-comfort" style="margin-bottom:0">Watch something cute</button>
+        <button class="btn calm" data-go="screen-comfort" style="margin-bottom:0">Open Comfort corner</button>
       </div>
       <div class="ridecard rise d4" id="home-finish-setup" hidden>
         <p class="kicker small">optional, whenever</p>
@@ -177,17 +178,16 @@
   <span class="acct-chevron" aria-hidden="true">›</span>
 </button>
       <div class="tools homenav rise d4">
-        <button class="tool" data-go="screen-toolkit"><span class="tool-ic tic-toolkit" aria-hidden="true"><i></i><i></i><i></i></span>Toolkit</button>
-        <button class="tool" data-go="screen-comfort" id="link-comfort-home"><span class="tool-ic tic-comfort" aria-hidden="true"><i></i></span>Comfort</button>
-        <button class="tool" data-go="screen-checkin"><span class="tool-ic tic-plan" aria-hidden="true"><i></i></span>Start a ride</button>
+        <button class="tool" data-go="screen-toolkit"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16v11H4z"/><path d="M9 9V7a3 3 0 0 1 6 0v2"/><path d="M4 13h16"/></svg></span>Toolkit</button>
+        <button class="tool" data-go="screen-comfort" id="link-comfort-home"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17 9a4.5 4.5 0 0 1-1 9z"/></svg></span>Comfort</button>
+        <button class="tool" data-go="screen-learn"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5c3-1.5 6 0 8 0s5-1.5 8 0v14c-3-1.5-6 0-8 0s-5-1.5-8 0z"/><path d="M12 5v14"/></svg></span>Learn</button>
       </div>
-      <button class="linklike quiet rise d4" id="btn-home-more" type="button">More</button>
+      <button class="linklike quiet rise d4" id="btn-home-more" type="button" aria-expanded="false">More</button>
       <div class="tools homenav rise d4" id="homenav-more" hidden>
-        <button class="tool" data-go="screen-learn"><span class="tool-ic tic-learn" aria-hidden="true"><i></i><i></i><i></i></span>Learn</button>
-        <button class="tool" data-go="screen-plan" id="link-plan-home"><span class="tool-ic tic-plan" aria-hidden="true"><i></i></span>Backup plan</button>
-        <button class="tool" data-go="screen-history"><span class="tool-ic tic-history" aria-hidden="true"><i></i></span>History</button>
-        <button class="tool" data-go="screen-privacy"><span class="tool-ic tic-privacy" aria-hidden="true"><i></i></span>Privacy</button>
-        <button class="tool" data-go="screen-about"><span class="tool-ic tic-about" aria-hidden="true"><i></i></span>About</button>
+        <button class="tool" data-go="screen-plan" id="link-plan-home"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4a3 3 0 0 1 6 0"/><path d="M9 11l2 2 4-4"/></svg></span>Backup plan</button>
+        <button class="tool" data-go="screen-history"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 10v3l2 2"/><path d="M4 4v3h3"/></svg></span>History</button>
+        <button class="tool" data-go="screen-privacy"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 7h.01"/><path d="M12 15.5h.01"/></svg></span>Privacy</button>
+        <button class="tool" data-go="screen-about"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7h.01"/></svg></span>About</button>
       </div>
     </div>
   </section>
@@ -203,15 +203,15 @@
       <p class="lede soft" id="panic-reassure">This will pass.</p>
       <p class="lede soft" id="panic-plan-line" hidden></p>
       <button class="panicopt po-guide po-hero" id="btn-panic-guide">
-        <span class="po-ic pov-guide" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="po-ic pov-guide" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span>
         <span class="po-tx"><strong>Talk me through it</strong></span>
       </button>
       <button class="panicopt po-breathe" id="btn-panic-breathe">
-        <span class="po-ic pov-breathe" aria-hidden="true"><i></i></span>
+        <span class="po-ic pov-breathe" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" opacity=".6"/><circle cx="12" cy="12" r="10" opacity=".3"/></svg></span>
         <span class="po-tx"><strong>Breathe with me</strong></span>
       </button>
       <button class="panicopt po-ground" id="btn-panic-ground">
-        <span class="po-ic pov-ground" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="po-ic pov-ground" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><circle cx="7" cy="14" r="1.5"/><circle cx="12" cy="11" r="1.5"/><circle cx="17" cy="14" r="1.5"/></svg></span>
         <span class="po-tx"><strong>Ground me instead</strong></span>
       </button>
       <p class="q988" id="crisis-quiet">If it ever gets really bad: <a href="tel:988">call or text 988</a></p>
@@ -498,9 +498,9 @@
       <div id="linepick-mount"></div>
       <div class="field rise d3">Stops to go
         <div class="stepper">
-          <button id="stops-minus" aria-label="Fewer stops">−</button>
+          <button id="stops-minus" aria-label="Fewer stops"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>
           <span id="stops-count" aria-live="polite">5</span>
-          <button id="stops-plus" aria-label="More stops">+</button>
+          <button id="stops-plus" aria-label="More stops"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg></button>
         </div>
         <p class="fineprint" id="setup-stops-note">Pick your stops and the count works itself out.</p>
       </div>
@@ -536,14 +536,14 @@
       <p class="fineprint" id="trip-fine">One tap per stop. That's all you have to do.</p>
       <button class="linklike quiet rise d3" id="btn-show-map" hidden>Show the map</button>
       <div class="tools rise d3">
-        <button class="tool" id="tool-breathe"><span class="tool-ic" aria-hidden="true">◯</span>Breathe</button>
-        <button class="tool" id="tool-ground"><span class="tool-ic" aria-hidden="true">◎</span>Ground</button>
-        <button class="tool" id="tool-sound" aria-pressed="false"><span class="tool-ic" aria-hidden="true">〜</span><span id="sound-indicator" class="snd-ind" aria-hidden="true"></span><span id="sound-label">Ambient off</span></button>
+        <button class="tool" id="tool-breathe"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" opacity=".6"/><circle cx="12" cy="12" r="10" opacity=".3"/></svg></span>Breathe</button>
+        <button class="tool" id="tool-ground"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><circle cx="7" cy="14" r="1.5"/><circle cx="12" cy="11" r="1.5"/><circle cx="17" cy="14" r="1.5"/></svg></span>Ground</button>
+        <button class="tool" id="tool-sound" aria-pressed="false"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></svg></span><span id="sound-indicator" class="snd-ind" aria-hidden="true"></span><span id="sound-label">Ambient off</span></button>
       </div>
       <div class="tools tools2 rise d4">
-        <button class="tool" data-go="screen-toolkit"><span class="tool-ic" aria-hidden="true">✦</span>Toolkit</button>
-        <button class="tool" data-go="screen-comfort" id="tool-comfort"><span class="tool-ic" aria-hidden="true">☁</span>Comfort</button>
-        <button class="tool" data-go="screen-crisis"><span class="tool-ic" aria-hidden="true">✆</span>Reach out</button>
+        <button class="tool" data-go="screen-toolkit"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16v11H4z"/><path d="M9 9V7a3 3 0 0 1 6 0v2"/><path d="M4 13h16"/></svg></span>Toolkit</button>
+        <button class="tool" data-go="screen-comfort" id="tool-comfort"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17 9a4.5 4.5 0 0 1-1 9z"/></svg></span>Comfort</button>
+        <button class="tool" data-go="screen-crisis"><span class="tool-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h3l2 5-2 1.5a12 12 0 0 0 5 5L15.5 13l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 4 6a2 2 0 0 1 2-3z"/></svg></span>Reach out</button>
       </div>
       <button class="linklike quiet" id="btn-end-trip">End trip</button>
     </div>
@@ -609,7 +609,7 @@
   <section class="screen" id="screen-plan" aria-label="My ride plan">
     <div class="wrap narrow">
       <p class="kicker rise d1">before boarding</p>
-      <h2 class="serene rise d2">My backup plan.</h2>
+      <h2 class="serene rise d2">Backup plan.</h2>
       <button class="petmini" id="pet-plan" aria-label="Your co-rider"></button>
       <p class="petline" id="petline-plan"></p>
       <p class="lede soft rise d3">Set once, while you're calm. One glance when you're not. This plan never tells you to stay — you can always reassess.</p>
@@ -686,7 +686,7 @@
     <div class="wrap narrow center">
       <div class="calmart rise d1" id="calm-art" aria-hidden="true"></div>
       <p class="serene rise d2" id="calm-note"></p>
-      <button class="btn ghost rise d3" id="btn-calm-done">Back</button>
+      <button class="backlink rise d3" id="btn-calm-done">← back</button>
     </div>
   </section>
 
@@ -858,7 +858,7 @@
         <button class="btn calm" id="btn-play-surprise">Surprise me</button>
       </div>
       <div class="fireflies hidden" id="play-fireflies" aria-label="Firefly game"></div>
-      <button class="linklike quiet" id="btn-petplay-done">Back</button>
+      <button class="backlink" id="btn-petplay-done">← back</button>
     </div>
   </section>
 
@@ -934,7 +934,7 @@
       <button class="backlink rise d1" data-go="screen-home">← back</button>
       <p class="kicker rise d1">about</p>
       <h2 class="serene rise d2">What is this?</h2>
-      <p class="lede soft rise d3">A free pocket companion for people who get scared on trains. Built for the ride itself. It works fully offline, in any metro in the world.</p>
+      <p class="lede soft rise d3">A free pocket companion for scared riders. Built for the ride itself. It works offline, in any metro in the world.</p>
       <p class="toolgroup rise d3">The not-medical-advice part</p>
       <p class="body rise d3">I Hate Trains is a comfort tool, not a medical device. It doesn't diagnose, treat, or replace professional help. These are coping tools, not treatment. If anxiety is running your life, please talk to a clinician you trust.</p>
       <p class="toolgroup rise d3">If it gets really bad</p>
@@ -979,7 +979,7 @@
         <p class="toolgroup">Color</p>
         <div class="colordots" role="group" aria-label="Pick a color">
           <button class="cdot on" data-color="classic" aria-pressed="true" aria-label="Classic color" style="--sw:#93d3ab"></button>
-          <button class="cdot" data-color="mint" aria-pressed="false" aria-label="Mint" style="--sw:#93d3ab"></button>
+          <button class="cdot" data-color="mint" aria-pressed="false" aria-label="Mint" style="--sw:#7fd4b2"></button>
           <button class="cdot" data-color="peach" aria-pressed="false" aria-label="Peach" style="--sw:#f2b880"></button>
           <button class="cdot" data-color="lilac" aria-pressed="false" aria-label="Lilac" style="--sw:#c3aed6"></button>
           <button class="cdot" data-color="sky" aria-pressed="false" aria-label="Sky" style="--sw:#9cc8e8"></button>
@@ -1000,7 +1000,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 38</p>
+      <p class="fineprint rise d4" id="app-version">version 39</p>
     </div>
   </section>
 
@@ -1077,7 +1077,7 @@
   <p class="toolgroup">Color</p>
   <div class="colordots" role="group" aria-label="Pick a color">
     <button class="cdot on" data-color="classic" aria-pressed="true" aria-label="Classic color" style="--sw:#93d3ab"></button>
-    <button class="cdot" data-color="mint" aria-pressed="false" aria-label="Mint" style="--sw:#93d3ab"></button>
+    <button class="cdot" data-color="mint" aria-pressed="false" aria-label="Mint" style="--sw:#7fd4b2"></button>
     <button class="cdot" data-color="peach" aria-pressed="false" aria-label="Peach" style="--sw:#f2b880"></button>
     <button class="cdot" data-color="lilac" aria-pressed="false" aria-label="Lilac" style="--sw:#c3aed6"></button>
     <button class="cdot" data-color="sky" aria-pressed="false" aria-label="Sky" style="--sw:#9cc8e8"></button>

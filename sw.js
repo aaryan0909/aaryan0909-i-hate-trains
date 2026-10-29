@@ -11,7 +11,7 @@
    v34: precaches metros.js (line-level metro directory for London, NYC, Paris, Rome, Milan, Naples, Turin).
    v35: precaches v35-*.css, sound.js, stations.js, auth.js, metros.js updates; station JSONs are runtime-cached on first fetch (offline after first use).
    v38: guide rescue captions — installed phones must re-cache guide.js. */
-var CACHE = 'iht-v38';
+var CACHE = 'iht-v39';
 var ASSETS = [
   './',
   'index.html',
@@ -31,6 +31,7 @@ var ASSETS = [
   'v35-flow.css',
   'v35-pets.css',
   'v35-accounts.css',
+  'v39-design.css',
   'manifest.webmanifest',
   'icon.svg'
 ];

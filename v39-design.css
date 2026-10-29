@@ -1,0 +1,38 @@
+/* v39 design pass: one icon language, button states, focus, copy consistency.
+   Calm-time and panic screens share the same icon language, but panic layout,
+   words, order, and colours are unchanged. This file only adds styles; it does
+   not restyle v35 classes except to centre the new SVG icons in existing tiles.
+   Tokens: icon glyph 24px, icon stroke 2px, focus ring 2px calm, disabled
+   opacity .55, minimum touch target 48px. */
+:root {
+  --v39-icon: 24px;
+  --v39-stroke: 2px;
+  --v39-focus: 2px solid var(--calm);
+  --v39-disabled: .55;
+}
+.tool-ic, .po-ic { display: flex; align-items: center; justify-content: center; }
+.tool-ic svg, .po-ic svg { width: var(--v39-icon); height: var(--v39-icon); flex: none;
+  stroke: currentColor; fill: none; stroke-width: var(--v39-stroke);
+  stroke-linecap: round; stroke-linejoin: round; }
+.po-hero .po-ic svg { width: 30px; height: 30px; }
+/* Focus: every interactive control gets the same visible ring. */
+.btn:focus-visible, .tool:focus-visible, .panicopt:focus-visible, .backlink:focus-visible,
+.linklike:focus-visible, .feelbtn:focus-visible, .check:focus-visible, .pchip:focus-visible,
+.acct-btn:focus-visible, .sosfloat:focus-visible, .tapbtn:focus-visible, .holdbtn:focus-visible,
+.flyzone:focus-visible, .bignum:focus-visible, .petopt:focus-visible, .cdot:focus-visible,
+.panicbtn:focus-visible, .flowchip:focus-visible, .calmcard:focus-visible, .sendot:focus-visible,
+.toolcard:focus-visible, .chip:focus-visible, .segbtn:focus-visible, .linkcard:focus-visible,
+.toptool:focus-visible, .stepper button:focus-visible, .acct-profile:focus-visible {
+  outline: var(--v39-focus); outline-offset: 2px; }
+/* Disabled: one look everywhere, never dim text alone. */
+.btn:disabled, .tool:disabled, .segbtn:disabled, .pchip:disabled, .acct-btn:disabled {
+  opacity: var(--v39-disabled); cursor: not-allowed; transform: none; }
+select:disabled { opacity: .6; }
+/* Back links: one class, one target size, full-width hit area. */
+.backlink { min-height: 48px; display: flex; align-items: center; }
+/* Stepper glyphs are now SVG, centred in the existing 64px circles. */
+.stepper button { display: flex; align-items: center; justify-content: center; }
+.stepper button svg { width: 24px; height: 24px; stroke: currentColor; fill: none;
+  stroke-width: 2px; stroke-linecap: round; }
+/* Colour dots: the swatch must match the name. Mint is distinct from classic. */
+.cdot[data-color="mint"] { --sw: #7fd4b2; }
