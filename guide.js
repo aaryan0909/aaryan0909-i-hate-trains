@@ -1,13 +1,14 @@
-/* I Hate Trains — guide.js (v27 "Talk me through it").
+/* I Hate Trains — guide.js (v27 "Talk me through it", v38 captions).
    An eyes-free, voice-led rescue: one tap on the panic screen starts a scripted linear
    rescue on screen-guide — near-black, the pet visibly breathing in sync, the phase
-   word the only thing on screen. No menu, no reading, no decisions. The tap is the
-   opt-in for the voice (the no-autoplay rule stays intact: voice auto-enables inside
-   this mode only, never elsewhere). One full-width "I'm steadier" ends it at any
+   word dominant with a quiet caption line under it carrying the full instruction.
+   No menu, no decisions. One full-width "I'm steadier" ends it at any
    moment. Same module-split pattern as crisis.js / stopheads.js: app.js calls
    window.__ihtGuide.stop() defensively whenever navigation leaves screen-guide.
-   Everything degrades silently if the voice or pet bridge is missing. Fully offline:
-   no audio files, no network. No storage keys. Zero jokes, sacred flow. */
+   v35 removed the voice system entirely, so say() is now guarded-inert and the
+   caption line is how the script's words reach the rider: a silent-switched phone,
+   a missing TTS engine, or a hard-of-hearing rider gets the same instructions as
+   text. Fully offline: no audio files, no network. No storage keys. Zero jokes, sacred flow. */
 (function () {
   'use strict';
 
@@ -76,7 +77,7 @@
       });
       return;
     }
-    word(s.word); sub(s.sub || ''); if (s.say) { say(s.say); }
+    word(s.word); sub(s.sub || s.say || ''); if (s.say) { say(s.say); }
     after(s.hold * 1000, function () {
       if (s.last) { breathePet(false, 2); return; } // the pet settles; the screen waits for "I'm steadier"
       runStep(i + 1);

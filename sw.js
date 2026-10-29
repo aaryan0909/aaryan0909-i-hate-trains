@@ -9,8 +9,9 @@
    v29: panic-screen hero reorder + instant render — installed phones must re-cache.
    v30: home-screen "what has helped you" top-tools card — installed phones must re-cache.
    v34: precaches metros.js (line-level metro directory for London, NYC, Paris, Rome, Milan, Naples, Turin).
-   v35: precaches v35-*.css, sound.js, stations.js, auth.js, metros.js updates; station JSONs are runtime-cached on first fetch (offline after first use). */
-var CACHE = 'iht-v37';
+   v35: precaches v35-*.css, sound.js, stations.js, auth.js, metros.js updates; station JSONs are runtime-cached on first fetch (offline after first use).
+   v38: guide rescue captions — installed phones must re-cache guide.js. */
+var CACHE = 'iht-v38';
 var ASSETS = [
   './',
   'index.html',
