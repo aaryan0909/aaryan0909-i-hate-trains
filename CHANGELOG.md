@@ -1,5 +1,9 @@
 # CHANGELOG — I Hate Trains
 
+## v38 (2026-10-29 — Forge)
+- **The guided rescue has words on screen now.** The v35 voice removal left the "Talk me through it" rescue speaking to nobody: guide.js still called say(), but the __ihtVoice bridge is gone, so the script's instructions (the 5-4-3-2-1 prompts, the acceptance and close lines) never reached the rider — the screen showed only a phase word like "five…" with no idea what to do. The script's full line now renders as a quiet caption under the phase word (the existing #guide-sub element, previously always blank because no step carried a `sub` field). No voice is restored — captions are the text alternative, so a silent-switched iPhone, a phone with no TTS voice, or a hard-of-hearing rider gets the same instructions. Breath beats keep a blank caption (the word itself is the instruction, no duplication); the phase word stays dominant and the screen stays near-black, decision-free, and offline. The mute-button wiring stays guarded-inert (no such button exists in the HTML).
+- SW bumped to `iht-v38`; About reads "version 38". Verified: node --check clean on guide.js/sw.js; new tools/tests/test-guide-captions.js green (every script step's caption, breath beats blank, close line persists, stop() clears).
+
 ## v37 (2026-10-27 — Pilot)
 - **Rehearse the worst 90 seconds.** Calm-time scenario prep, entered only from the Learn screen (never the panic flow, crisis screens, or any tool): three cards — stopped between stations, missed my stop, crush-loaded car — each with what actually happens next in plain general terms, which existing tool to reach for, and a 30-second mental rehearsal. Native details/summary cards, no new storage, no JS changes to the sacred flow; entry card on the Learn screen, tool buttons into Breathe and the Toolkit.
 - SW bumped to `iht-v37`; About reads "version 37".
