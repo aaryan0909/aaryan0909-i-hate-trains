@@ -1,0 +1,95 @@
+/* v40-design.css: app-wide calm-time depth language.
+   Scope: calm-time screens only. Panic, crisis, breathe, and guide screens
+   are EXEMPT: the reset block at the end strips every shadow and press
+   state inside them, so their frozen minimal look cannot change. This file
+   adds depth to existing classes; it moves no layout, changes no words,
+   and adds no new markup. Every shadow, press, and timing value below is a
+   token defined in :root. Banned-use notes ride with each token, per the
+   v35 token convention. Depth craft (layered soft shadows, a top-edge
+   highlight, tactile press that shrinks the shadow) is generic product
+   craft; no outside characters, art, logos, or trademarked designs are
+   used anywhere. */
+
+/* ============ Tokens ============ */
+:root {
+  /* Shadows. Banned: never on panic/crisis/breathe/guide screens, never
+     as a text treatment, never stacked more than two deep on one element. */
+  --v40-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --v40-shadow-card: 0 6px 16px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --v40-shadow-lift: 0 12px 26px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --v40-shadow-float: 0 14px 30px rgba(0, 0, 0, 0.4);
+  /* Press. Banned: never below 0.95 (a squashed button reads broken),
+     never on a panic control, never without the shadow shrinking with it. */
+  --v40-press: 0.97;
+  /* Acknowledgment timing. Banned: never above 100ms, never used for a
+     screen transition (those live on the v35 motion scale). */
+  --v40-ack: 90ms;
+}
+
+/* Cards: one layered shadow with a top-edge highlight, so calm-time cards
+   sit on the page instead of floating flat on it. */
+.ridecard, .loccard, .toolcard, .kindcard, .acct-card, .ps-preview {
+  box-shadow: var(--v40-shadow-card);
+}
+
+/* Buttons and tiles: the press is confirmed within 100ms, and the shadow
+   shrinks with the button so the press reads as physical, not just smaller. */
+.btn, .tool, .toolcard, .chip, .segbtn, .pchip {
+  transition: transform var(--v40-ack) ease, box-shadow var(--v40-ack) ease;
+}
+.btn:active, .tool:active, .toolcard:active, .chip:active, .segbtn:active,
+.pchip:active {
+  transform: scale(var(--v40-press));
+  box-shadow: var(--v40-shadow-sm);
+}
+
+/* Intro train scene (start screen): the engine and cars carry the same
+   layered shadow, the track gets a groove shadow, and the pet in the cab
+   gets a soft drop shadow so it sits inside the cab instead of pasted on. */
+.ts-engine, .ts-car { box-shadow: var(--v40-shadow-card); }
+.ts-track { box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+.ts-pet .petsvg { filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35)); }
+
+/* Trip screen: the little train gets a drop shadow so it reads as a solid
+   object rolling on the track, and the station track gets a grounding line. */
+.triptrain { filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.4)); }
+.tripstation-track { box-shadow: var(--v40-shadow-sm); }
+
+/* Preview pane pet already has its v35 drop shadow; lift it one step so
+   the reviewable pet is the deepest object on the sheet. */
+.ps-preview-pet .petsvg { filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.4)); }
+
+/* ============ EXEMPT SCREENS: panic, crisis, breathe, guide ============
+   Frozen means frozen. Nothing above may show inside these screens. */
+#screen-panic .ridecard, #screen-panic .loccard, #screen-panic .toolcard,
+#screen-panic .kindcard, #screen-panic .acct-card, #screen-panic .ps-preview,
+#screen-crisis .ridecard, #screen-crisis .loccard, #screen-crisis .toolcard,
+#screen-crisis .kindcard, #screen-crisis .acct-card, #screen-crisis .ps-preview,
+#screen-breathe .ridecard, #screen-breathe .loccard, #screen-breathe .toolcard,
+#screen-breathe .kindcard, #screen-breathe .acct-card, #screen-breathe .ps-preview,
+#screen-guide .ridecard, #screen-guide .loccard, #screen-guide .toolcard,
+#screen-guide .kindcard, #screen-guide .acct-card, #screen-guide .ps-preview,
+#screen-panic .ts-engine, #screen-panic .ts-car, #screen-panic .ts-track,
+#screen-panic .ts-pet .petsvg, #screen-panic .triptrain,
+#screen-panic .tripstation-track, #screen-crisis .triptrain,
+#screen-breathe .triptrain, #screen-guide .triptrain {
+  box-shadow: none;
+  filter: none;
+}
+#screen-panic .btn:active, #screen-panic .tool:active, #screen-panic .toolcard:active,
+#screen-panic .chip:active, #screen-panic .segbtn:active, #screen-panic .pchip:active,
+#screen-crisis .btn:active, #screen-crisis .tool:active, #screen-crisis .toolcard:active,
+#screen-crisis .chip:active, #screen-crisis .segbtn:active, #screen-crisis .pchip:active,
+#screen-breathe .btn:active, #screen-breathe .tool:active, #screen-breathe .toolcard:active,
+#screen-breathe .chip:active, #screen-breathe .segbtn:active, #screen-breathe .pchip:active,
+#screen-guide .btn:active, #screen-guide .tool:active, #screen-guide .toolcard:active,
+#screen-guide .chip:active, #screen-guide .segbtn:active, #screen-guide .pchip:active {
+  transform: none;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .tool, .toolcard, .chip, .segbtn, .pchip { transition: none; }
+  .btn:active, .tool:active, .toolcard:active, .chip:active, .segbtn:active,
+  .pchip:active { transform: none; }
+}

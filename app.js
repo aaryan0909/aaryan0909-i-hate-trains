@@ -574,7 +574,7 @@
     if (pb) {
       pb.style.transition = reducedMotion ? 'opacity 1.2s ease' : 'transform ' + p.secs + 's cubic-bezier(.37,0,.63,1)';
       if (reducedMotion) { pb.style.transform = 'none'; pb.style.opacity = grow ? '1' : '0.55'; }
-      else { pb.style.transform = grow ? 'scale(0.94, 1.2)' : 'scale(1, 1)'; }
+      else { pb.style.transform = grow ? 'scale(0.96, 1.22)' : 'scale(1, 1)'; }
     }
     breathHaptic(p.k);
     phaseCue(p.k);
@@ -2357,8 +2357,8 @@
       var dx = Math.max(-1, Math.min(1, (x - window.innerWidth / 2) / (window.innerWidth / 2)));
       var dy = Math.max(-1, Math.min(1, (y - window.innerHeight / 2) / (window.innerHeight / 2)));
       var r = document.documentElement;
-      r.style.setProperty('--px', (dx * 3).toFixed(1) + 'px');
-      r.style.setProperty('--py', (dy * 2).toFixed(1) + 'px');
+      r.style.setProperty('--px', (dx * 3.5).toFixed(1) + 'px');
+      r.style.setProperty('--py', (dy * 2.5).toFixed(1) + 'px');
       if (gazeResetTimer) { clearTimeout(gazeResetTimer); }
       gazeResetTimer = setTimeout(function () {
         r.style.setProperty('--px', '0px');
@@ -2373,7 +2373,7 @@
   (function petBlinkLoop() {
     function schedule() {
       setTimeout(function () {
-        if (!petBreathIn && !document.hidden) {
+        if (!petBreathIn && !document.hidden && currentScreen() !== 'screen-panic' && currentScreen() !== 'screen-breathe') {
           document.body.classList.add('pet-blink');
           setTimeout(function () { document.body.classList.remove('pet-blink'); }, 130);
         }
@@ -2464,29 +2464,30 @@
   }
   var PET_DEFS = {
     blob: {
-      eyes: [[48, 62], [72, 62]], blush: [[37, 72], [83, 72]], hat: [60, 22], bow: [88, 40],
+      eyes: [[48, 62], [72, 62]], blush: [[37, 72], [83, 72]], hat: [60, 22], bow: [88, 40], shade: [60, 61, 34, 39],
       body: function (c) {
-        return '<ellipse cx="60" cy="104" rx="30" ry="7" fill="rgba(0,0,0,.28)"/>'
-          + '<path d="M60 22 C36 22 26 44 26 66 C26 90 40 100 60 100 C80 100 94 90 94 66 C94 44 84 22 60 22 Z" fill="' + c.main + '"/>'
+        return '<path d="M60 22 C36 22 26 44 26 66 C26 90 40 100 60 100 C80 100 94 90 94 66 C94 44 84 22 60 22 Z" fill="' + c.main + '"/>'
           + '<ellipse cx="45" cy="46" rx="10" ry="15" fill="#ffffff" opacity=".16" transform="rotate(-18 45 46)"/>';
       }
     },
     bird: {
-      eyes: [[70, 52]], blush: [[60, 62]], hat: [62, 32], bow: [86, 38],
+      eyes: [[48, 60], [72, 60]], blush: [[37, 72], [83, 72]], hat: [60, 28], bow: [88, 40],
+      shade: [60, 66, 30, 30],
       body: function (c) {
-        return '<path d="M30 78 q-16 4 -20 18 q16 2 24 -8 Z" fill="' + c.dark + '"/>'
+        return '<path class="ptail" d="M30 78 q-16 4 -20 18 q16 2 24 -8 Z" fill="' + c.dark + '"/>'
           + '<circle cx="60" cy="66" r="30" fill="' + c.main + '"/>'
-          + '<ellipse cx="42" cy="70" rx="11" ry="17" fill="' + c.dark + '" transform="rotate(14 42 70)"/>'
+          + '<ellipse class="pwing" cx="42" cy="70" rx="11" ry="17" fill="' + c.dark + '" transform="rotate(14 42 70)"/>'
+          + '<ellipse class="pwing" cx="78" cy="70" rx="11" ry="17" fill="' + c.dark + '" transform="rotate(-14 78 70)"/>'
           + '<ellipse cx="50" cy="52" rx="9" ry="12" fill="#ffffff" opacity=".18" transform="rotate(-16 50 52)"/>'
-          + '<path d="M60 62 l13 5 l-13 5 Z" fill="#e8b86f"/>'
+          + '<path d="M53 66 L67 66 L60 74 Z" fill="#e8b86f"/>'
           + '<path d="M52 94 l0 9 M68 94 l0 9" stroke="#e8b86f" stroke-width="3" stroke-linecap="round"/>';
       }
     },
     cat: {
-      eyes: [[48, 62], [72, 62]], blush: [[37, 72], [83, 72]], hat: [60, 26], bow: [88, 38],
+      eyes: [[48, 62], [72, 62]], blush: [[37, 72], [83, 72]], hat: [60, 26], bow: [88, 38], shade: [60, 64, 30, 30],
       body: function (c) {
-        return '<path d="M90 86 q18 -2 22 -20" stroke="' + c.main + '" stroke-width="9" fill="none" stroke-linecap="round"/>'
-          + '<path d="M34 42 L27 16 L49 30 Z" fill="' + c.main + '"/><path d="M86 42 L93 16 L71 30 Z" fill="' + c.main + '"/>'
+        return '<path class="ptail" d="M90 86 q18 -2 22 -20" stroke="' + c.main + '" stroke-width="9" fill="none" stroke-linecap="round"/>'
+          + '<path class="pear" d="M34 42 L27 16 L49 30 Z" fill="' + c.main + '"/><path class="pear" d="M86 42 L93 16 L71 30 Z" fill="' + c.main + '"/>'
           + '<path d="M36 35 L31 21 L45 30 Z" fill="' + c.dark + '"/><path d="M84 35 L89 21 L75 30 Z" fill="' + c.dark + '"/>'
           + '<circle cx="60" cy="64" r="30" fill="' + c.main + '"/>'
           + '<path d="M48 40 q3 5 0 10 M60 38 q3 5 0 10 M72 40 q3 5 0 10" stroke="' + c.dark + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
@@ -2495,9 +2496,9 @@
       }
     },
     fox: {
-      eyes: [[48, 60], [72, 60]], blush: [[37, 72], [83, 72]], hat: [60, 26], bow: [88, 40],
+      eyes: [[48, 60], [72, 60]], blush: [[37, 72], [83, 72]], hat: [60, 26], bow: [88, 40], shade: [60, 66, 30, 30],
       body: function (c) {
-        return '<path d="M34 44 L28 14 L52 32 Z" fill="' + c.main + '"/><path d="M86 44 L92 14 L68 32 Z" fill="' + c.main + '"/>'
+        return '<path class="pear" d="M34 44 L28 14 L52 32 Z" fill="' + c.main + '"/><path class="pear" d="M86 44 L92 14 L68 32 Z" fill="' + c.main + '"/>'
           + '<path d="M36 36 L33 20 L48 31 Z" fill="#fdf6ec"/><path d="M84 36 L87 20 L72 31 Z" fill="#fdf6ec"/>'
           + '<circle cx="60" cy="66" r="30" fill="' + c.main + '"/>'
           + '<ellipse cx="60" cy="79" rx="16" ry="11" fill="#fdf6ec"/>'
@@ -2506,7 +2507,7 @@
       }
     },
     frog: {
-      eyes: [[42, 34], [78, 34]], blush: [[30, 74], [90, 74]], hat: [42, 14], bow: [90, 56],
+      eyes: [[42, 34], [78, 34]], blush: [[30, 74], [90, 74]], hat: [42, 14], bow: [90, 56], shade: [60, 70, 32, 32],
       body: function (c) {
         return '<circle cx="42" cy="34" r="13" fill="' + c.main + '"/><circle cx="78" cy="34" r="13" fill="' + c.main + '"/>'
           + '<circle cx="60" cy="70" r="32" fill="' + c.main + '"/>'
@@ -2514,10 +2515,10 @@
       }
     },
     panda: {
-      eyes: [[48, 62], [72, 62]], blush: [[37, 72], [83, 72]], hat: [60, 24], bow: [88, 40],
+      eyes: [[48, 62], [72, 62]], blush: [[37, 72], [83, 72]], hat: [60, 24], bow: [88, 40], shade: [60, 66, 30, 30],
       body: function (c) {
         var patch = (!c || !c.patch) ? '#2b2b33' : c.patch;
-        return '<circle cx="32" cy="40" r="13" fill="' + patch + '"/><circle cx="88" cy="40" r="13" fill="' + patch + '"/>'
+        return '<circle class="pear" cx="32" cy="40" r="13" fill="' + patch + '"/><circle class="pear" cx="88" cy="40" r="13" fill="' + patch + '"/>'
           + '<circle cx="60" cy="66" r="30" fill="#f5f2ea"/>'
           + '<ellipse cx="48" cy="62" rx="9" ry="12" fill="' + patch + '" transform="rotate(-15 48 62)"/>'
           + '<ellipse cx="72" cy="62" rx="9" ry="12" fill="' + patch + '" transform="rotate(15 72 62)"/>'
@@ -2525,10 +2526,10 @@
       }
     },
     bunny: {
-      eyes: [[48, 64], [72, 64]], blush: [[37, 74], [83, 74]], hat: [60, 28], bow: [88, 44],
+      eyes: [[48, 64], [72, 64]], blush: [[37, 74], [83, 74]], hat: [60, 28], bow: [88, 44], shade: [60, 68, 28, 28],
       body: function (c) {
-        return '<ellipse cx="40" cy="26" rx="9" ry="24" fill="' + c.main + '" transform="rotate(-10 40 26)"/>'
-          + '<ellipse cx="80" cy="26" rx="9" ry="24" fill="' + c.main + '" transform="rotate(10 80 26)"/>'
+        return '<ellipse class="pear" cx="40" cy="26" rx="9" ry="24" fill="' + c.main + '" transform="rotate(-10 40 26)"/>'
+          + '<ellipse class="pear" cx="80" cy="26" rx="9" ry="24" fill="' + c.main + '" transform="rotate(10 80 26)"/>'
           + '<ellipse cx="40" cy="28" rx="4.5" ry="16" fill="' + c.dark + '" transform="rotate(-10 40 28)"/>'
           + '<ellipse cx="80" cy="28" rx="4.5" ry="16" fill="' + c.dark + '" transform="rotate(10 80 28)"/>'
           + '<circle cx="60" cy="68" r="28" fill="' + c.main + '"/>'
@@ -2548,9 +2549,9 @@
      support every expression. Open-eye expressions keep BOTH eye groups so the
      global blink loop (body.pet-blink) still works; happy/celebrate faces simply
      do not blink, which reads as a smile held. */
-  var PET_MOUTH = { blob: [60, 78], bird: [66, 74], cat: [60, 80], fox: [60, 84], frog: [60, 84], panda: [60, 80], bunny: [60, 90] };
+  var PET_MOUTH = { blob: [60, 78], bird: [60, 80], cat: [60, 80], fox: [60, 84], frog: [60, 84], panda: [60, 80], bunny: [60, 90] };
   /* v35: blush strength by expression, so joy reads stronger than worry at phone size. */
-  var PET_BLUSH = { idle: 1, happy: 1.2, worried: 0.6, proud: 1.1, sleepy: 0.7, celebrate: 1.5, curious: 1, wave: 1.2, excited: 1.6, calm: 1.1 };
+  var PET_BLUSH = { idle: 1, happy: 1.3, worried: 0.6, proud: 1.1, sleepy: 0.7, celebrate: 1.6, curious: 1, wave: 1.2, excited: 1.8, calm: 1.1 };
   /* v35 BROWS: every open-eyed expression gets brows, shaped by feeling. Raised
      arcs read happy, flat high brows read proud, inner-down slants read worried,
      one raised brow reads curious, low soft lines read calm. */
@@ -2560,9 +2561,8 @@
     sp.eyes.forEach(function (e, i) {
       var x = e[0], y = e[1] - 14;
       if (expr === 'worried') {
-        if (sp.eyes.length === 1) { out += '<path d="M' + (x - 9) + ' ' + y + ' L' + (x + 9) + ' ' + y + '"/>'; }
-        else if (i === 0) { out += '<path d="M' + (x - 8) + ' ' + y + ' L' + (x + 8) + ' ' + (y + 5) + '"/>'; }
-        else { out += '<path d="M' + (x - 8) + ' ' + (y + 5) + ' L' + (x + 8) + ' ' + y + '"/>'; }
+        if (i === 0) { out += '<path d="M' + (x - 8) + ' ' + y + ' L' + (x + 8) + ' ' + (y + 8) + '"/>'; }
+        else { out += '<path d="M' + (x - 8) + ' ' + (y + 8) + ' L' + (x + 8) + ' ' + y + '"/>'; }
       } else if (expr === 'curious') {
         if (i === 0) { out += '<path d="M' + (x - 8) + ' ' + (y - 4) + ' L' + (x + 8) + ' ' + (y - 4) + '"/>'; }
         else { out += '<path d="M' + (x - 8) + ' ' + (y + 1) + ' L' + (x + 8) + ' ' + (y + 1) + '"/>'; }
@@ -2585,9 +2585,9 @@
     if (!m) { return ''; }
     var x = m[0], y = m[1];
     var st = ' stroke="#10141b" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
-    if (expr === 'celebrate') { return '<path d="M' + (x - 9) + ' ' + y + ' q9 11 18 0 Z" fill="#7a2e2e"/><ellipse cx="' + x + '" cy="' + (y + 6) + '" rx="4" ry="2.5" fill="#d98a9e"/>'; }
-    if (expr === 'excited') { return '<path d="M' + (x - 10) + ' ' + y + ' q10 13 20 0 Z" fill="#7a2e2e"/><ellipse cx="' + x + '" cy="' + (y + 7) + '" rx="4.5" ry="3" fill="#d98a9e"/>'; }
-    if (expr === 'worried') { return '<path d="M' + (x - 8) + ' ' + (y + 2) + ' q8 -7 16 0"' + st; }
+    if (expr === 'celebrate') { return '<path d="M' + (x - 10) + ' ' + y + ' q10 12 20 0 Z" fill="#7a2e2e"/><ellipse cx="' + x + '" cy="' + (y + 7) + '" rx="4.5" ry="3" fill="#d98a9e"/>'; }
+    if (expr === 'excited') { return '<path d="M' + (x - 11) + ' ' + y + ' q11 14 22 0 Z" fill="#7a2e2e"/><ellipse cx="' + x + '" cy="' + (y + 8) + '" rx="5" ry="3.2" fill="#d98a9e"/>'; }
+    if (expr === 'worried') { return '<path d="M' + (x - 9) + ' ' + (y + 3) + ' q9 -10 18 0"' + st; }
     if (expr === 'sleepy') { return '<circle cx="' + x + '" cy="' + (y + 1) + '" r="3.5"' + st; }
     if (expr === 'curious') { return '<circle cx="' + x + '" cy="' + (y + 1) + '" r="4"' + st; }
     if (expr === 'happy') { return '<path d="M' + (x - 9) + ' ' + y + ' q9 8 18 0"' + st; }
@@ -2622,7 +2622,7 @@
       out += '<g class="peye peye-open">';
       sp.eyes.forEach(function (e) {
         out += '<path d="M' + (e[0] - 7) + ' ' + (e[1] - 1) + ' q7 -6 14 0" stroke="#10141b" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
-        out += '<circle cx="' + e[0] + '" cy="' + (e[1] + 2) + '" r="3" fill="#10141b"/><circle cx="' + (e[0] + 1) + '" cy="' + e[1] + '" r="1.2" fill="#fff"/>';
+        out += '<circle cx="' + e[0] + '" cy="' + (e[1] + 2) + '" r="3" fill="#10141b"/><circle cx="' + (e[0] + 1) + '" cy="' + e[1] + '" r="1.4" fill="#fff"/>';
       });
       out += '</g>';
       out += petEyesShut(sp.eyes);
@@ -2630,7 +2630,7 @@
       var r = expr === 'worried' ? 4 : expr === 'excited' ? 7 : expr === 'curious' ? 6 : 5.5;
       out += '<g class="peye peye-open">';
       sp.eyes.forEach(function (e) {
-        out += '<circle cx="' + e[0] + '" cy="' + e[1] + '" r="' + r + '" fill="#10141b"/><circle cx="' + (e[0] + 2) + '" cy="' + (e[1] - 2) + '" r="1.8" fill="#fff"/>';
+        out += '<circle cx="' + e[0] + '" cy="' + e[1] + '" r="' + r + '" fill="#10141b"/><circle cx="' + (e[0] + 2) + '" cy="' + (e[1] - 2) + '" r="2.2" fill="#fff"/>';
       });
       out += '</g>';
       out += petEyesShut(sp.eyes);
@@ -2656,15 +2656,29 @@
     var x = Math.max(2, 60 - w / 2);
     return '<g class="pbubble"><rect x="' + x + '" y="1" width="' + w + '" height="21" rx="10.5" fill="#ffffff" stroke="#e5e0d8"/><path d="M54 22 l6 7 l6 -7 Z" fill="#ffffff" stroke="#e5e0d8" stroke-linejoin="round"/><text x="60" y="16" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d2430" font-family="inherit">' + t + '</text></g>';
   }
+  var petUID = 0;
   function petSVG(type, color, accessory, expr, bubble) {
     var sp = PET_DEFS[type] || PET_DEFS.blob;
     var cl = PET_CLASSIC[type] || PET_CLASSIC.blob;
     var c = petResolve(cl[0], cl[1], color);
+    /* v40 DEPTH: one soft radial light per render (unique id per instance, so
+       several pets on one page never share a gradient). Light falls from the
+       upper left, shade settles at the lower right: the same layered depth on
+       every species, still flat cartoon, no new art style, no assets. */
+    var uid = 'pg' + (petUID++);
+    var sh = sp.shade || [60, 66, 30, 30];
+    var defs = '<defs><radialGradient id="' + uid + '" cx="38%" cy="30%" r="78%">'
+      + '<stop offset="0%" stop-color="#ffffff" stop-opacity=".34"/>'
+      + '<stop offset="55%" stop-color="#ffffff" stop-opacity="0"/>'
+      + '<stop offset="100%" stop-color="#000000" stop-opacity=".16"/></radialGradient></defs>';
+    var ground = '<ellipse class="pshadow" cx="60" cy="109" rx="26" ry="5" fill="rgba(0,0,0,.22)"/>';
+    var shade = '<ellipse cx="' + sh[0] + '" cy="' + sh[1] + '" rx="' + sh[2] + '" ry="' + sh[3] + '" fill="url(#' + uid + ')"/>';
     if (type === 'panda' && color && color !== 'classic' && PET_PALETTE[color]) { c = { main: '#f5f2ea', dark: PET_PALETTE[color].dark, patch: PET_PALETTE[color].dark }; }
     if (type === 'panda') { c.patch = c.dark; }
     var ex = expr || 'idle';
     return '<svg viewBox="0 0 120 120" class="petsvg pexpr-' + ex + '" data-expr="' + ex + '" aria-hidden="true">'
-      + '<g class="pbody">' + sp.body(c) + '</g>'
+      + defs + ground
+      + '<g class="pbody">' + sp.body(c) + shade + '</g>'
       + '<g class="pface">' + petFace(ex, sp, c, PET_MOUTH[type] || null) + petBlush(sp.blush, PET_BLUSH[ex] || 1) + '</g>'
       + petAccSVG(accessory || 'none', sp) + petBubbleSVG(bubble) + '</svg>';
   }

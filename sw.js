@@ -10,8 +10,9 @@
    v30: home-screen "what has helped you" top-tools card — installed phones must re-cache.
    v34: precaches metros.js (line-level metro directory for London, NYC, Paris, Rome, Milan, Naples, Turin).
    v35: precaches v35-*.css, sound.js, stations.js, auth.js, metros.js updates; station JSONs are runtime-cached on first fetch (offline after first use).
-   v38: guide rescue captions — installed phones must re-cache guide.js. */
-var CACHE = 'iht-v39';
+   v38: guide rescue captions — installed phones must re-cache guide.js.
+   v40: bird two-eye fix, pet depth + expression pass, calm-time depth tokens. */
+var CACHE = 'iht-v40';
 var ASSETS = [
   './',
   'index.html',
@@ -32,6 +33,8 @@ var ASSETS = [
   'v35-pets.css',
   'v35-accounts.css',
   'v39-design.css',
+  'v40-pets.css',
+  'v40-design.css',
   'manifest.webmanifest',
   'icon.svg'
 ];

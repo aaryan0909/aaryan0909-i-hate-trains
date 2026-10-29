@@ -1,0 +1,65 @@
+/* v40-pets.css: depth and life pass for the pet system.
+   Scope: pet rendering and calm-time pet motion only. This file never moves
+   layout, never touches panic or crisis layout, words, or order, and never
+   adds motion to the panic pet or the breath guide. Load after v35-pets.css
+   so the squash-and-stretch jump below wins over the plain jump. Tokens:
+   all durations use the v35 motion scale (ack under 100ms, transitions
+   150-300ms, max 1000ms); squash keyframes run inside the existing 0.8s
+   celebrate window. No outside characters, art, logos, or trademarked
+   designs are used anywhere: the craft borrowed is generic character
+   animation craft (layered shading, squash and stretch, secondary motion),
+   applied to our own original pets. */
+
+/* Squash and stretch: anticipation crouch, stretch at the peak, overshoot
+   settle. The wrapper origin is the feet, so the pet squashes into the
+   ground and springs up instead of floating. Replaces the plain translate
+   jump from styles.css/v35-pets.css for celebrate (play Jump included). */
+.pet-celebrate .petsvg {
+  transform-origin: 50% 100%;
+  animation: petjump40 0.8s ease 2;
+}
+@keyframes petjump40 {
+  0% { transform: translateY(0) scale(1, 1); }
+  15% { transform: translateY(2px) scale(1.14, 0.84); }
+  40% { transform: translateY(-26px) scale(0.93, 1.12); }
+  60% { transform: translateY(-3px) scale(1.06, 0.93); }
+  75% { transform: translateY(0) scale(0.98, 1.03); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+/* Secondary motion: wings, tails, and ears settle a beat after the body.
+   The delay is the whole trick: appendages trail the jump instead of moving
+   in lockstep, which is what reads as alive rather than mechanical. */
+.pwing, .ptail { transform-box: fill-box; transform-origin: center; }
+.pear { transform-box: fill-box; transform-origin: 50% 100%; }
+.pet-celebrate .pwing, .pet-celebrate .ptail, .pet-celebrate .pear {
+  animation: psettle40 0.8s ease 0.08s 2;
+}
+@keyframes psettle40 {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(-7deg); }
+  60% { transform: rotate(5deg); }
+}
+
+/* Breath guide: truly bottom-anchored now (v35 intended it; the wrapper had
+   no origin set, so it scaled from center). Same timing, same words, the
+   inhale just fills from the belly: scale(0.96, 1.22) in app.js runPhase. */
+#pet-breathe { transform-origin: 50% 100%; }
+
+/* Blink guards: the JS blink loop already skips hidden tabs, inhale, and
+   (v40, app.js) the panic and breathe screens. These CSS guards are the
+   second lock: even if the blink class lands, the panic pet and the breath
+   guide keep their eyes exactly as mounted. */
+body.pet-blink #pet-panic .peye-open { display: block; }
+body.pet-blink #pet-panic .peye-shut { display: none; }
+body.pet-blink #pet-breathe .peye-open { display: block; }
+body.pet-blink #pet-breathe .peye-shut { display: none; }
+
+/* Ground shadow inside the SVG needs no CSS; it is drawn by petSVG. The
+   trip, play, and preview drop shadows from v35 stay as the outer depth. */
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-celebrate .petsvg, .pet-celebrate .pwing, .pet-celebrate .ptail,
+  .pet-celebrate .pear { animation: none !important; }
+  #pet-breathe { transform: none !important; }
+}
