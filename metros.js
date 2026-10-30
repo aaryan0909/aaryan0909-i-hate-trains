@@ -163,6 +163,10 @@
         { id: '10', name: 'Line 10', color: '#005AA9' }, { id: '11', name: 'Line 11', color: '#009B3A' },
         { id: '12', name: 'Line 12', color: '#A49800' }, { id: 'r', name: 'Line R', color: '#FFFFFF' }
       ] },
+    mumbai: { stations: true, label: 'Mumbai', match: ['mumbai', 'bombay'],
+      lines: [
+        { id: '3', name: 'Aqua Line (Line 3)', color: '#00a9ce', termini: 'Aarey JVLR – Cuffe Parade' }
+      ] },
   };
   function cityFor(text) {
     var s = (text || '').toLowerCase();
