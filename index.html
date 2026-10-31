@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="v39-design.css">
 <link rel="stylesheet" href="v40-pets.css">
 <link rel="stylesheet" href="v40-design.css">
+<link rel="stylesheet" href="v42.css">
 </head>
 <body>
 <main id="app">
@@ -148,6 +149,12 @@
         <span class="petcap"><strong id="pet-home-name">Mochi</strong><em>is riding with you</em></span>
       </button>
       <button class="panicbtn rise d3" data-go="screen-panic">I need help right now</button>
+      <div class="calm42-resume rise d4" id="resume-wave-card" hidden>
+        <p><strong id="resume-wave-cta">Still with you — back to breathing?</strong></p>
+        <p class="fineprint">You were in the middle of a tool. One tap picks it back up, or dismiss it and it will not come back.</p>
+        <button class="btn calm" id="resume-wave-resume" type="button">Resume</button>
+        <button class="linklike quiet" id="resume-wave-dismiss" type="button">Not now</button>
+      </div>
       <div class="ridecard rise d4">
         <p class="body" id="home-ride-line">Your ride</p>
         <button class="btn calm big" id="btn-start-ride" data-go="screen-checkin" style="margin-bottom:0">Start a ride</button>
@@ -323,6 +330,8 @@
       <p class="petline" id="petline-learn"></p>
       <p class="lede soft rise d3">Short, honest reads on how panic works — for between rides, so the tools land harder during them. Coping tools, not treatment.</p>
       <button class="toolcard rise d3" data-go="screen-scenarios" type="button"><strong>Rehearse the hard moments</strong><p>Three scariest ride moments, rehearsed in calm time: what actually happens next, which tool to reach for, and a 30-second run-through.</p></button>
+      <button class="toolcard rise d3" data-go="screen-sensation" type="button"><strong>Make friends with the sensation</strong><p>Calm-time practice only: gently bring on a mild sensation (faster breathing, stand-and-sit, holding a breath) and rate how scary it felt before and after. Practice, not treatment. Never during panic.</p></button>
+      <button class="toolcard rise d3" data-go="screen-bodyscan" type="button"><strong>Body scan, pet-led</strong><p>Calm-time only: your co-rider guides your attention slowly, feet to head, one body part per card, with a soft chime each step. Attention inward, not outward like 5–4–3–2–1.</p></button>
       <div id="learn-list" class="toolcards rise d3"></div>
       <div id="learn-read" class="rise d3" hidden></div>
       <button class="backlink rise d4" data-go="screen-home" id="learn-back-home">← back</button>
@@ -1002,7 +1011,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 41</p>
+      <p class="fineprint rise d4" id="app-version">version 42</p>
     </div>
   </section>
 
@@ -1054,6 +1063,71 @@
     <button class="backlink" data-go="screen-home" type="button">Back home</button>
   </div>
 </section>
+  <!-- SENSATION PRACTICE (v42) — calm-time only. Entered only from Learn.
+       Never linked from the panic flow, crisis screens, or any tool.
+       Practice, not treatment. Ratings are session-only: never stored,
+       never scored, never streaked. Sound is the v35 sound pack only. -->
+  <section class="screen" id="screen-sensation" aria-label="Make friends with the sensation">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">calm-time practice</p>
+      <h2 class="serene rise d2">Make friends with the sensation.</h2>
+      <p class="lede soft rise d3"><span class="calm42-petname">Mochi</span> is with you. Panic feels scary partly because the body sensations feel dangerous. Practising them gently, while calm, can make them feel less alarming later. This is practice, not treatment.</p>
+      <div class="calm42-safety rise d3">Only do these while you feel calm and safe, sitting or standing somewhere steady. Stop any time, especially if you feel dizzy, unwell, or short of breath. If breathing ever feels difficult, stop right away and pick a grounding tool instead. Never do this during panic.</div>
+      <div id="sen42-pick" class="rise d3">
+        <p class="body">Pick one to practise:</p>
+        <button class="toolcard" data-sen42="breathe-faster" type="button"><strong>Breathe a little faster</strong><p>30 seconds, a little quicker than usual. Not hard, not forced.</p></button>
+        <button class="toolcard" data-sen42="stand-sit" type="button"><strong>Stand up, sit down, quickly</strong><p>Notice the light-headed rush, then sit and breathe normally.</p></button>
+        <button class="toolcard" data-sen42="hold-breath" type="button"><strong>Hold a breath</strong><p>A normal breath in, held only while it stays comfortable.</p></button>
+      </div>
+      <div id="sen42-before" class="rise d3" hidden>
+        <h2 class="serene" id="sen42-before-title">Practice</h2>
+        <p class="body" id="sen42-before-q">Before you start: how scary does this sensation feel right now, 0 to 10?</p>
+        <div class="calm42-rate-grid" id="sen42-before-grid" role="group" aria-label="How scary before, 0 to 10"></div>
+        <button class="linklike quiet" id="sen42-back-pick" type="button">Pick a different one</button>
+      </div>
+      <div id="sen42-do" class="rise d3" hidden>
+        <h2 class="serene" id="sen42-do-title">Practice</h2>
+        <p class="calm42-big" id="sen42-do-big" aria-live="polite">30</p>
+        <p class="body" id="sen42-do-cue"></p>
+        <p class="body" id="sen42-do-body"></p>
+        <p><span class="calm42-ind" id="sen42-ind">Sound off</span></p>
+        <button class="btn calm" id="sen42-do-action" type="button">Stop</button>
+        <button class="btn ghost" id="sen42-do-finish" type="button">Finished — rate how it felt</button>
+      </div>
+      <div id="sen42-after" class="rise d3" hidden>
+        <h2 class="serene" id="sen42-after-title">Practice</h2>
+        <p class="body">And now: how scary did that feel, 0 to 10?</p>
+        <div class="calm42-rate-grid" id="sen42-after-grid" role="group" aria-label="How scary after, 0 to 10"></div>
+      </div>
+      <div id="sen42-done" class="rise d3" hidden>
+        <h2 class="serene">Noted, for this moment only.</h2>
+        <p class="body" id="sen42-done-text"></p>
+        <p class="fineprint">That rating is not saved anywhere. No score, no streak, nothing to beat next time.</p>
+        <button class="btn calm" id="sen42-done-again" type="button">Try another sensation</button>
+      </div>
+      <button class="backlink rise d4" data-go="screen-learn">← back to calm facts</button>
+    </div>
+  </section>
+
+  <!-- BODY SCAN (v42) — calm-time only, entered only from Learn.
+       Pet-led attention inward, feet to head, one body part per card.
+       Soft chime per step from the v35 sound pack, with a visible
+       playing indicator. Zero voice. Distinct from 5-4-3-2-1 (outward). -->
+  <section class="screen" id="screen-bodyscan" aria-label="Body scan">
+    <div class="wrap narrow center">
+      <p class="kicker rise d1">calm-time only · attention inward</p>
+      <p class="stepcount" id="scan42-count">1 of 8</p>
+      <h2 class="serene" id="scan42-title">Feet</h2>
+      <p class="lede soft"><span class="calm42-petname">Mochi</span> is guiding you, one part at a time.</p>
+      <p class="groundprompt" id="scan42-prompt">Notice your feet. Warmth, pressure from the floor, tingling, or nothing much at all. No need to change anything.</p>
+      <p><span class="calm42-ind" id="scan42-ind">Sound off</span></p>
+      <div class="walknav">
+        <button class="btn ghost" id="scan42-back">Back</button>
+        <button class="btn calm" id="scan42-next">Next</button>
+      </div>
+      <button class="backlink" data-go="screen-learn">← back to calm facts</button>
+    </div>
+  </section>
 </main>
 <div class="petsheet-backdrop hidden" id="pet-sheet-back"></div>
 <section class="petsheet hidden" id="pet-sheet" aria-label="Your co-rider">
@@ -1115,6 +1189,7 @@
 <script src="app.js"></script>
 <script src="stopheads.js"></script>
 <script src="guide.js"></script>
+<script src="calm42.js"></script>
 <script>
   window.IHT_ACCOUNT_CONFIG = {
     supabaseUrl: 'https://YOUR-PROJECT.supabase.co',
