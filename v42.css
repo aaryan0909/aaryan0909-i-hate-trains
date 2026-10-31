@@ -1,0 +1,17 @@
+/* v42: Resume the wave + calm-time sensation practice + pet-led body scan.
+   Calm-time surfaces only. Panic, crisis, breathe, and guide screens are
+   deliberately not styled here. All interactive targets are 48px or taller. */
+.calm42-resume { border: 1.5px solid var(--line, #d8d2c4); border-radius: 18px; padding: 16px; margin: 12px 0; background: rgba(255,255,255,.5); }
+.calm42-resume p { margin: 0 0 4px; font-size: 17px; }
+.calm42-resume .fineprint { font-size: 14px; color: var(--dim, #6b6b6b); }
+.calm42-resume .btn { margin-top: 10px; }
+.calm42-rate-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 16px 0; }
+.calm42-rate { min-height: 48px; min-width: 44px; border-radius: 12px; border: 1.5px solid var(--line, #d8d2c4); background: transparent; color: var(--ink, #222); font-size: 17px; cursor: pointer; }
+.calm42-rate:active { border-color: var(--calm, #7fae8e); }
+.calm42-big { font-size: 56px; font-weight: 600; margin: 12px 0 4px; min-height: 70px; }
+.calm42-ind { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--dim, #6b6b6b); min-height: 24px; }
+.calm42-ind::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #bbb; }
+.calm42-ind.playing::before { background: #7fae8e; animation: calm42-pulse 1s ease infinite; }
+@keyframes calm42-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .calm42-ind.playing::before { animation: none; } }
+.calm42-safety { border: 1.5px solid var(--line, #d8d2c4); border-radius: 14px; padding: 14px; font-size: 15px; line-height: 1.55; margin: 14px 0; }
