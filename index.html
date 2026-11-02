@@ -934,6 +934,17 @@
         </div>
         <p class="fineprint hidden" id="io-msg" aria-live="polite"></p>
       </div>
+      <p class="toolgroup rise d4">Panic access</p>
+      <div class="loccard rise d4">
+        <p class="body">Set this up once, in calm time, so help is one tap away later. This setup lives only on this screen — it never appears in the panic flow itself.</p>
+        <p class="body"><strong>iPhone:</strong> copy the panic link below, then in Shortcuts make a new shortcut with one action, Open URLs, pasting the link. Name it something you will say or tap, then add it to your Home Screen from the shortcut's share menu. The same shortcut can be run by Siri by name, or by Back Tap in Settings → Accessibility → Touch → Back Tap.</p>
+        <p class="body"><strong>Android:</strong> open the panic link in Chrome, then use the menu → Add to Home screen. The icon opens straight on the panic screen.</p>
+        <div class="io-btnrow">
+          <button class="btn calm" id="btn-copy-panic-link">Copy panic link</button>
+          <button class="btn ghost" id="btn-try-panic-link">Try it now</button>
+        </div>
+        <p class="fineprint" id="panic-link-hint" aria-live="polite">The link opens this app straight on the panic screen, skipping setup and home.</p>
+      </div>
       <button class="btn ghost rise d4" id="btn-erase-2">Erase everything on this phone</button>
       <button class="backlink" data-go="screen-home">← back</button>
     </div>
@@ -1011,7 +1022,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 42</p>
+      <p class="fineprint rise d4" id="app-version">version 43</p>
     </div>
   </section>
 

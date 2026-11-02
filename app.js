@@ -2108,6 +2108,20 @@
   $('btn-erase').addEventListener('click', eraseAll);
   $('btn-erase-2').addEventListener('click', eraseAll);
 
+  /* ---------- panic access (v43): one tap to the panic screen, set up in calm time.
+     The link is this page + '#panic'. Boot (below) honours it even before onboarding,
+     matching the app's "no setup, no questions first" promise. No new storage keys:
+     the Shortcut / home-screen icon lives in the OS, not in the app. ---------- */
+  function panicLink() { try { return window.location.href.split('#')[0] + '#panic'; } catch (e) { return '#panic'; } }
+  var bcp = $('btn-copy-panic-link');
+  if (bcp) { bcp.addEventListener('click', function () { tick(); var link = panicLink(); var hint = $('panic-link-hint');
+    function done(msg) { if (hint) { hint.textContent = msg; } }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(link).then(function () { done('Panic link copied. Paste it into a Shortcut or a home-screen icon.'); }, function () { done(link); }); }
+    else { done(link); } }); }
+  var btp = $('btn-try-panic-link');
+  if (btp) { btp.addEventListener('click', function () { tick(); go('screen-panic'); }); }
+  window.addEventListener('hashchange', function () { try { if (window.location.hash === '#panic') { go('screen-panic'); } } catch (e) {} });
+
   /* ---------- privacy: move my setup to another browser (v18). Export writes a compact,
      copyable code (and an optional file) with co-rider, name, prefs, reflections, trips,
      plans, and saved links. Import restores it with a confirmation. Everything stays
@@ -3775,6 +3789,9 @@
   renderBreatheCap();
   if (window.__ihtCrisis) { window.__ihtCrisis.renderQuiet(); window.__ihtCrisis.renderLocale(); } // v24: locale-aware crisis line (crisis.js)
   (function boot() {
+    /* v43: a #panic deep link (Shortcut / home-screen icon, set up in Privacy)
+       skips splash, onboarding, and home and lands straight on the panic screen. */
+    try { if (window.location.hash === '#panic') { go('screen-panic'); return; } } catch (e) {}
     var target = read('iht_onboarded') ? 'screen-home' : 'screen-ob0';
     var warm = false;
     try { warm = !!sessionStorage.getItem('iht_session'); sessionStorage.setItem('iht_session', '1'); } catch (e) {}
