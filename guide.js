@@ -5,6 +5,9 @@
    No menu, no decisions. One full-width "I'm steadier" ends it at any
    moment. Same module-split pattern as crisis.js / stopheads.js: app.js calls
    window.__ihtGuide.stop() defensively whenever navigation leaves screen-guide.
+   v44: start(returnTo) accepts an optional return screen (used by the spiraling
+   check-in, which passes 'screen-checkin'); "I'm steadier" then goes straight
+   back there instead of the re-entry screen, and the return is cleared on use.
    v35 removed the voice system entirely, so say() is now guarded-inert and the
    caption line is how the script's words reach the rider: a silent-switched phone,
    a missing TTS engine, or a hard-of-hearing rider gets the same instructions as
@@ -16,6 +19,7 @@
 
   /* ---------- sequencing ---------- */
   var timers = [];
+  var guideReturn = null; // v44: optional return screen set by start(returnTo)
   var muted = false; // v31 audit: rescue voice is independent of the global toggle,
   // auto-on at low volume, with a big mute inside rescue. A setting chosen in calm
   // time must never silently remove voice from a rescue.
@@ -84,8 +88,12 @@
     });
   }
 
-  function start() {
+  function start(returnTo) {
     stop();
+    // v44: an optional return screen (checkin rescue). When set, "I'm steadier"
+    // goes straight back there instead of the re-entry screen, whose default
+    // target would strand a pre-ride rider on home. Cleared on end.
+    guideReturn = returnTo || null;
     try { if (window.__ihtGuidePet) { window.__ihtGuidePet.mount($('guide-pet')); } } catch (e) {}
     var pb = $('guide-pet');
     if (pb) { pb.style.transition = 'none'; pb.style.transform = 'scale(1)'; }
@@ -101,8 +109,10 @@
   if (end) {
     end.addEventListener('click', function () {
       stop();
+      var ret = guideReturn; guideReturn = null;
       try {
-        if (window.__ihtReentry && window.__ihtReentry.show) { window.__ihtReentry.show(); }
+        if (ret && window.__ihtUpdate && window.__ihtUpdate.go) { window.__ihtUpdate.go(ret); }
+        else if (window.__ihtReentry && window.__ihtReentry.show) { window.__ihtReentry.show(); }
         else if (window.__ihtUpdate && window.__ihtUpdate.go) { window.__ihtUpdate.go('screen-panic'); }
       } catch (e) {}
     });

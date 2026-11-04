@@ -865,6 +865,7 @@
       $('checkin-note').textContent = checkinNotes[checkinFeel];
       $('checkin-actions').hidden = false;
       $('btn-checkin-breathe').hidden = checkinFeel !== 'spiraling';
+      $('btn-checkin-guide').hidden = checkinFeel !== 'spiraling'; // v44: spiraling riders get the flagship eyes-free rescue too
       $('btn-checkin-continue').textContent = checkinFeel === 'spiraling' ? 'Start the ride anyway' : 'Continue';
       petMood = checkinFeel === 'spiraling' ? 'soft' : null; // v12: the co-rider notices how you feel
       try { petInto($('pet-checkin'), 'idle', null, checkinFeel === 'steady' ? 'happy' : 'worried'); } catch (e) {} // v34: the face matches the feeling
@@ -872,6 +873,7 @@
     });
   });
   $('btn-checkin-breathe').addEventListener('click', function () { startBreathe('gentle', 'screen-checkin', true); });
+  $('btn-checkin-guide').addEventListener('click', function () { tick(); if (window.__ihtGuide) { window.__ihtGuide.start('screen-checkin'); } }); // v44: rescue returns to checkin, not home
   $('btn-checkin-continue').addEventListener('click', function () { tick(); go('screen-checklist'); });
 
   /* ---------- checklist ---------- */
