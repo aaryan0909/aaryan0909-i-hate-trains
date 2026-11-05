@@ -611,9 +611,33 @@
       <button class="petmini" id="pet-history" aria-label="Your co-rider"></button>
       <p class="petline" id="petline-history"></p>
       <div id="history-list" class="rise d3"></div>
+      <button class="btn calm rise d4" id="btn-export-summary" hidden>Export my summary</button>
+      <p class="fineprint" id="export-hint">One page for your therapist: rides, what helped, and your own words. Made on this phone, shared only if you tap share.</p>
       <button class="btn ghost rise d4" id="btn-erase">Erase everything on this phone</button>
       <p class="fineprint">This deletes your plans, notes, reflections and saved links from this device. It can't be undone.</p>
       <button class="backlink" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- SUMMARY — one-page printable ride summary for a therapist (v45).
+       Calm time only, entered from History. Built purely on-device from
+       iht_journal: per month, rides logged, how it felt after, top helping
+       tools, and the rider's own words. Trigger tags are not tracked yet,
+       so no trigger section is shown (never an invented one). Print shows
+       only this screen; share hands plain text to the native sheet. -->
+  <section class="screen" id="screen-summary" aria-label="Ride summary">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">for your therapist</p>
+      <h2 class="serene rise d2">My rides, in one page.</h2>
+      <button class="petmini" id="pet-summary" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-summary"></p>
+      <div id="summary-body" class="rise d3"></div>
+      <div class="summary-actions rise d4">
+        <button class="btn calm big" id="btn-summary-print">Print</button>
+        <button class="btn ghost" id="btn-summary-share">Share</button>
+      </div>
+      <p class="fineprint" id="summary-hint">Made on your phone from your ride notes. Nothing was sent anywhere. Coping tools, not treatment.</p>
+      <button class="backlink" data-go="screen-history">← back to history</button>
     </div>
   </section>
 
@@ -1023,7 +1047,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 44</p>
+      <p class="fineprint rise d4" id="app-version">version 45</p>
     </div>
   </section>
 
