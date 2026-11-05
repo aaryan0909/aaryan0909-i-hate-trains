@@ -333,6 +333,17 @@ em { font-style: normal; }
 .histitem .hnote { font-size: 15px; color: var(--ink); margin-top: 6px; font-style: italic; }
 .histempty { color: var(--dim); font-size: 16px; margin: 8px 0 22px; }
 
+/* v45: ride summary — month heading + actions; print shows only the page */
+.sum-month { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.summary-actions { display: flex; gap: 10px; margin: 18px 0 6px; }
+.summary-actions .btn { flex: 1; }
+@media print {
+  #sos-float, .summary-actions, #screen-summary .backlink, #screen-summary .petmini, #screen-summary .petline { display: none !important; }
+  .screen { min-height: 0 !important; padding: 0 !important; animation: none !important; }
+  #screen-summary, #screen-summary .histitem, #screen-summary .hfeel, #screen-summary .hnote { background: #fff !important; color: #111 !important; border-color: #999 !important; }
+  #screen-summary .htools, #screen-summary .fineprint, #screen-summary .sum-month { color: #333 !important; }
+}
+
 /* reduced motion — honor it everywhere */
 @media (prefers-reduced-motion: reduce) {
   .screen.active { animation: none; }
