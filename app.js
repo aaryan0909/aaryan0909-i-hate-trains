@@ -1433,7 +1433,8 @@
     var mins = setupStops * 3;
     var eta = new Date(Date.now() + mins * 60000);
     var etaStr = eta.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    var text = 'Riding ' + (city ? city + ' ' : '') + line + ' to ' + dest + ' (' + setupStops + ' stops, ETA ~' + etaStr + '). If I go quiet past ' + etaStr + ', check on me. \u2014 via I Hate Trains';
+    var nudge = (prefs.stopHeadsQuiet || prefs.stopHeadsUp) ? ' IHT will nudge me when my stop is near.' : '';
+    var text = 'Riding ' + (city ? city + ' ' : '') + line + ' to ' + dest + ' (' + setupStops + ' stops, ETA ~' + etaStr + '). If I go quiet past ' + etaStr + ', check on me.' + nudge + ' \u2014 via I Hate Trains';
     var hint = $('share-hint');
     function done(msg, sent) { hint.textContent = msg; if (sent) { tripCardSent = true; } }
     if (navigator.share) {
@@ -1503,6 +1504,8 @@
     var host = $('history-list');
     host.innerHTML = '';
     var log = readJSON('iht_journal', []);
+    var exp = $('btn-export-summary'); if (exp) { exp.hidden = !log.length; }
+    var eh = $('export-hint'); if (eh) { eh.hidden = !log.length; }
     if (!log.length) {
       var p = document.createElement('p'); p.className = 'histempty';
       p.textContent = 'Nothing here yet. After a ride, you can note how it went — only for you.';
@@ -1533,6 +1536,144 @@
     });
   }
   $all('[data-go="screen-history"]').forEach(function (b) { b.addEventListener('click', renderHistory); });
+
+  /* ---------- ride summary for a therapist (v45) ---------- */
+  /* One page, built purely on-device from iht_journal: per month, rides
+     logged, how it felt after, top helping tools, and the rider's own words.
+     Trigger tags are not tracked yet (approved 2026-10-16, unbuilt), so no
+     trigger section is shown — never an invented one. No scores, no streaks,
+     no grades; counts are rides. Nothing leaves the phone except by the
+     rider's own tap on Print or Share. */
+  function buildSummaryData(log) {
+    var months = {}, order = [];
+    var total = 0, first = null, last = null, ordinal = 0;
+    (log || []).forEach(function (e) {
+      if (!e || !e.t) { return; }
+      var d;
+      try { d = new Date(e.t); } catch (err) { return; }
+      if (isNaN(d.getTime())) { return; }
+      total++; ordinal++;
+      if (!first || d < first) { first = d; }
+      if (!last || d > last) { last = d; }
+      var key = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
+      var m = months[key];
+      if (!m) {
+        m = { key: key, label: d.toLocaleString([], { month: 'long', year: 'numeric' }), rides: 0, after: { calmer: 0, same: 0, harder: 0 }, counts: {}, lastSeen: {}, notes: [] };
+        months[key] = m; order.push(m);
+      }
+      m.rides++;
+      if (e.after && m.after.hasOwnProperty(e.after)) { m.after[e.after]++; }
+      var seen = {};
+      (e.tools || []).forEach(function (title) {
+        if (seen[title]) { return; } seen[title] = true;
+        if (!toolByTitle(title)) { return; } /* unknown titles never counted */
+        m.counts[title] = (m.counts[title] || 0) + 1;
+        m.lastSeen[title] = ordinal;
+      });
+      if (e.note) { m.notes.push(e.note); }
+    });
+    order.sort(function (a, b) { return b.key < a.key ? -1 : (b.key > a.key ? 1 : 0); });
+    order.forEach(function (m) {
+      m.tools = Object.keys(m.counts).map(function (title) {
+        return { title: title, count: m.counts[title], last: m.lastSeen[title] };
+      }).sort(function (a, b) { return (b.count - a.count) || (b.last - a.last); }).slice(0, 3);
+      m.notes = m.notes.slice(-4); /* newest 4: one page stays one page */
+    });
+    return { total: total, first: first, last: last, months: order };
+  }
+  function summaryDate(d) {
+    try { return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); } catch (err) { return ''; }
+  }
+  function renderSummary() {
+    var host = $('summary-body');
+    host.innerHTML = '';
+    var log = readJSON('iht_journal', []);
+    var data = buildSummaryData(log);
+    if (!data.total) {
+      var p = document.createElement('p'); p.className = 'histempty';
+      p.textContent = 'Nothing here yet. After a ride, note how it went — only for you — and this page will build itself.';
+      host.appendChild(p);
+      return;
+    }
+    var head = document.createElement('p'); head.className = 'body';
+    head.textContent = data.total + (data.total === 1 ? ' ride' : ' rides') + ' · ' + summaryDate(data.first) + ' to ' + summaryDate(data.last) + '.';
+    host.appendChild(head);
+    data.months.forEach(function (m) {
+      var card = document.createElement('div'); card.className = 'histitem';
+      var mh = document.createElement('div'); mh.className = 'sum-month';
+      mh.textContent = m.label + ' — ' + m.rides + (m.rides === 1 ? ' ride' : ' rides');
+      card.appendChild(mh);
+      var afterBits = [];
+      ['calmer', 'same', 'harder'].forEach(function (k) {
+        if (m.after[k]) { afterBits.push(feelingWord(k).toLowerCase() + ' after: ' + m.after[k]); }
+      });
+      if (afterBits.length) {
+        var af = document.createElement('div'); af.className = 'hfeel';
+        af.textContent = afterBits.join(' · ');
+        card.appendChild(af);
+      }
+      if (m.tools.length) {
+        var tl = document.createElement('div'); tl.className = 'htools';
+        tl.textContent = 'Helped most: ' + m.tools.map(function (t) { return t.title + ' (' + t.count + (t.count === 1 ? ' ride' : ' rides') + ')'; }).join(', ');
+        card.appendChild(tl);
+      }
+      m.notes.forEach(function (n) {
+        var nn = document.createElement('div'); nn.className = 'hnote';
+        nn.textContent = '\u201C' + n + '\u201D';
+        card.appendChild(nn);
+      });
+      host.appendChild(card);
+    });
+    var foot = document.createElement('p'); foot.className = 'fineprint';
+    foot.textContent = 'From my own ride notes, on my phone. Coping tools, not treatment.';
+    host.appendChild(foot);
+  }
+  function summaryText() {
+    var log = readJSON('iht_journal', []);
+    var data = buildSummaryData(log);
+    if (!data.total) { return 'My rides, in one page.\n\nNo rides noted yet.'; }
+    var lines = ['My rides, in one page.', data.total + (data.total === 1 ? ' ride' : ' rides') + ' · ' + summaryDate(data.first) + ' to ' + summaryDate(data.last) + '.', ''];
+    data.months.forEach(function (m) {
+      lines.push(m.label + ' — ' + m.rides + (m.rides === 1 ? ' ride' : ' rides'));
+      var afterBits = [];
+      ['calmer', 'same', 'harder'].forEach(function (k) {
+        if (m.after[k]) { afterBits.push(feelingWord(k).toLowerCase() + ' after: ' + m.after[k]); }
+      });
+      if (afterBits.length) { lines.push('  ' + afterBits.join(' · ')); }
+      if (m.tools.length) {
+        lines.push('  Helped most: ' + m.tools.map(function (t) { return t.title + ' (' + t.count + (t.count === 1 ? ' ride' : ' rides') + ')'; }).join(', '));
+      }
+      m.notes.forEach(function (n) { lines.push('  \u201C' + n + '\u201D'); });
+      lines.push('');
+    });
+    lines.push('From my own ride notes, on my phone. Coping tools, not treatment.');
+    return lines.join('\n');
+  }
+  var btnExport = $('btn-export-summary');
+  if (btnExport) { btnExport.addEventListener('click', function () {
+    tick();
+    renderSummary();
+    go('screen-summary');
+  }); }
+  var btnPrint = $('btn-summary-print');
+  if (btnPrint) { btnPrint.addEventListener('click', function () {
+    tick();
+    try { window.print(); } catch (e) {}
+  }); }
+  var btnShare = $('btn-summary-share');
+  if (btnShare) { btnShare.addEventListener('click', function () {
+    tick();
+    var text = summaryText();
+    var hint = $('summary-hint');
+    function done(msg) { hint.textContent = msg; }
+    if (navigator.share) {
+      navigator.share({ title: 'My ride summary', text: text }).then(function () { done('Summary sent. Nothing else left this phone.'); }, function () { done('Share dismissed. The summary is still yours to send.'); });
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done('Summary copied. Paste it where you want it.'); }, function () { done(text); });
+    } else {
+      done(text);
+    }
+  }); }
 
   /* ---------- my plan ---------- */
   var plan = readJSON('iht_plan', null) || { exit: '', reach: '', reachName: '', reachPhone: '', pocket: ['Water', 'Headphones'], c1: '', c2: '', c3: '' };
@@ -3169,6 +3310,7 @@
     learn: ['Tiny reads, for between rides.', 'Knowing what panic does makes it less scary.', 'Read one, then try its tool.'],
     plan: ['Set this while you are calm. Future-you says thanks.', 'One glance when you are not. That is the whole job.'],
     history: ['Look what you got through.', 'Every ride here is one you finished.'],
+    summary: ['This is yours to share, or not. Your call.', 'Your words, your rides. Nothing leaves this phone unless you send it.'],
     privacy: ['Everything here stays on this phone. Just us.', 'No accounts. No tracking. Just you and me.'],
     checkin: ['I am ready when you are.', 'However you feel is a fine place to start.'],
     reflect: ['You did it. That is enough.', 'How was that, really? No grade, just noticing.'],
@@ -3177,7 +3319,7 @@
   };
   var PET_SCREEN_MOUNTS = {
     'screen-toolkit': 'pet-toolkit', 'screen-learn': 'pet-learn', 'screen-plan': 'pet-plan',
-    'screen-history': 'pet-history', 'screen-privacy': 'pet-privacy', 'screen-checkin': 'pet-checkin',
+    'screen-history': 'pet-history', 'screen-summary': 'pet-summary', 'screen-privacy': 'pet-privacy', 'screen-checkin': 'pet-checkin',
     'screen-reflect': 'pet-reflect', 'screen-crisis': 'pet-crisis', 'screen-nonbreath': 'pet-nonbreath'
   };
   function renderPetScreenLines() {
