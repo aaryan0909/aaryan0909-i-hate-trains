@@ -14,8 +14,9 @@
    v40: bird two-eye fix, pet depth + expression pass, calm-time depth tokens.
    v42: precaches calm42.js + v42.css (resume the wave, sensation practice, body scan).
    v43: panic-access deep link — installed phones must re-cache app.js/index.html.
-   v45: ride summary for a therapist — installed phones must re-cache app.js/index.html/styles.css. */
-var CACHE = 'iht-v45';
+   v45: ride summary for a therapist — installed phones must re-cache app.js/index.html/styles.css.
+   v46: "This feels like something worse" explainer — installed phones must re-cache app.js/index.html. */
+var CACHE = 'iht-v46';
 var ASSETS = [
   './',
   'index.html',

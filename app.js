@@ -670,6 +670,10 @@
      (v31 audit): when breathing fails, the rider branches to grounding without a
      menu, a question, or a restart. */
   $('btn-panic-breathe').addEventListener('click', function () { startBreathe('gentle', 'screen-panic', true); });
+  /* v46: the explainer's Breathe door starts the same minimal panic-path
+     exercise (pattern chips hidden, steadier returns via re-entry). */
+  var bwb = $('btn-worse-breathe');
+  if (bwb) { bwb.addEventListener('click', function () { startBreathe('gentle', 'screen-panic', true); }); }
   $('btn-panic-ground').addEventListener('click', function () { openTool('five-senses', 'screen-panic'); });
   (function () {
     var b = $('btn-guide-ground');
@@ -3315,12 +3319,14 @@
     checkin: ['I am ready when you are.', 'However you feel is a fine place to start.'],
     reflect: ['You did it. That is enough.', 'How was that, really? No grade, just noticing.'],
     crisis: ['I am right here with you.', 'You do not have to ride this out alone.'],
+    worse: ['Your body is sounding an alarm with no fire behind it.', 'It feels like danger because it is loud, not because it is dangerous.'],
     nonbreath: ['No breath required. These work differently, and they work.', 'Counting is not the only way. Pick what feels possible.']
   };
   var PET_SCREEN_MOUNTS = {
     'screen-toolkit': 'pet-toolkit', 'screen-learn': 'pet-learn', 'screen-plan': 'pet-plan',
     'screen-history': 'pet-history', 'screen-summary': 'pet-summary', 'screen-privacy': 'pet-privacy', 'screen-checkin': 'pet-checkin',
-    'screen-reflect': 'pet-reflect', 'screen-crisis': 'pet-crisis', 'screen-nonbreath': 'pet-nonbreath'
+    'screen-reflect': 'pet-reflect', 'screen-crisis': 'pet-crisis', 'screen-nonbreath': 'pet-nonbreath',
+    'screen-worse': 'pet-worse'
   };
   function renderPetScreenLines() {
     var nm = petName();

@@ -204,7 +204,9 @@
   <!-- PANIC — the sacred flow. Calm, direct, zero jokes. Layout is FROZEN: same
        options, same words, same positions, every time. Muscle memory is safety.
        Word budget under 20. When a backup plan exists, the plan line replaces
-       the reassurance line (one line, not two). -->
+       the reassurance line (one line, not two). v46 adds ONE quiet door below
+       the three tool buttons ("This feels like something worse") — same quiet
+       link style as the other doors, tool buttons untouched. -->
   <section class="screen" id="screen-panic" aria-label="Panic help">
     <div class="wrap narrow panicwrap">
       <button class="petmini panicpet" id="pet-panic" aria-label="Your co-rider is here"></button>
@@ -223,8 +225,31 @@
         <span class="po-ic pov-ground" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><circle cx="7" cy="14" r="1.5"/><circle cx="12" cy="11" r="1.5"/><circle cx="17" cy="14" r="1.5"/></svg></span>
         <span class="po-tx"><strong>Ground me instead</strong></span>
       </button>
+      <button class="linklike quiet" data-go="screen-worse" type="button" id="btn-panic-worse">This feels like something worse</button>
       <p class="q988" id="crisis-quiet">If it ever gets really bad: <a href="tel:988">call or text 988</a></p>
       <button class="backlink" data-go="screen-home">← back</button>
+    </div>
+  </section>
+
+  <!-- WORSE — "This feels like something worse" (v46): the confront path.
+       One quiet door off the panic screen for the "something is physically
+       wrong with me" thought. Names panic physiology in plain words, ends
+       with the crisis screen's medical safety line. Text only: the voice
+       system was removed in v35, so there is no spoken version. No decisions
+       beyond back / breathe / reach someone. -->
+  <section class="screen" id="screen-worse" aria-label="When it feels like something worse">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">when it feels worse than panic</p>
+      <h2 class="serene rise d2">It can feel like danger. It usually isn't.</h2>
+      <button class="petmini" id="pet-worse" aria-label="Your co-rider"></button>
+      <p class="petline" id="petline-worse"></p>
+      <p class="body rise d3"><strong>A racing heart is adrenaline.</strong> Your body is preparing to run from a threat that isn't there.</p>
+      <p class="body rise d3"><strong>A tight chest, shaking, or breathlessness is fight-or-flight with nothing to fight.</strong> Uncomfortable, not dangerous.</p>
+      <p class="body rise d3"><strong>Panic peaks in about 10 minutes.</strong> The wave passes on its own. You don't have to force it down.</p>
+      <p class="fineprint rise d3">If symptoms are new, severe, or medically concerning, seek urgent medical help.</p>
+      <button class="btn ghost fullwidth rise d4" id="btn-worse-breathe" type="button">Breathe with me</button>
+      <button class="linklike quiet" data-go="screen-crisis" type="button">If it ever gets really bad: reach someone</button>
+      <button class="backlink rise d4" data-go="screen-panic">← back to the options</button>
     </div>
   </section>
 
@@ -1047,7 +1072,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 45</p>
+      <p class="fineprint rise d4" id="app-version">version 46</p>
     </div>
   </section>
 
