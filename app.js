@@ -24,6 +24,10 @@
   function go(id, opts) {
     opts = opts || {};
     clearPanicFreeze(); clearSplashTimers();
+    /* v47: navigating away mid-sequence (swipe-back, SOS, any data-go) ends the
+       sequence quietly — the runner's own launches set seqLaunching first, so
+       they pass through untouched. */
+    if (seqActive && !seqLaunching) { seqActive = null; hideSeqBar(); }
     var cur = currentScreen();
     if (!opts.keep && cur && cur !== id) { navBack.push(cur); if (navBack.length > 30) { navBack.shift(); } navFwd = []; }
     if (coachVisible) { coachHide(); } // navigating dismisses the hint (it returns next visit)
@@ -309,10 +313,10 @@
   $('btn-walk-next').addEventListener('click', function () {
     tick();
     if (walkIdx < walkTool.steps.length - 1) { walkIdx++; renderWalk(); }
-    else { go(walkReturn); }
+    else { seqDone(walkReturn); }
   });
   $('btn-walk-back').addEventListener('click', function () { tick(); if (walkIdx > 0) { walkIdx--; renderWalk(); } });
-  $('btn-walk-close').addEventListener('click', function () { tick(); go(walkReturn); });
+  $('btn-walk-close').addEventListener('click', function () { tick(); seqClose(walkReturn); });
 
   /* ---------- toolkit + non-breath lists ---------- */
   /* living mini-visual per tool: the icon-card language. Every card gets one. */
@@ -627,6 +631,7 @@
   var stopHold = function () {}; // replaced by the hold-to-steady tool below; go() calls it so a mid-hold navigation never leaves the tone droning
   var stopMuscleHold = function () {}; // replaced by the muscle-release hold ring below (same reason: never leave a rAF loop running on a hidden screen)
   $('btn-breathe-end').addEventListener('click', function () { tick(); stopBreathe(); markSteady();
+    if (seqActive) { seqAdvance(); return; } // v47: mid-sequence, the next tool runs instead of re-entry
     /* v35: completion chime for calm-time breathing only. The panic flow
        returns to screen-panic and stays silent: no chirpy sound after panic. */
     try {
@@ -675,6 +680,159 @@
   var bwb = $('btn-worse-breathe');
   if (bwb) { bwb.addEventListener('click', function () { startBreathe('gentle', 'screen-panic', true); }); }
   $('btn-panic-ground').addEventListener('click', function () { openTool('five-senses', 'screen-panic'); });
+
+  /* ---------- v47: "My rescue sequence" — your tools, in your order, one tap.
+     Calm-time only: pick up to 3 tools in Privacy; the panic screen gains one
+     quiet "Start my sequence" button (hidden until a sequence is saved). The
+     runner launches each tool through its own existing entry point (openTool /
+     startBreathe) and hooks the four shared return channels — walk, interactive,
+     gesture, breathe — so finishing a tool advances to the next instead of
+     returning. A fixed pill shows "Step N of M" with a stop-anytime exit;
+     navigating away (swipe-back, SOS, any data-go) ends the sequence quietly
+     in go(). No new flow touches the guide rescue, the crisis screen, or the
+     panic buttons themselves; no scores, no streaks, nothing leaves the phone.
+     The key rides along with the existing setup export (all iht_* keys). ---------- */
+  var SEQ_TOOLS = [
+    { id: 'breathe', title: 'Breathe with me' },
+    { id: 'five-senses', title: '5–4–3–2–1 senses' },
+    { id: 'three-three-three', title: '3–3–3 noticing' },
+    { id: 'muscle-release', title: 'Progressive muscle release' },
+    { id: 'kind-words', title: 'Kind, factual words' },
+    { id: 'butterfly-hug', title: 'Butterfly taps' },
+    { id: 'swipe-breathe', title: 'Swipe breathing' },
+    { id: 'trace-calm', title: 'Trace calm' },
+    { id: 'hold-steady', title: 'Hold to steady' },
+    { id: 'categories', title: 'Quiet category game' },
+    { id: 'backwards-count', title: 'Count backward' },
+    { id: 'thought-check', title: 'A gentle thought check' },
+    { id: 'med-body-scan', title: 'One-minute body scan' }
+  ];
+  /* Screens a sequence tool can be on. A stale completion timer (senses /
+     countdown / butterfly auto-exit) firing after the rider already left the
+     tool must not yank them back to the return screen. */
+  var SEQ_TOOL_SCREENS = { 'screen-walk': 1, 'screen-senses': 1, 'screen-countdown': 1, 'screen-categories': 1, 'screen-thought': 1, 'screen-kindwords': 1, 'screen-muscle': 1, 'screen-butterfly': 1, 'screen-swipebreathe': 1, 'screen-trace': 1, 'screen-hold': 1, 'screen-breathe': 1 };
+  function seqTitle(id) {
+    for (var i = 0; i < SEQ_TOOLS.length; i++) { if (SEQ_TOOLS[i].id === id) { return SEQ_TOOLS[i].title; } }
+    var t = getTool(id); return t ? t.title : id;
+  }
+  function readSeq() {
+    var raw = readJSON('iht_rescue_seq', null);
+    if (!raw || !Array.isArray(raw)) { return []; }
+    var out = [];
+    raw.forEach(function (id) {
+      if (typeof id !== 'string') { return; }
+      var known = false;
+      for (var i = 0; i < SEQ_TOOLS.length; i++) { if (SEQ_TOOLS[i].id === id) { known = true; break; } }
+      if (known && out.indexOf(id) === -1) { out.push(id); }
+    });
+    return out.slice(0, 3);
+  }
+  function saveSeq(ids) { store('iht_rescue_seq', JSON.stringify(ids)); }
+  var seqActive = null, seqLaunching = false;
+  function showSeqBar() {
+    var bar = $('seq-bar'), label = $('seq-label');
+    if (!bar || !seqActive) { return; }
+    if (label) { label.textContent = 'Step ' + (seqActive.idx + 1) + ' of ' + seqActive.ids.length + ' · ' + seqTitle(seqActive.ids[seqActive.idx]); }
+    bar.hidden = false;
+  }
+  function hideSeqBar() { var bar = $('seq-bar'); if (bar) { bar.hidden = true; } }
+  function seqLaunch(id) {
+    seqLaunching = true;
+    try {
+      if (id === 'breathe') { startBreathe('gentle', 'screen-panic', true); }
+      else { openTool(id, 'screen-panic'); }
+    } finally { seqLaunching = false; }
+    showSeqBar();
+  }
+  function startSequence() {
+    var ids = readSeq();
+    if (!ids.length) { return; }
+    seqActive = { ids: ids, idx: 0 };
+    seqLaunch(ids[0]);
+  }
+  function seqAdvance() {
+    if (!seqActive) { return; }
+    seqActive.idx++;
+    if (seqActive.idx >= seqActive.ids.length) { endSequence(); return; }
+    seqLaunch(seqActive.ids[seqActive.idx]);
+  }
+  function endSequence() {
+    seqActive = null; hideSeqBar();
+    stopBreathe();
+    markSteady(); showReentry();
+  }
+  function stopSequence() {
+    if (!seqActive) { return; }
+    seqActive = null; hideSeqBar();
+    stopBreathe();
+    showReentry();
+  }
+  /* Every tool exit routes through one of these two: finishing a tool advances
+     the sequence; closing out of one stops it. Outside a sequence both behave
+     exactly like the old go(returnId). */
+  function seqDone(returnId) {
+    if (!seqActive) {
+      if (SEQ_TOOL_SCREENS[currentScreen()]) { go(returnId); }
+      return;
+    }
+    seqAdvance();
+  }
+  function seqClose(returnId) { if (!seqActive) { go(returnId); return; } stopSequence(); }
+  /* Panic-screen button: hidden until a sequence is saved (synced on every
+     panic entry via renderPanicPlan). */
+  function syncSeqButton() {
+    var b = $('btn-panic-seq');
+    if (b) { b.hidden = readSeq().length === 0; }
+  }
+  (function () {
+    var b = $('btn-panic-seq');
+    if (b) { b.addEventListener('click', function () { tick(); startSequence(); }); }
+    var stop = $('btn-seq-stop');
+    if (stop) { stop.addEventListener('click', function () { tick(); stopSequence(); }); }
+  })();
+  /* Privacy picker: three slots, saved in order, duplicates dropped. */
+  function renderSeqPicker() {
+    var saved = readSeq();
+    for (var s = 0; s < 3; s++) {
+      var sel = $('seq-pick-' + s);
+      if (!sel) { continue; }
+      sel.innerHTML = '';
+      var none = document.createElement('option');
+      none.value = ''; none.textContent = '— no tool —';
+      sel.appendChild(none);
+      SEQ_TOOLS.forEach(function (t) {
+        var o = document.createElement('option');
+        o.value = t.id; o.textContent = t.title;
+        sel.appendChild(o);
+      });
+      sel.value = saved[s] || '';
+    }
+    renderSeqCurrent();
+  }
+  function renderSeqCurrent() {
+    var el = $('seq-current');
+    if (!el) { return; }
+    var ids = readSeq();
+    el.textContent = ids.length
+      ? 'Your sequence: ' + ids.map(seqTitle).join(' → ') + '.'
+      : 'No sequence saved yet.';
+  }
+  (function () {
+    var save = $('btn-seq-save'), clear = $('btn-seq-clear');
+    if (save) { save.addEventListener('click', function () {
+      tick();
+      var ids = [];
+      for (var s = 0; s < 3; s++) {
+        var sel = $('seq-pick-' + s);
+        if (sel && sel.value && ids.indexOf(sel.value) === -1) { ids.push(sel.value); }
+      }
+      saveSeq(ids);
+      renderSeqPicker();
+    }); }
+    if (clear) { clear.addEventListener('click', function () { tick(); saveSeq([]); renderSeqPicker(); }); }
+  })();
+  renderSeqPicker();
+  window.__ihtSequence = { read: readSeq, start: startSequence, stop: stopSequence, active: function () { return !!seqActive; } };
   (function () {
     var b = $('btn-guide-ground');
     if (!b) { return; }
@@ -731,6 +889,7 @@
      plan exists, the plan line REPLACES the reassurance line (one line, not two).
      When no plan exists, the reassurance line stands alone. */
   function renderPanicPlan() {
+    syncSeqButton(); // v47: show "Start my sequence" only when one is saved
     var line = $('panic-plan-line'), re = $('panic-reassure');
     if (!line || !re) { return; }
     var bits = [];
@@ -2351,7 +2510,7 @@
 
   /* ---------- gesture calming tools: pure touchmove math, zero dependencies, offline.
      Big forgiving zones for a shaking train. Every tool has a tap fallback for reduced motion. ---------- */
-  function gestureDone(id) { $(id).addEventListener('click', function () { tick(); go(gestureReturn); }); }
+  function gestureDone(id) { $(id).addEventListener('click', function () { tick(); seqDone(gestureReturn); }); }
   gestureDone('btn-sb-done'); gestureDone('btn-trace-done'); gestureDone('btn-hold-done');
 
   /* swipe breathing: the gesture IS the pacer */
@@ -3574,11 +3733,11 @@
     $('sen-hint').textContent = 'You\u2019re back in the room.';
     $('sen-dots').innerHTML = ''; $('sen-count').textContent = '';
     $('btn-sen-skip').style.visibility = 'hidden';
-    setTimeout(function () { go(ixReturn); }, 1500);
+    setTimeout(function () { seqDone(ixReturn); }, 1500);
   }
   TOOL_FNS.senses = function (r) { ixReturn = r; senStage = 0; renderSen(); tick(); go('screen-senses'); };
   $('btn-sen-skip').addEventListener('click', function () { tick(); senNext(); });
-  $('btn-sen-done').addEventListener('click', function () { tick(); go(ixReturn); });
+  $('btn-sen-done').addEventListener('click', function () { tick(); seqDone(ixReturn); });
 
   /* count backward, interactive */
   var cdN = 0;
@@ -3605,10 +3764,10 @@
     setTimeout(function () { el.style.transform = ''; }, 130);
     if (cdN === 0) {
       $('cd-title').textContent = 'Done. Nicely steady.';
-      setTimeout(function () { go(ixReturn); }, 1300);
+      setTimeout(function () { seqDone(ixReturn); }, 1300);
     }
   });
-  $('btn-cd-done').addEventListener('click', function () { tick(); go(ixReturn); });
+  $('btn-cd-done').addEventListener('click', function () { tick(); seqDone(ixReturn); });
 
   /* quiet category game, interactive */
   var CAT_CATS = ['Foods', 'Films', 'Animals', 'Places', 'Songs'];
@@ -3648,7 +3807,7 @@
   }
   $('cat-add').addEventListener('click', catAdd);
   $('cat-in').addEventListener('keydown', function (e) { if (e.key === 'Enter') { catAdd(); } });
-  $('btn-cat-done').addEventListener('click', function () { tick(); go(ixReturn); });
+  $('btn-cat-done').addEventListener('click', function () { tick(); seqDone(ixReturn); });
   TOOL_FNS.categories = function (r) { ixReturn = r; tick(); go('screen-categories'); };
 
   /* gentle thought check, interactive with private inputs */
@@ -3672,10 +3831,10 @@
     tick();
     thData[thStep] = $('th-in').value.trim();
     if (thStep < 2) { thStep++; renderTh(); $('th-in').focus(); }
-    else { go(ixReturn); }
+    else { seqDone(ixReturn); }
   });
   $('btn-th-back').addEventListener('click', function () { tick(); if (thStep > 0) { thStep--; renderTh(); } });
-  $('btn-th-done').addEventListener('click', function () { tick(); go(ixReturn); });
+  $('btn-th-done').addEventListener('click', function () { tick(); seqDone(ixReturn); });
 
   /* kind words deck */
   var KW_LINES = [
@@ -3700,7 +3859,7 @@
   }
   TOOL_FNS.kindwords = function (r) { ixReturn = r; kwIdx = Math.floor(Math.random() * KW_LINES.length); renderKw(); tick(); go('screen-kindwords'); };
   $('btn-kw-next').addEventListener('click', function () { tick(); kwIdx++; renderKw(); });
-  $('btn-kw-done').addEventListener('click', function () { tick(); go(ixReturn); });
+  $('btn-kw-done').addEventListener('click', function () { tick(); seqDone(ixReturn); });
 
   /* muscle release, timed hold */
   var MU_PARTS = [
@@ -3751,10 +3910,10 @@
   $('btn-mu-next').addEventListener('click', function () {
     tick();
     if (muIdx < MU_PARTS.length - 1) { muIdx++; renderMu(); }
-    else { go(ixReturn); }
+    else { seqDone(ixReturn); }
   });
   $('btn-mu-back').addEventListener('click', function () { tick(); if (muIdx > 0) { muIdx--; renderMu(); } });
-  $('btn-mu-done').addEventListener('click', function () { tick(); go(ixReturn); });
+  $('btn-mu-done').addEventListener('click', function () { tick(); seqDone(ixReturn); });
 
   /* butterfly taps, bilateral */
   var flyN = 0, flyExpect = 'L';
@@ -3789,12 +3948,12 @@
     $('fly-hint').textContent = flyExpect === 'L' ? 'Left…' : 'Right…';
     if (flyN >= FLY_TOTAL) {
       $('fly-hint').textContent = 'Steady rhythm. Well done.';
-      setTimeout(function () { go(gestureReturn); }, 1400);
+      setTimeout(function () { seqDone(gestureReturn); }, 1400);
     }
   }
   $('fly-l').addEventListener('click', function () { flyTap('L'); });
   $('fly-r').addEventListener('click', function () { flyTap('R'); });
-  $('btn-fly-done').addEventListener('click', function () { tick(); go(gestureReturn); });
+  $('btn-fly-done').addEventListener('click', function () { tick(); seqDone(gestureReturn); });
 
   /* ---------- app updates (v18): the phone must actually receive new versions.
      The service worker installs in the background and waits; we show one calm banner on

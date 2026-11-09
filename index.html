@@ -206,7 +206,10 @@
        Word budget under 20. When a backup plan exists, the plan line replaces
        the reassurance line (one line, not two). v46 adds ONE quiet door below
        the three tool buttons ("This feels like something worse") — same quiet
-       link style as the other doors, tool buttons untouched. -->
+       link style as the other doors, tool buttons untouched. v47 adds one more
+       quiet button in the same style ("Start my sequence"), hidden until the
+       rider saves a rescue sequence in Privacy — the default panic screen is
+       unchanged for everyone else. -->
   <section class="screen" id="screen-panic" aria-label="Panic help">
     <div class="wrap narrow panicwrap">
       <button class="petmini panicpet" id="pet-panic" aria-label="Your co-rider is here"></button>
@@ -226,6 +229,7 @@
         <span class="po-tx"><strong>Ground me instead</strong></span>
       </button>
       <button class="linklike quiet" data-go="screen-worse" type="button" id="btn-panic-worse">This feels like something worse</button>
+      <button class="linklike quiet" id="btn-panic-seq" type="button" hidden>Start my sequence</button>
       <p class="q988" id="crisis-quiet">If it ever gets really bad: <a href="tel:988">call or text 988</a></p>
       <button class="backlink" data-go="screen-home">← back</button>
     </div>
@@ -995,6 +999,21 @@
         </div>
         <p class="fineprint" id="panic-link-hint" aria-live="polite">The link opens this app straight on the panic screen, skipping setup and home.</p>
       </div>
+      <p class="toolgroup rise d4">My rescue sequence</p>
+      <div class="loccard rise d4">
+        <p class="body">Pick up to three tools, in your order. One quiet button on the panic screen then runs them back to back — the pet leads, and you can stop any time. The panic screen itself stays unchanged until you save a sequence here.</p>
+        <label class="fineprint" for="seq-pick-0">First</label>
+        <select class="seqselect" id="seq-pick-0" aria-label="First tool in my rescue sequence"></select>
+        <label class="fineprint" for="seq-pick-1">Then</label>
+        <select class="seqselect" id="seq-pick-1" aria-label="Second tool in my rescue sequence"></select>
+        <label class="fineprint" for="seq-pick-2">Then</label>
+        <select class="seqselect" id="seq-pick-2" aria-label="Third tool in my rescue sequence"></select>
+        <div class="io-btnrow">
+          <button class="btn calm" id="btn-seq-save" type="button">Save my sequence</button>
+          <button class="btn ghost" id="btn-seq-clear" type="button">Clear</button>
+        </div>
+        <p class="fineprint" id="seq-current" aria-live="polite">No sequence saved yet.</p>
+      </div>
       <button class="btn ghost rise d4" id="btn-erase-2">Erase everything on this phone</button>
       <button class="backlink" data-go="screen-home">← back</button>
     </div>
@@ -1072,7 +1091,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 46</p>
+      <p class="fineprint rise d4" id="app-version">version 47</p>
     </div>
   </section>
 
@@ -1237,6 +1256,9 @@
   <button class="linklike quiet" id="ps-close">Close</button>
 </section>
 <button id="sos-float" class="sosfloat" data-go="screen-panic" aria-label="Get help right now" hidden>SOS</button>
+  <!-- v47: rescue-sequence progress bar. One fixed pill, visible only while a
+       sequence runs; the Stop button is the stop-anytime exit. -->
+  <div id="seq-bar" class="seqbar" hidden><span id="seq-label"></span><button id="btn-seq-stop" type="button">Stop sequence</button></div>
 <div class="update-banner hidden" id="update-banner" role="status" aria-live="polite">
   <p>A fresh version is ready. Take it whenever you like — nothing of yours is lost.</p>
   <button class="btn calm" id="btn-update-now">Update when you're ready</button>

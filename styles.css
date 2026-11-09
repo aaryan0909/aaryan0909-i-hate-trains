@@ -199,6 +199,28 @@ em { font-style: normal; }
 }
 .loccard .body { margin: 0; }
 
+/* v47: rescue sequence — one fixed progress pill, visible only mid-sequence,
+   and the calm-time picker selects in Privacy. No animation: the bar must
+   never move on its own while a rider is mid-panic. */
+.seqbar {
+  position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  z-index: 60; display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 24px);
+  background: rgba(10, 12, 20, .94); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 6px 6px 14px; font-size: 13px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .45);
+}
+.seqbar[hidden] { display: none; }
+.seqbar span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seqbar button {
+  flex: none; background: transparent; border: 1px solid var(--line); color: var(--ink);
+  border-radius: 999px; padding: 6px 12px; font: inherit; min-height: 32px; cursor: pointer;
+}
+.seqselect {
+  width: 100%; margin: 6px 0 10px; padding: 12px; border-radius: 12px;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+  font: inherit; font-size: 16px; -webkit-user-select: text; user-select: text;
+}
+
 /* trip — the calm ritual */
 .tripwrap { text-align: center; }
 .counter { margin: 12px 0 6px; }

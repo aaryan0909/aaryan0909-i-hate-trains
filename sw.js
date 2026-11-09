@@ -16,7 +16,7 @@
    v43: panic-access deep link — installed phones must re-cache app.js/index.html.
    v45: ride summary for a therapist — installed phones must re-cache app.js/index.html/styles.css.
    v46: "This feels like something worse" explainer — installed phones must re-cache app.js/index.html. */
-var CACHE = 'iht-v46';
+var CACHE = 'iht-v47';
 var ASSETS = [
   './',
   'index.html',
