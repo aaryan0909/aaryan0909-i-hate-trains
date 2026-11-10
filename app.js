@@ -1551,22 +1551,53 @@
   /* v35: the pet reacts as stops pass. Celebrate per stop, proud when one
      stop is left (near arrival). The reaction lives here so map auto-advance
      and the tap both get it, never a parallel reaction. */
+  /* v48: the stop counter has an undo, and rapid double-taps are debounced.
+     A shaking hand can double-tap the big button; without this, one bounce
+     drops the count twice and at 0 the app declares a false arrival. */
+  var lastAdvanceAt = 0;
+  var stopUndoTimer = null;
+  var arrivedUndoLeft = 0;
+  function showStopUndo() {
+    var u = $('btn-stop-undo'); if (!u) { return; }
+    u.hidden = false;
+    if (stopUndoTimer) { clearTimeout(stopUndoTimer); }
+    stopUndoTimer = setTimeout(function () { u.hidden = true; stopUndoTimer = null; }, 10000);
+  }
+  function hideStopUndo() {
+    var u = $('btn-stop-undo'); if (u) { u.hidden = true; }
+    if (stopUndoTimer) { clearTimeout(stopUndoTimer); stopUndoTimer = null; }
+  }
   function advanceStop() {
+    var now = Date.now();
+    if (now - lastAdvanceAt < 700) { return; } /* v48: a second tap inside 700ms is a bounce, not a stop */
+    lastAdvanceAt = now;
     buzz(25);
     var n = $('stops-left');
     n.classList.remove('bump'); void n.offsetWidth; n.classList.add('bump');
+    var before = trip.left;
     if (trip.left > 0) { trip.left--; renderStops(); if (window.__ihtStopHeadsUp) { try { window.__ihtStopHeadsUp(trip.left); } catch (e) {} } } // v26: spoken heads-up at 2 and 1, opt-in only (stopheads.js)
     if (trip.left === 0) {
+      arrivedUndoLeft = before; /* v48: the count this tap took away, so "still riding" can give it back */
+      hideStopUndo();
       if (window.TriMap) { TriMap.closeMap(); }
       setTimeout(function () { arrivedNote(); go('screen-arrived'); }, 600);
     } else if (trip.left === 1) {
+      showStopUndo();
       try { petInto($('pet-trip'), 'idle', null, 'proud'); } catch (e) {}
     } else {
+      showStopUndo();
       try { petInto($('pet-trip'), 'celebrate', null, 'celebrate'); setTimeout(function () { petInto($('pet-trip'), 'idle'); }, 900); } catch (e) {}
     }
     renderTripPetLine();
   }
   $('btn-stop-tap').addEventListener('click', function () { advanceStop(); });
+  /* v48: one tap back — restores the count the last tap took away, never past the trip total. */
+  $('btn-stop-undo').addEventListener('click', function () {
+    tick();
+    hideStopUndo();
+    if (trip.left < trip.total) { trip.left++; renderStops(); renderTripPetLine(); }
+    try { petInto($('pet-trip'), 'idle'); } catch (e) {}
+  });
   $('btn-show-map').addEventListener('click', function () {
     tick();
     var s = window.TriMap && TriMap.current;
@@ -1585,7 +1616,19 @@
   $('btn-end-trip').addEventListener('click', function () {
     tick();
     if (window.TriMap) { TriMap.closeMap(); }
+    arrivedUndoLeft = trip.left; /* v48: ending early is undoable too */
     arrivedNote(); go('screen-arrived'); });
+  /* v48: a false arrival is recoverable — give the count back and ride on. */
+  $('btn-arrived-still').addEventListener('click', function () {
+    tick();
+    trip.left = Math.max(1, arrivedUndoLeft || 1);
+    tripActive = true;
+    hideStopUndo();
+    renderStops();
+    renderTripPetLine();
+    try { petInto($('pet-trip'), 'idle'); } catch (e) {}
+    go('screen-trip');
+  });
 
   /* ---------- trip card share (online-enhanced, never a dead end) ---------- */
   $('btn-share-card').addEventListener('click', function () {
