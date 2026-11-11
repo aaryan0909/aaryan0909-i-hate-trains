@@ -61,7 +61,11 @@ function rows(d) { return Array.prototype.slice.call(d.querySelectorAll('#home-t
 
 console.log('empty journal:');
 let t = boot(undefined);
-ok(active(t.d) === 'screen-home', 'boots on screen-home');
+/* v31 moved the card into the toolkit: it renders on toolkit entry, so the
+   test navigates there (the old boot-screen assertion is stale — the app
+   boots to the v33 splash by design). */
+t.d.querySelector('button[data-go="screen-toolkit"]').click();
+ok(active(t.d) === 'screen-toolkit', 'toolkit reachable from home');
 ok(t.d.getElementById('home-top-tools').hidden === true, 'card hidden with no journal');
 ok(rows(t.d).length === 0, 'no rows with no journal');
 
@@ -75,6 +79,7 @@ const seeded = JSON.stringify([
   { t: '2026-10-24T10:00:00Z', tools: ['Butterfly taps', 'Butterfly taps'] },
 ]);
 t = boot(seeded);
+t.d.querySelector('button[data-go="screen-toolkit"]').click();
 ok(t.d.getElementById('home-top-tools').hidden === false, 'card shown with journal data');
 const r = rows(t.d);
 ok(r.length === 3, 'top 3 only (got ' + r.length + ')');
@@ -96,6 +101,7 @@ ok(t.d.getElementById('home-top-tools').hidden === false, 'card still shown afte
 
 console.log('corrupt journal + sacred-flow isolation:');
 t = boot('{not json');
+t.d.querySelector('button[data-go="screen-toolkit"]').click();
 ok(t.d.getElementById('home-top-tools').hidden === true, 'card hidden on corrupt journal (no crash)');
 t.d.querySelector('button[data-go="screen-panic"]').click();
 ok(active(t.d) === 'screen-panic', 'panic screen reachable');

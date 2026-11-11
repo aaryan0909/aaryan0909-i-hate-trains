@@ -344,6 +344,12 @@
         <div id="home-top-tools-list"></div>
         <p class="topnote">Counts come only from your own ride notes, on this phone. No scores, no streaks.</p>
       </div>
+      <div class="ridecard rise d3" id="home-trigger-insights" hidden>
+        <p class="kicker small">from your own ride notes</p>
+        <p class="body" id="home-trigger-insights-line"></p>
+        <button class="backlink" data-go="screen-plan" type="button">See my backup plan →</button>
+        <p class="topnote">Patterns, not scores. Counts come only from your own ride notes, on this phone.</p>
+      </div>
       <button class="toolcard rise d3" data-go="screen-learn" type="button"><strong>Calm facts</strong><p>Short, honest reads on how panic works — for between rides.</p></button>
       <button class="backlink rise d4" data-go="screen-home">← back</button>
     </div>
@@ -626,6 +632,8 @@
       </div>
       <p class="body rise d3">Anything that helped? <em>(optional)</em></p>
       <div class="chipgrid rise d3" id="reflect-tools"></div>
+      <p class="body rise d3">What was happening on the ride? <em>(optional)</em></p>
+      <div class="chipgrid rise d3" id="reflect-triggers"></div>
       <label class="field rise d3">One line, if you want
         <input id="in-reflect" type="text" inputmode="text" autocomplete="off" placeholder="Optional. Just for you.">
       </label>
@@ -1093,7 +1101,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 48</p>
+      <p class="fineprint rise d4" id="app-version">version 49</p>
     </div>
   </section>
 

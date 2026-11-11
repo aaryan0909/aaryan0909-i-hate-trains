@@ -44,7 +44,7 @@
     maybeCoach(id);
     maybeShowUpdateBanner(); // update prompt only ever appears on calm, non-crisis screens
     if (id === 'screen-panic') { renderPanicPlan(); suppressCelebration = recentSteady(); armPanicFreeze(); } // v31: plan line + celebration cooldown + freeze auto-start
-    if (id === 'screen-toolkit') { renderTopTools(); } // v31: "What has helped you" lives in the toolkit now, not home
+    if (id === 'screen-toolkit') { renderTopTools(); renderTriggerInsights(); } // v31: "What has helped you" lives in the toolkit now, not home; v49: trigger insights beside it
     if (id !== 'screen-petplay') { fireflyActive = false; var fh = $('play-fireflies'); if (fh) { fh.classList.add('hidden'); } } // v34: leaving play ends the game
     mountScreenPets(); renderPetScreenLines(); // v33: the pet guides every screen
     if (id === 'screen-home' && cur && cur !== 'screen-home' && cur !== 'screen-splash' && cur !== 'screen-panic') { waveHomePet(); } // v34: home return gets a wave + hi
@@ -925,6 +925,27 @@
     for (var i = 0; i < TOOLS.length; i++) { if (TOOLS[i].title === title) { return TOOLS[i]; } }
     return null;
   }
+  /* Trigger tags (v49, "patterns, not scores"): the optional one-tap tags a
+     rider can leave at the post-ride reflection — crowded car, delayed,
+     stopped in tunnel, missed my stop — plus "nothing in particular", which
+     is exclusive and stores nothing (it only means "I actively chose none").
+     Stored on the journal entry as `triggers` (ids, never free text), so old
+     entries without the key read exactly like entries with no tags. */
+  var TRIGGER_TAGS = [
+    { id: 'crowded', label: 'Crowded car', phrase: 'a crowded car' },
+    { id: 'delayed', label: 'Delayed', phrase: 'delays' },
+    { id: 'tunnel', label: 'Stopped in tunnel', phrase: 'a stop in the tunnel' },
+    { id: 'missed', label: 'Missed my stop', phrase: 'a missed stop' },
+    { id: 'nothing', label: 'Nothing in particular', phrase: '' }
+  ];
+  function triggerLabel(id) {
+    for (var i = 0; i < TRIGGER_TAGS.length; i++) { if (TRIGGER_TAGS[i].id === id) { return TRIGGER_TAGS[i].label; } }
+    return null;
+  }
+  function triggerPhrase(id) {
+    for (var i = 0; i < TRIGGER_TAGS.length; i++) { if (TRIGGER_TAGS[i].id === id) { return TRIGGER_TAGS[i].phrase; } }
+    return null;
+  }
   /* "your most calming tools": aggregate iht_journal on-device and show the
      top 3 on the home screen (calm time only, never the panic flow). Counts
      are rides, not scores: one entry counts once per tool, ties break toward
@@ -975,6 +996,43 @@
       });
       list.appendChild(b);
     });
+    card.hidden = false;
+  }
+
+  /* "patterns, not scores" insight card (v49): one calm-time line in the
+     toolkit, built purely on-device from iht_journal. It looks at the last
+     5 rides that felt harder and names the trigger only when the data can
+     support the sentence: at least 3 of those rides recorded a trigger, and
+     the top trigger shows up on at least 2 — a single occurrence is not a
+     pattern (same honesty rule as the v31 top-tools audit). No streaks, no
+     grades, no judgment; corrupt journal hides the card. */
+  function renderTriggerInsights() {
+    var card = $('home-trigger-insights'), line = $('home-trigger-insights-line');
+    if (!card || !line) { return; }
+    var show = null;
+    try {
+      var log = readJSON('iht_journal', []);
+      var hard = log.filter(function (e) { return e && e.after === 'harder'; }).slice(-5);
+      var tagged = hard.filter(function (e) { return e.triggers && e.triggers.length; });
+      if (tagged.length >= 3) {
+        var counts = {}, lastSeen = {};
+        hard.forEach(function (e, idx) {
+          var seen = {};
+          (e.triggers || []).forEach(function (id) {
+            if (seen[id] || id === 'nothing') { return; } seen[id] = true;
+            if (!triggerLabel(id)) { return; } /* unknown ids never counted */
+            counts[id] = (counts[id] || 0) + 1;
+            lastSeen[id] = idx;
+          });
+        });
+        var ranked = Object.keys(counts).map(function (id) {
+          return { id: id, count: counts[id], last: lastSeen[id] };
+        }).sort(function (a, b) { return (b.count - a.count) || (b.last - a.last); });
+        if (ranked.length && ranked[0].count >= 2) { show = { top: ranked[0], n: hard.length }; }
+      }
+    } catch (err) { show = null; }
+    if (!show) { card.hidden = true; return; }
+    line.textContent = show.top.count + ' of your last ' + show.n + (show.n === 1 ? ' hard ride had ' : ' hard rides had ') + triggerPhrase(show.top.id) + '. Your backup plan is ready for those.';
     card.hidden = false;
   }
 
@@ -1657,8 +1715,9 @@
     tick();
     $all('#screen-reflect .feelbtn').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
     $all('#reflect-tools .chip').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+    $all('#reflect-triggers .chip').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
     $('in-reflect').value = '';
-    reflectAfter = null; reflectTools = [];
+    reflectAfter = null; reflectTools = []; reflectTriggers = [];
     go('screen-reflect');
   });
 
@@ -1687,16 +1746,44 @@
       host.appendChild(c);
     });
   })();
+  /* v49 trigger tags: one tap each, none mandatory. "Nothing in particular"
+     is exclusive — it clears the rest and stores nothing. */
+  var reflectTriggers = [];
+  (function renderReflectTriggers() {
+    var host = $('reflect-triggers');
+    if (!host) { return; }
+    TRIGGER_TAGS.forEach(function (tag) {
+      var c = document.createElement('button');
+      c.className = 'chip'; c.setAttribute('aria-pressed', 'false'); c.textContent = tag.label;
+      c.setAttribute('data-trigger', tag.id);
+      c.addEventListener('click', function () {
+        tick();
+        var on = c.getAttribute('aria-pressed') === 'true';
+        if (tag.id === 'nothing') {
+          $all('#reflect-triggers .chip').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+          reflectTriggers = [];
+          if (!on) { c.setAttribute('aria-pressed', 'true'); }
+          return;
+        }
+        var nothing = host.querySelector('[data-trigger="nothing"]');
+        if (nothing) { nothing.setAttribute('aria-pressed', 'false'); }
+        c.setAttribute('aria-pressed', on ? 'false' : 'true');
+        if (on) { reflectTriggers = reflectTriggers.filter(function (x) { return x !== tag.id; }); }
+        else { reflectTriggers.push(tag.id); }
+      });
+      host.appendChild(c);
+    });
+  })();
   $('btn-reflect-done').addEventListener('click', function () {
     tick();
     var wasCalmer = reflectAfter === 'calmer';
     try {
       var log = readJSON('iht_journal', []);
-      log.push({ t: new Date().toISOString(), before: checkinFeel, after: reflectAfter, tools: reflectTools.slice(), note: $('in-reflect').value.trim().slice(0, 280) });
+      log.push({ t: new Date().toISOString(), before: checkinFeel, after: reflectAfter, tools: reflectTools.slice(), triggers: reflectTriggers.slice(), note: $('in-reflect').value.trim().slice(0, 280) });
       store('iht_journal', JSON.stringify(log.slice(-100)));
     } catch (e) {}
     try { store('iht_trips', String((parseInt(read('iht_trips') || '0', 10) || 0) + 1)); } catch (e) {}
-    checkinFeel = null; reflectAfter = null; reflectTools = [];
+    checkinFeel = null; reflectAfter = null; reflectTools = []; reflectTriggers = [];
     tripActive = false;
     if (wasCalmer) { petMood = 'proud'; } // v12: the co-rider is proud of you
     applyTheme();
@@ -1733,6 +1820,14 @@
         tl.textContent = 'Helped: ' + e.tools.join(', ');
         d.appendChild(tl);
       }
+      if (e.triggers && e.triggers.length) {
+        var tgLabels = e.triggers.map(function (id) { return triggerLabel(id); }).filter(function (x) { return !!x; });
+        if (tgLabels.length) {
+          var tg = document.createElement('div'); tg.className = 'htools';
+          tg.textContent = 'What was happening: ' + tgLabels.join(', ');
+          d.appendChild(tg);
+        }
+      }
       if (e.note) {
         var n = document.createElement('div'); n.className = 'hnote';
         n.textContent = '\u201C' + e.note + '\u201D';
@@ -1745,11 +1840,11 @@
 
   /* ---------- ride summary for a therapist (v45) ---------- */
   /* One page, built purely on-device from iht_journal: per month, rides
-     logged, how it felt after, top helping tools, and the rider's own words.
-     Trigger tags are not tracked yet (approved 2026-10-16, unbuilt), so no
-     trigger section is shown — never an invented one. No scores, no streaks,
-     no grades; counts are rides. Nothing leaves the phone except by the
-     rider's own tap on Print or Share. */
+     logged, how it felt after, top helping tools, top trigger tags (v49 —
+     the tags shipped, so the section is shown when any were recorded, never
+     invented), and the rider's own words. No scores, no streaks, no grades;
+     counts are rides. Nothing leaves the phone except by the rider's own
+     tap on Print or Share. */
   function buildSummaryData(log) {
     var months = {}, order = [];
     var total = 0, first = null, last = null, ordinal = 0;
@@ -1764,7 +1859,7 @@
       var key = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
       var m = months[key];
       if (!m) {
-        m = { key: key, label: d.toLocaleString([], { month: 'long', year: 'numeric' }), rides: 0, after: { calmer: 0, same: 0, harder: 0 }, counts: {}, lastSeen: {}, notes: [] };
+        m = { key: key, label: d.toLocaleString([], { month: 'long', year: 'numeric' }), rides: 0, after: { calmer: 0, same: 0, harder: 0 }, counts: {}, lastSeen: {}, tcounts: {}, tlastSeen: {}, notes: [] };
         months[key] = m; order.push(m);
       }
       m.rides++;
@@ -1776,12 +1871,22 @@
         m.counts[title] = (m.counts[title] || 0) + 1;
         m.lastSeen[title] = ordinal;
       });
+      var tseen = {};
+      (e.triggers || []).forEach(function (id) {
+        if (tseen[id] || id === 'nothing') { return; } tseen[id] = true;
+        if (!triggerLabel(id)) { return; } /* unknown ids never counted */
+        m.tcounts[id] = (m.tcounts[id] || 0) + 1;
+        m.tlastSeen[id] = ordinal;
+      });
       if (e.note) { m.notes.push(e.note); }
     });
     order.sort(function (a, b) { return b.key < a.key ? -1 : (b.key > a.key ? 1 : 0); });
     order.forEach(function (m) {
       m.tools = Object.keys(m.counts).map(function (title) {
         return { title: title, count: m.counts[title], last: m.lastSeen[title] };
+      }).sort(function (a, b) { return (b.count - a.count) || (b.last - a.last); }).slice(0, 3);
+      m.triggers = Object.keys(m.tcounts).map(function (id) {
+        return { id: id, count: m.tcounts[id], last: m.tlastSeen[id] };
       }).sort(function (a, b) { return (b.count - a.count) || (b.last - a.last); }).slice(0, 3);
       m.notes = m.notes.slice(-4); /* newest 4: one page stays one page */
     });
@@ -1823,6 +1928,11 @@
         tl.textContent = 'Helped most: ' + m.tools.map(function (t) { return t.title + ' (' + t.count + (t.count === 1 ? ' ride' : ' rides') + ')'; }).join(', ');
         card.appendChild(tl);
       }
+      if (m.triggers.length) {
+        var tg = document.createElement('div'); tg.className = 'htools';
+        tg.textContent = 'What was happening: ' + m.triggers.map(function (t) { return triggerLabel(t.id) + ' (' + t.count + (t.count === 1 ? ' ride' : ' rides') + ')'; }).join(', ');
+        card.appendChild(tg);
+      }
       m.notes.forEach(function (n) {
         var nn = document.createElement('div'); nn.className = 'hnote';
         nn.textContent = '\u201C' + n + '\u201D';
@@ -1848,6 +1958,9 @@
       if (afterBits.length) { lines.push('  ' + afterBits.join(' · ')); }
       if (m.tools.length) {
         lines.push('  Helped most: ' + m.tools.map(function (t) { return t.title + ' (' + t.count + (t.count === 1 ? ' ride' : ' rides') + ')'; }).join(', '));
+      }
+      if (m.triggers.length) {
+        lines.push('  What was happening: ' + m.triggers.map(function (t) { return triggerLabel(t.id) + ' (' + t.count + (t.count === 1 ? ' ride' : ' rides') + ')'; }).join(', '));
       }
       m.notes.forEach(function (n) { lines.push('  \u201C' + n + '\u201D'); });
       lines.push('');
