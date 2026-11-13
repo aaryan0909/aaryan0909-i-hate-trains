@@ -18,7 +18,7 @@
    v46: "This feels like something worse" explainer — installed phones must re-cache app.js/index.html.
    v48: stop-counter undo + double-tap debounce — installed phones must re-cache app.js/index.html/styles.css.
    v49: trigger tags + calm-time pattern insight — installed phones must re-cache app.js/index.html. */
-var CACHE = 'iht-v49';
+var CACHE = 'iht-v50';
 var ASSETS = [
   './',
   'index.html',

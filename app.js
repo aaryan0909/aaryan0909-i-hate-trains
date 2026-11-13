@@ -905,9 +905,19 @@
     }
   }
   /* v31 audit, highest-leverage change: a rider who taps "I need help right now"
-     and then freezes gets help anyway. 5 seconds of nothing on the panic screen
+     and then freezes gets help anyway. A stillness window on the panic screen
      auto-starts the scripted rescue. Any tap re-arms the timer; any navigation
-     clears it (go() above). */
+     clears it (go() above).
+     v50: the window is 8s, not 5s, and visible reading activity re-arms it too.
+     The panic screen now carries a fourth door plus the plan and 988 lines, so
+     5s of stillness was firing on riders reading at a normal pace (seen three
+     times in live QA, v46-v48) before they could reach the quiet doors. A rider
+     who moves the pointer, scrolls, or taps is visibly reading, not frozen, so
+     pointermove / wheel / touchmove / scroll / keydown re-arm the timer. A rider
+     who truly freezes — no touch, no scroll, no key — still gets the rescue
+     after 8s. The freeze still starts the guided rescue itself (the saved
+     rescue-sequence fork is a separate queued item). */
+  var PANIC_FREEZE_MS = 8000;
   function armPanicFreeze() {
     clearPanicFreeze();
     panicFreezeTimer = setTimeout(function () {
@@ -915,11 +925,20 @@
       if (currentScreen() === 'screen-panic' && window.__ihtGuide) {
         try { window.__ihtGuide.start(); } catch (e) {}
       }
-    }, 5000);
+    }, PANIC_FREEZE_MS);
   }
-  document.addEventListener('pointerdown', function () {
+  /* v50: any visible activity on the panic screen re-arms the freeze — a tap, a
+     pointer drift, a scroll, or a key press all mean the rider is reading, not
+     frozen. Listeners are passive and screen-gated; navigation clears the
+     timer in go(). */
+  ['pointerdown', 'pointermove', 'wheel', 'touchmove', 'keydown'].forEach(function (ev) {
+    document.addEventListener(ev, function () {
+      if (currentScreen() === 'screen-panic') { armPanicFreeze(); }
+    }, { passive: true });
+  });
+  document.addEventListener('scroll', function () {
     if (currentScreen() === 'screen-panic') { armPanicFreeze(); }
-  }, { passive: true });
+  }, { capture: true, passive: true });
 
   function toolByTitle(title) {
     for (var i = 0; i < TOOLS.length; i++) { if (TOOLS[i].title === title) { return TOOLS[i]; } }
