@@ -62,6 +62,13 @@
   try { var p = readJSON('iht_pet', null); if (p && p.name) { petName = p.name; } } catch (e) {}
 
   var step = 0, timers = [], pickedTool = 'breathe', pickedCue = '', readyPick = null;
+  /* v52: the breath auto-advance and the step-1 "Next" button occupy the same
+     spot. A tap aimed at step 1's Next that lands just after the 10s timer
+     re-renders step 2 hits step 2's Next instead and skips the tool pick
+     (seen in v51 live QA). So a step shown by the timer ignores Next taps
+     for 500ms — long enough for the aimed-at button to settle, short enough
+     that a deliberate second tap always works. Manual navigation never sets it. */
+  var autoShownAt = 0;
   var reduceMotion = false;
   try { reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
 
@@ -148,7 +155,7 @@
       later(function () {
         if (!onReadyScreen() || step !== 1) { return; }
         if (wrap) { wrap.classList.remove('ready-out'); }
-        showStep(2);
+        showStep(2, { auto: true });
       }, timing.outMs);
     }, timing.inMs);
   }
@@ -220,9 +227,10 @@
   }
 
   /* ---------- step plumbing ---------- */
-  function showStep(n) {
+  function showStep(n, opts) {
     clearTimers();
     step = n;
+    autoShownAt = (opts && opts.auto) ? Date.now() : 0;
     var count = $('ready-count');
     if (count) { count.textContent = 'Step ' + n + ' of 3'; }
     [1, 2, 3].forEach(function (i) {
@@ -277,9 +285,16 @@
     var el = $(id);
     if (el) { el.addEventListener('click', fn); }
   }
+  function nextGuarded(n) {
+    /* v52: swallow a Next tap that lands within 500ms of a timer-driven step
+       change — it was aimed at the previous step's button, not this one. */
+    if (autoShownAt && (Date.now() - autoShownAt) < 500) { return; }
+    tick();
+    showStep(n);
+  }
   wire('btn-ready-start', function () { openReady(); });
-  wire('btn-ready-next1', function () { tick(); showStep(2); });
-  wire('btn-ready-next2', function () { tick(); showStep(3); });
+  wire('btn-ready-next1', function () { nextGuarded(2); });
+  wire('btn-ready-next2', function () { nextGuarded(3); });
   wire('btn-ready-back2', function () { tick(); showStep(1); });
   wire('btn-ready-back3', function () { tick(); showStep(2); });
   wire('btn-ready-finish', function () { finishReady(); });

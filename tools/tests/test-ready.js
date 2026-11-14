@@ -5,7 +5,7 @@
    line on start-trip and its clearing on end-trip; the 15-minute pick
    staleness rule; the skip path; back buttons; the reduced-motion path;
    corrupt-journal safety; panic isolation; version markers; no voice,
-   no paywall.
+   no paywall. v52 adds the auto-advance Next guard + its race test.
    Usage: node tools/tests/test-ready.js  (run from the project root) */
 const fs = require('fs');
 const path = require('path');
@@ -122,6 +122,7 @@ function openReady(env) {
   click(d.querySelector('#ready-tools .chip[data-tool="five-senses"]'));
   ok(w.__ihtReady.state().tool === 'five-senses', 'tapping a tool changes the pick');
   ok(pressedChip(d, 'ready-tools').getAttribute('data-tool') === 'five-senses', 'only the tapped chip is pressed');
+  await sleep(600); // v52 guard: let the auto-advance settle before Next
   click(d.getElementById('btn-ready-next2'));
   ok(stepVisible(d, 3), 'next -> step 3');
   ok(d.querySelectorAll('#ready-cues .chip').length === 4, '4 cue presets');
@@ -213,6 +214,7 @@ function openReady(env) {
   env = boot({ plan: JSON.stringify({ exit: 'Bloor-Yonge', reachName: 'Div', reach: '', reachPhone: '', pocket: ['Water'], c1: '', c2: '', c3: '' }), cue: 'steady' });
   d = env.d; w = env.w;
   goChecklist(env); openReady(env); await waitFor(function () { return stepVisible(d, 2); }, 'step 2');
+  await sleep(600); // v52 guard: let the auto-advance settle before Next
   click(d.getElementById('btn-ready-next2'));
   ok(d.getElementById('ready-plan-line').textContent === 'Your plan: get off at Bloor-Yonge, call Div.', 'plan glance reads the saved plan');
   ok(d.getElementById('in-ready-cue').value === 'steady', 'saved cue word is prefilled');
@@ -220,6 +222,7 @@ function openReady(env) {
   /* ---------- F. 15-minute staleness ---------- */
   env = boot(); d = env.d; w = env.w;
   goChecklist(env); openReady(env); await waitFor(function () { return stepVisible(d, 2); }, 'step 2');
+  await sleep(600); // v52 guard: let the auto-advance settle before Next
   click(d.getElementById('btn-ready-next2'));
   click(d.getElementById('btn-ready-finish'));
   const at = w.__ihtReady.pick().at;
@@ -240,12 +243,23 @@ function openReady(env) {
   click(d.getElementById('btn-ready-next1'));
   ok(stepVisible(d, 2), 'reduced motion: Next still advances by hand');
 
+  /* ---------- I. v52: a Next tap landing just after the breath timer
+     must not skip a step ---------- */
+  env = boot(); d = env.d; w = env.w;
+  goChecklist(env); openReady(env);
+  await waitFor(function () { return stepVisible(d, 2); }, 'step 2');
+  click(d.getElementById('btn-ready-next2'));
+  ok(stepVisible(d, 2), 'Next tapped right after auto-advance is swallowed, still step 2');
+  await sleep(600);
+  click(d.getElementById('btn-ready-next2'));
+  ok(stepVisible(d, 3), 'the same Next works once the guard window has passed');
+
   /* ---------- H. markers + isolation ---------- */
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
   const readySrc = fs.readFileSync(path.join(ROOT, 'ready.js'), 'utf8');
-  ok(html.indexOf('version 51') !== -1, 'About reads "version 51"');
-  ok(sw.indexOf('iht-v51') !== -1, 'sw.js cache is iht-v51');
+  ok(html.indexOf('version 52') !== -1, 'About reads "version 52"');
+  ok(sw.indexOf('iht-v52') !== -1, 'sw.js cache is iht-v52');
   ok(sw.indexOf("'ready.js'") !== -1, 'sw.js precaches ready.js');
   ok(html.indexOf('<script src="ready.js"></script>') !== -1, 'index.html loads ready.js');
   ok(readySrc.indexOf('speechSynthesis') === -1, 'no voice code added (speechSynthesis absent)');
