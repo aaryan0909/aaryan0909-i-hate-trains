@@ -492,8 +492,55 @@
         <button class="check" data-item="meds"><span class="box" aria-hidden="true"></span><span><strong>Prescribed meds</strong><em>With you, if you take them.</em></span></button>
         <button class="check" data-item="exit"><span class="box" aria-hidden="true"></span><span><strong>Exit plan</strong><em>Know your stop.</em></span></button>
       </div>
+      <div class="ready-offer rise d4" id="ready-offer">
+        <p class="body"><strong>Before you leave.</strong> <span class="soft">Two quiet minutes: one slow breath, your tool for this ride, one word to carry with you.</span></p>
+        <button class="btn ghost" id="btn-ready-start" data-go="screen-ready">Take 2 minutes</button>
+      </div>
       <button class="btn calm big rise d4" data-go="screen-setup">All set. Let's ride.</button>
       <button class="backlink" data-go="screen-checkin">← back</button>
+    </div>
+  </section>
+
+  <!-- READY CHECK (v51): the 2-minute pre-ride routine. Calm time only,
+       offered on ride prep, skippable in one tap. One slow breath, one tool
+       pick, one cue word, one glance at the backup plan. -->
+  <section class="screen" id="screen-ready" aria-label="Before you leave">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">before you leave</p>
+      <h2 class="serene rise d2">Two minutes, then you go.</h2>
+      <p class="body rise d2" id="ready-count" aria-live="polite">Step 1 of 3</p>
+
+      <div class="ready-step" id="ready-step1">
+        <div class="ready-petwrap" id="ready-pet-wrap">
+          <button class="petmini" id="pet-ready" aria-label="Your co-rider"></button>
+        </div>
+        <p class="petline" id="petline-ready"></p>
+        <p class="ready-cue" id="ready-breath-cue" aria-live="polite">Breathe in…</p>
+        <p><span class="ready-ind" id="ready-ind">Sound off</span></p>
+        <button class="btn calm" id="btn-ready-next1">Next</button>
+      </div>
+
+      <div class="ready-step" id="ready-step2" hidden>
+        <p class="body">Pick your tool for this ride.</p>
+        <p class="fineprint" id="ready-default-note"></p>
+        <div class="chipgrid" id="ready-tools" role="group" aria-label="Pick your tool for this ride"></div>
+        <button class="btn calm" id="btn-ready-next2">Next</button>
+        <button class="backlink" id="btn-ready-back2">← back</button>
+      </div>
+
+      <div class="ready-step" id="ready-step3" hidden>
+        <p class="body">One word to carry with you.</p>
+        <div class="chipgrid" id="ready-cues" role="group" aria-label="Cue word presets"></div>
+        <label class="field">Your word
+          <input id="in-ready-cue" type="text" inputmode="text" autocomplete="off" maxlength="40" placeholder="steady">
+        </label>
+        <p class="body" id="ready-plan-line"></p>
+        <button class="btn calm big" id="btn-ready-finish" data-go="screen-setup">Ready — start the ride</button>
+        <button class="backlink" id="btn-ready-back3">← back</button>
+      </div>
+
+      <button class="linklike quiet" id="btn-ready-skip" data-go="screen-setup">Skip the check — start the ride</button>
+      <button class="backlink" data-go="screen-checklist">← back to ride prep</button>
     </div>
   </section>
 
@@ -579,6 +626,7 @@
       <p class="tripstation-next rise d2" id="trip-next"></p>
       <button class="pettrip" id="pet-trip" aria-label="Your co-rider is riding with you"></button>
       <p class="petline" id="petline-trip"></p>
+      <p class="lede soft" id="trip-ready-line" hidden></p>
       <button class="tapbtn rise d3" id="btn-stop-tap">Tap at each stop</button>
       <button class="linklike quiet rise d3" id="btn-stop-undo" hidden>Not yet — one back</button>
       <p class="fineprint" id="trip-fine">One tap per stop. That's all you have to do.</p>
@@ -1101,7 +1149,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 50</p>
+      <p class="fineprint rise d4" id="app-version">version 51</p>
     </div>
   </section>
 
@@ -1283,6 +1331,7 @@
 <script src="stopheads.js"></script>
 <script src="guide.js"></script>
 <script src="calm42.js"></script>
+<script src="ready.js"></script>
 <script>
   window.IHT_ACCOUNT_CONFIG = {
     supabaseUrl: 'https://YOUR-PROJECT.supabase.co',

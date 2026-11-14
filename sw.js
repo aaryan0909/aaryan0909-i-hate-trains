@@ -17,8 +17,9 @@
    v45: ride summary for a therapist — installed phones must re-cache app.js/index.html/styles.css.
    v46: "This feels like something worse" explainer — installed phones must re-cache app.js/index.html.
    v48: stop-counter undo + double-tap debounce — installed phones must re-cache app.js/index.html/styles.css.
-   v49: trigger tags + calm-time pattern insight — installed phones must re-cache app.js/index.html. */
-var CACHE = 'iht-v50';
+   v49: trigger tags + calm-time pattern insight — installed phones must re-cache app.js/index.html.
+   v51: "Before you leave" ready check — installed phones must re-cache app.js/index.html/styles.css + new ready.js. */
+var CACHE = 'iht-v51';
 var ASSETS = [
   './',
   'index.html',
@@ -34,6 +35,7 @@ var ASSETS = [
   'stations.js',
   'sound.js',
   'calm42.js',
+  'ready.js',
   'v42.css',
   'auth.js',
   'v35-design.css',

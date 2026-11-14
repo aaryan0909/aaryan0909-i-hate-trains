@@ -958,3 +958,25 @@ body.stopflash #app { animation: stopflash .9s ease; }
    (.panicbtn, .panicopt, .sosfloat) are deliberately excluded: the panic
    screen is frozen and must not change. */
 .btn:focus-visible, .chip:focus-visible, .toolcard:focus-visible, .linkcard:focus-visible, .toptool:focus-visible, .segbtn:focus-visible, .v35-chip:focus-visible, .v35-seeall:focus-visible, .v35-shortcut:focus-visible, .v35-announce-close:focus-visible { outline: 2px solid var(--calm); outline-offset: 2px; }
+
+/* v51 — "Before you leave" ready check. Calm time only, offered on ride
+   prep. One slow breath (the pet swells and settles), one tool pick, one
+   cue word, one glance at the backup plan. */
+.ready-offer { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin: 0 0 16px; }
+.ready-offer .body { margin: 0 0 12px; }
+.ready-step[hidden] { display: none; }
+.ready-petwrap { display: flex; justify-content: center; margin: 8px 0 4px; transition: transform 4s ease-in-out; transform-origin: 50% 80%; }
+.ready-petwrap.ready-in { transform: scale(1.12); }
+.ready-petwrap.ready-out { transition-duration: 6s; transform: scale(1); }
+.ready-cue { font-size: 24px; font-weight: 600; text-align: center; margin: 12px 0 8px; min-height: 34px; }
+.ready-ind { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--dim); min-height: 24px; }
+.ready-ind::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #bbb; }
+.ready-ind.playing::before { background: #7fae8e; animation: ready-pulse 1s ease infinite; }
+@keyframes ready-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+#screen-ready .btn { margin-top: 8px; }
+#ready-plan-line { margin-top: 18px; }
+#trip-ready-line { margin-top: 4px; }
+@media (prefers-reduced-motion: reduce) {
+  .ready-petwrap { transition: none; }
+  .ready-ind.playing::before { animation: none; }
+}

@@ -3651,6 +3651,7 @@
     summary: ['This is yours to share, or not. Your call.', 'Your words, your rides. Nothing leaves this phone unless you send it.'],
     privacy: ['Everything here stays on this phone. Just us.', 'No accounts. No tracking. Just you and me.'],
     checkin: ['I am ready when you are.', 'However you feel is a fine place to start.'],
+    ready: ['One slow breath, then we go.', 'I am breathing with you.'],
     reflect: ['You did it. That is enough.', 'How was that, really? No grade, just noticing.'],
     crisis: ['I am right here with you.', 'You do not have to ride this out alone.'],
     worse: ['Your body is sounding an alarm with no fire behind it.', 'It feels like danger because it is loud, not because it is dangerous.'],
@@ -3658,7 +3659,7 @@
   };
   var PET_SCREEN_MOUNTS = {
     'screen-toolkit': 'pet-toolkit', 'screen-learn': 'pet-learn', 'screen-plan': 'pet-plan',
-    'screen-history': 'pet-history', 'screen-summary': 'pet-summary', 'screen-privacy': 'pet-privacy', 'screen-checkin': 'pet-checkin',
+    'screen-history': 'pet-history', 'screen-summary': 'pet-summary', 'screen-privacy': 'pet-privacy', 'screen-checkin': 'pet-checkin', 'screen-ready': 'pet-ready',
     'screen-reflect': 'pet-reflect', 'screen-crisis': 'pet-crisis', 'screen-nonbreath': 'pet-nonbreath',
     'screen-worse': 'pet-worse'
   };
