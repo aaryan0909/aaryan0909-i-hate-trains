@@ -915,14 +915,21 @@
      who moves the pointer, scrolls, or taps is visibly reading, not frozen, so
      pointermove / wheel / touchmove / scroll / keydown re-arm the timer. A rider
      who truly freezes — no touch, no scroll, no key — still gets the rescue
-     after 8s. The freeze still starts the guided rescue itself (the saved
-     rescue-sequence fork is a separate queued item). */
+     after 8s. The freeze still starts the guided rescue itself when no
+     sequence is saved.
+     v53: the freeze now honors a saved rescue sequence — if
+     `readSeq()` is non-empty it starts the rider's own tools instead of the
+     guide (v47's premise: the rider's chosen tools *are* the rescue). The
+     guide stays the default when nothing is saved, and a corrupt/unknown
+     saved list reads back as [] so the guide fires as before. */
   var PANIC_FREEZE_MS = 8000;
   function armPanicFreeze() {
     clearPanicFreeze();
     panicFreezeTimer = setTimeout(function () {
       panicFreezeTimer = null;
-      if (currentScreen() === 'screen-panic' && window.__ihtGuide) {
+      if (currentScreen() !== 'screen-panic') { return; }
+      try { if (readSeq().length) { startSequence(); return; } } catch (e) {}
+      if (window.__ihtGuide) {
         try { window.__ihtGuide.start(); } catch (e) {}
       }
     }, PANIC_FREEZE_MS);

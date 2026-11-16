@@ -1,7 +1,11 @@
-/* jsdom test for v50 "Reading doesn't get yanked": the panic freeze waits
-   while the rider is visibly reading.
-   - Stillness on the panic screen still auto-starts the guided rescue, now
-     after 8s (was 5s).
+/* jsdom test for v50 "Reading doesn't get yanked" + v53 "Your sequence, even
+   when you freeze": the panic freeze waits while the rider is visibly
+   reading, and when it does fire it starts the rider's saved rescue sequence
+   instead of the scripted guide.
+   - Stillness on the panic screen still auto-starts a rescue, after 8s.
+   - With a sequence saved, the freeze launches the first sequence tool
+     (step pill shown); without one, the guided rescue fires as before.
+   - A corrupt/unknown saved list reads back as [] and falls back to the guide.
    - Visible reading activity re-arms the timer: pointermove, scroll, keydown,
      and the pre-existing tap (pointerdown) each push the rescue out.
    - Navigating away from the panic screen clears the timer (no rescue fires
@@ -30,14 +34,15 @@ ok(!/}, 5000\)/.test(appJs), 'no 5s freeze timer left in app.js');
 ok(appJs.includes("'pointerdown', 'pointermove', 'wheel', 'touchmove', 'keydown'"), 'tap + pointer drift + wheel + touch + keys all re-arm');
 ok(appJs.includes("document.addEventListener('scroll'"), 'scroll re-arms the freeze');
 ok(/if \(currentScreen\(\) === 'screen-panic'\) \{ armPanicFreeze\(\); \}/.test(appJs), 'activity re-arm is gated to the panic screen');
-ok(appJs.includes('window.__ihtGuide.start()'), 'freeze still starts the guided rescue');
-ok(html.includes('version 50'), 'About reads version 50');
-ok(/var CACHE = 'iht-v50'/.test(sw), 'sw.js cache is iht-v50');
+ok(appJs.includes('window.__ihtGuide.start()'), 'freeze still starts the guided rescue when nothing is saved');
+ok(/try \{ if \(readSeq\(\)\.length\) \{ startSequence\(\); return; \} \} catch/.test(appJs), 'freeze checks the saved sequence before the guide');
+ok(html.includes('version 53'), 'About reads version 53');
+ok(/var CACHE = 'iht-v53'/.test(sw), 'sw.js cache is iht-v53');
 ok(!/speechSynthesis/.test(appJs), 'no speechSynthesis anywhere in app.js (voice removed v35)');
 
 /* Live boot check: #panic lands straight on the panic screen, so the freeze
    timer is already running at build time. */
-function build(url, onboarded) {
+function build(url, onboarded, seq) {
   let h = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   h = h.replace(/<script src="(drift|trimap|crisis|app|stopheads|guide)\.js"><\/script>/g, '<!-- inlined by test -->');
   const dom = new JSDOM(h, {
@@ -70,6 +75,7 @@ function build(url, onboarded) {
   });
   const w = dom.window;
   if (onboarded) { w.localStorage.setItem('iht_onboarded', '1'); }
+  if (seq !== undefined) { w.localStorage.setItem('iht_rescue_seq', JSON.stringify(seq)); }
   ['drift.js', 'trimap.js', 'crisis.js', 'app.js', 'stopheads.js', 'guide.js'].forEach(function (f) {
     w.eval(fs.readFileSync(path.join(ROOT, f), 'utf8'));
   });
@@ -119,6 +125,22 @@ function fire(w, d, type) { d.dispatchEvent(new w.Event(type, { bubbles: true, c
   ok(active(t.d) === 'screen-panic', 'still on the panic screen 6s after a tap');
   await sleep(3000);
   ok(active(t.d) === 'screen-guide', 'rescue fires 8s after the last tap');
+
+  console.log('live: a saved sequence wins the freeze over the guide (v53):');
+  t = build(PROD + '#panic', true, ['five-senses', 'kind-words']);
+  ok(active(t.d) === 'screen-panic', 'sequence boot lands on screen-panic');
+  ok(t.d.querySelector('#btn-panic-seq') && !t.d.querySelector('#btn-panic-seq').hidden, 'Start my sequence button is visible with a saved sequence');
+  await sleep(9000); // past the 8s window
+  ok(active(t.d) === 'screen-senses', 'freeze starts the first sequence tool, not the guide');
+  ok(active(t.d) !== 'screen-guide', 'guide did not start when a sequence is saved');
+  ok(t.d.querySelector('#seq-bar') && !t.d.querySelector('#seq-bar').hidden, 'sequence step bar is showing');
+  ok((t.d.querySelector('#seq-label') || {}).textContent === 'Step 1 of 2 · 5–4–3–2–1 senses', 'step pill reads Step 1 of 2');
+
+  console.log('live: unknown saved ids fall back to the guide (v53):');
+  t = build(PROD + '#panic', true, ['not-a-tool']);
+  ok(active(t.d) === 'screen-panic', 'corrupt-sequence boot lands on screen-panic');
+  await sleep(9000);
+  ok(active(t.d) === 'screen-guide', 'unknown saved ids fall back to the guided rescue');
 
   console.log('live: navigating away clears the freeze:');
   t = build(PROD + '#panic', true);
