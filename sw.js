@@ -19,8 +19,9 @@
    v48: stop-counter undo + double-tap debounce — installed phones must re-cache app.js/index.html/styles.css.
    v49: trigger tags + calm-time pattern insight — installed phones must re-cache app.js/index.html.
    v51: "Before you leave" ready check — installed phones must re-cache app.js/index.html/styles.css + new ready.js.
-   v52: ready-check Next guard — installed phones must re-cache ready.js/index.html. */
-var CACHE = 'iht-v53';
+   v52: ready-check Next guard — installed phones must re-cache ready.js/index.html.
+   v54: "The platform minute" — installed phones must re-cache app.js/index.html/styles.css + new platform.js. */
+var CACHE = 'iht-v54';
 var ASSETS = [
   './',
   'index.html',
@@ -37,6 +38,7 @@ var ASSETS = [
   'sound.js',
   'calm42.js',
   'ready.js',
+  'platform.js',
   'v42.css',
   'auth.js',
   'v35-design.css',

@@ -604,9 +604,32 @@
       </div>
       <button class="check rise d4" id="set-stopheads-quiet" aria-pressed="false"><span class="box" aria-hidden="true"></span><span><strong>Quiet stop alerts</strong><em>Pet pulse, screen flash, and a gentle sound when your stop is near. For crowded trains.</em></span></button>
       <button class="btn calm big rise d4" id="btn-start-trip">Start trip</button>
+      <button class="linklike quiet rise d4" id="btn-platform-start" data-go="screen-platform">Waiting on the platform? One slow minute</button>
       <button class="linklike quiet rise d4" id="btn-share-card">Send a trip card to someone you trust</button>
       <p class="fineprint" id="share-hint">Shares your route and ETA, while you still have signal.</p>
       <button class="backlink" data-go="screen-checklist">← back</button>
+    </div>
+  </section>
+
+  <!-- PLATFORM MINUTE (v54): the wait between setup and boarding. Calm
+       time only, one screen, zero decisions: the pet, one slow breath,
+       your cue word from the ready check, one line, optional ambient pad.
+       "Board the train" starts the trip — this screen never starts one. -->
+  <section class="screen" id="screen-platform" aria-label="Waiting on the platform">
+    <div class="wrap narrow">
+      <p class="kicker rise d1">on the platform</p>
+      <h2 class="serene rise d2">One slow minute.</h2>
+      <div class="platform-petwrap" id="platform-pet-wrap">
+        <button class="petmini" id="pet-platform" aria-label="Your co-rider"></button>
+      </div>
+      <p class="petline" id="petline-platform"></p>
+      <p class="platform-cue" id="platform-breath-cue" aria-live="polite">Breathe in…</p>
+      <p class="lede" id="platform-cue-line" hidden></p>
+      <p class="body">The train comes. You step on. You can step off at any stop.</p>
+      <p><span class="platform-ind" id="platform-ind">Sound off</span></p>
+      <button class="btn ghost" id="btn-platform-sound" aria-pressed="false">Soft sound</button>
+      <button class="btn calm big" id="btn-platform-board">Board the train</button>
+      <button class="backlink" id="btn-platform-back" data-go="screen-setup">← back to ride setup</button>
     </div>
   </section>
 
@@ -1149,7 +1172,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 53</p>
+      <p class="fineprint rise d4" id="app-version">version 54</p>
     </div>
   </section>
 
@@ -1332,6 +1355,7 @@
 <script src="guide.js"></script>
 <script src="calm42.js"></script>
 <script src="ready.js"></script>
+<script src="platform.js"></script>
 <script>
   window.IHT_ACCOUNT_CONFIG = {
     supabaseUrl: 'https://YOUR-PROJECT.supabase.co',

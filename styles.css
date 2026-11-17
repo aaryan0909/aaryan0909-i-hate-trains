@@ -980,3 +980,20 @@ body.stopflash #app { animation: stopflash .9s ease; }
   .ready-petwrap { transition: none; }
   .ready-ind.playing::before { animation: none; }
 }
+
+/* v54 — "The platform minute": the wait on the platform. One slow breath
+   (the pet swells and settles, looping), your cue word, one line, optional
+   ambient pad with a visible playing indicator. */
+.platform-petwrap { display: flex; justify-content: center; margin: 8px 0 4px; transition: transform 4s ease-in-out; transform-origin: 50% 80%; }
+.platform-petwrap.platform-in { transform: scale(1.12); }
+.platform-petwrap.platform-out { transition-duration: 6s; transform: scale(1); }
+.platform-cue { font-size: 24px; font-weight: 600; text-align: center; margin: 12px 0 8px; min-height: 34px; }
+.platform-ind { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--dim); min-height: 24px; }
+.platform-ind::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #bbb; }
+.platform-ind.playing::before { background: #7fae8e; animation: ready-pulse 1s ease infinite; }
+#screen-platform .btn { margin-top: 8px; }
+#platform-cue-line { text-align: center; }
+@media (prefers-reduced-motion: reduce) {
+  .platform-petwrap { transition: none; }
+  .platform-ind.playing::before { animation: none; }
+}
