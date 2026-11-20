@@ -212,6 +212,12 @@
      vs 0.05) so it survives a phone speaker, same warm low pad. */
   function motif() {
     if (!unlock()) { return false; }
+    /* v55: never schedule on a suspended/interrupted context. iOS and
+       Chrome freeze the clock until a user gesture, so notes scheduled
+       at boot would sit silent (or fire late, after the splash is
+       gone). Callers that need sound before a gesture must wait for
+       one and retry — see app.js playSplashMotif(). */
+    if (state() !== 'running') { return false; }
     var any = false;
     MOTIF_NOTES.forEach(function (f, i) {
       if (tone(f, 0.05 + i * 0.32, 0.5, 0.10, 0.12, 'sine')) { any = true; }

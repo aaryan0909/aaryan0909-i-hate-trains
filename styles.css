@@ -306,6 +306,22 @@ em { font-style: normal; }
 .scen-body { padding: 18px; }
 .scen-body p { margin: 0 0 14px; font-size: 15px; color: var(--dim); line-height: 1.55; }
 .scen-body .scen-h { margin: 18px 0 6px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); }
+
+/* outs (v56) — every stop is an exit; quiet collapsible list on the trip screen */
+.outs { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius); overflow: hidden; text-align: left; }
+.outs summary { cursor: pointer; padding: 16px 18px; min-height: 56px; display: flex; flex-direction: column; justify-content: center; gap: 4px; list-style: none; }
+.outs summary::-webkit-details-marker { display: none; }
+.outs summary strong { font-size: 17px; font-weight: 600; }
+.outs summary span { font-size: 14px; color: var(--dim); }
+.outs[open] summary { border-bottom: 1.5px solid var(--line); }
+.outs-body { padding: 6px 18px 16px; }
+.outs-list { list-style: none; margin: 0; padding: 0; }
+.outs-list li { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.outs-list li:last-child { border-bottom: none; }
+.outs-name { font-size: 16px; font-weight: 600; }
+.outs-tag { display: inline-block; margin-left: 6px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--dim); vertical-align: 1px; }
+.outs-line { font-size: 14px; color: var(--dim); margin-top: 2px; line-height: 1.5; }
+.outs-fallback { margin: 12px 0 2px; font-size: 15px; color: var(--dim); line-height: 1.55; }
 .scen-body .scen-h:first-child { margin-top: 0; }
 .scen-body ol { margin: 0 0 18px; padding-left: 22px; font-size: 15px; color: var(--dim); line-height: 1.6; }
 .scen-body ol li { margin-bottom: 8px; }
@@ -851,6 +867,12 @@ body.pet-blink .peye-shut { display: block; }
 .splashpet { width: min(56vw, 200px); margin: auto auto 8px; }
 .splashpet .petsvg { animation: petbob 3.4s ease-in-out infinite; }
 .splashname { font-family: var(--font-display); font-size: 34px; font-style: italic; text-align: center; margin: 0 0 12px; }
+/* v55: the welcome motif's visible proof — pulses while the 4 notes sound,
+   so the rider can SEE the sound is on even when the silent switch mutes
+   the speaker. Hidden unless the motif is actually playing. */
+.splashsound { display: none; font-size: 22px; text-align: center; margin: 0 0 10px; }
+.splashsound.playing { display: block; animation: splashNote .55s ease-in-out infinite; }
+@keyframes splashNote { 0%, 100% { transform: scale(1); opacity: .55; } 50% { transform: scale(1.25); opacity: 1; } }
 .splashpanic { margin-top: auto; }
 
 /* Quiet stop alerts: screen flash + gentle sound. */
@@ -923,6 +945,7 @@ body.stopflash #app { animation: stopflash .9s ease; }
   .ts-train, .ts-wheel, .ts-cloud, .ts-hill, .ts-puff, .ts-speed { animation: none !important; }
   .ts-train { left: 50%; margin-left: -132px; transform: none; }
   .petmini .petsvg, .ts-pet .petsvg { animation: none !important; }
+  .splashsound.playing { animation: none !important; }
 }
 
 /* ============ v34: expression system, play, trip train, line chips ============ */

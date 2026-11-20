@@ -1190,7 +1190,7 @@
     var note = $('setup-stops-note'); if (!note) { return; }
     var start = $('btn-start-trip');
     if (setupManualMode) {
-      note.textContent = 'Counted by hand. The stepper is yours.';
+      note.textContent = 'Counted by hand. The stepper is yours. Every stop is an exit.';
       if (start) { start.disabled = false; }
       return;
     }
@@ -1200,7 +1200,7 @@
         if (start) { start.disabled = true; }
       } else {
         note.textContent = setupStops + (setupStops === 1 ? ' stop, from ' : ' stops, from ')
-          + setupStations[setupFromIdx] + ' to ' + setupStations[setupDestIdx] + '. Counted from the line order.';
+          + setupStations[setupFromIdx] + ' to ' + setupStations[setupDestIdx] + '. Counted from the line order. Every stop on the way is an exit \u2014 you can step off at any stop.';
         if (start) { start.disabled = false; }
       }
     } else if (setupStations) {
@@ -1621,6 +1621,50 @@
     $('stops-word').textContent = trip.left === 1 ? 'stop to go' : 'stops to go';
     renderTripTrain();
     renderTripStation();
+    renderOuts();
+  }
+  /* v56: "Every stop is an exit" — the remaining stops, framed as outs.
+     Station trips list each stop by name (next stop tagged, the destination
+     named as your stop); count-only trips get one honest line and no
+     invented names. Collapsed by default; the panic flow never sees it
+     unless the rider opens it. Re-rendered with every counter change, so
+     passed stops drop off the list. */
+  function renderOuts() {
+    var det = $('outs-details'); if (!det) { return; }
+    var list = $('outs-list'), fb = $('outs-fallback'), count = $('outs-count');
+    var hasStations = !!(trip.stations && trip.fromIdx >= 0 && trip.destIdx >= 0 && window.IHTStations);
+    if (count) {
+      count.textContent = !hasStations ? 'Every stop is an exit'
+        : (trip.left === 0 ? 'You made it'
+        : (trip.left === 1 ? '1 exit ahead' : trip.left + ' exits ahead'));
+    }
+    if (!hasStations) {
+      if (list) { list.innerHTML = ''; }
+      if (fb) { fb.hidden = false; }
+      return;
+    }
+    if (fb) { fb.hidden = true; }
+    if (!list) { return; }
+    list.innerHTML = '';
+    var passed = (trip.total || 0) - (trip.left || 0);
+    var i, name, li, nm, tag, ln;
+    for (i = 1; i <= trip.left; i++) {
+      name = window.IHTStations.stationAt(trip.stations, trip.fromIdx, trip.destIdx, passed + i);
+      if (!name) { continue; }
+      li = document.createElement('li');
+      nm = document.createElement('div'); nm.className = 'outs-name'; nm.textContent = name;
+      if (i === 1 || i === trip.left) {
+        tag = document.createElement('span'); tag.className = 'outs-tag';
+        tag.textContent = (i === trip.left) ? 'Your stop' : 'Next stop';
+        nm.appendChild(document.createTextNode(' ')); nm.appendChild(tag);
+      }
+      ln = document.createElement('div'); ln.className = 'outs-line';
+      ln.textContent = (i === trip.left)
+        ? 'Your stop \u2014 step off and you\u2019re there.'
+        : 'Step off here, sit, breathe, re-board when ready.';
+      li.appendChild(nm); li.appendChild(ln);
+      list.appendChild(li);
+    }
   }
   /* v34: a little train that crawls across the trip screen as stops pass —
      same craft as the intro scene, quiet enough for a ride. */
@@ -4187,21 +4231,66 @@
   window.__ihtUpdate = { arm: armUpdatePrompt, refresh: maybeShowUpdateBanner, safe: UPDATE_SAFE_SCREENS, go: go };
 
   /* ---------- v31 start screen: a loading screen meets a sitcom intro ----------
-     2.0-2.5s on a normal cold open, 1.2s when the rider already opened the app
-     3+ times today, pet-only 0.8s after the first week (audit frequency cap).
-     Skippable after 1s; the panic button works from 0.0s and skips the rest.
-     Warm resume (same tab session) skips the intro entirely. The motif is an
-     original 4-note figure synthesized with Web Audio: no files, no licenses,
-     offline by construction. If iOS blocks audio before a gesture, the intro is
-     still complete silent — the pet and the name carry it. */
-  function splashMotif() {
+     v55: the opening you can actually hear. The motif is ~1.7s long (4 notes
+     at 0.32s + pad), so the splash NEVER runs shorter than 2.0s: the old
+     frequency caps (1.2s after 3 opens, 0.8s after a week) cut the motif
+     mid-phrase and read as a flash. 2.2s normally, 2.0s for a frequent
+     opener, pet-only visuals after the first week. Skippable after 1s; the
+     panic button works from 0.0s and skips the rest. Warm resume (same tab
+     session) skips the intro entirely. The motif is an original 4-note
+     figure synthesized with Web Audio: no files, no licenses, offline by
+     construction.
+     SOUND (v55 fix): iOS and Chrome start an AudioContext `suspended`
+     until a user gesture, so a motif scheduled at boot is silent — the old
+     code scheduled it anyway and the notes froze on a suspended clock
+     (sometimes firing late, after the splash was gone). Now the motif
+     only plays when the context is actually running; at boot, if it is
+     not, the motif waits for the first tap anywhere (which unlocks audio)
+     and plays then, while the splash is still up. A tap to skip unlocks
+     audio first and lets the motif ring through the transition instead of
+     killing it. A small ♪ pulses on the splash while the motif sounds, so
+     the rider can SEE the sound is on even when the silent switch mutes
+     the speaker. The panic button never triggers the motif.
+     Vibration: a soft double pulse at the motif start on Android only —
+     iPhones have no Vibration API in any browser, so on iOS the sound
+     (and the ♪) carry the opening instead; Privacy already says this. */
+  var splashMotifPlayed = false;
+  var splashSoundTimer = null;
+  function splashSoundOn() {
+    try {
+      var el = $('splash-sound');
+      if (!el) { return; }
+      el.classList.add('playing');
+      if (splashSoundTimer) { clearTimeout(splashSoundTimer); }
+      splashSoundTimer = setTimeout(function () {
+        try { el.classList.remove('playing'); } catch (e) {}
+        splashSoundTimer = null;
+      }, 1800);
+    } catch (e) {}
+  }
+  function playSplashMotif() {
+    /* Plays the motif only if audio can actually sound right now.
+       Returns true when it sounded. At boot (no gesture yet) this
+       returns false and the first-gesture handler retries it. */
+    if (splashMotifPlayed) { return true; }
     try {
       if (window.__ihtSound) { // v35: same 4-note motif character, from sound.js
-        try { if (window.__ihtSound.motif()) { return; } } catch (e) {}
+        try {
+          var st = window.__ihtSound.state ? window.__ihtSound.state() : null;
+          if (st !== 'running') {
+            try { window.__ihtSound.unlock(); st = window.__ihtSound.state(); } catch (e) {}
+          }
+          if (st === 'running' && window.__ihtSound.motif()) {
+            splashMotifPlayed = true;
+            buzz([25, 60, 25]);
+            splashSoundOn();
+            return true;
+          }
+          return false;
+        } catch (e) { return false; }
       }
       var ctx = ensureAudio();
-      if (!ctx) { return; }
-      if (ctx.state === 'suspended') { ctx.resume(); }
+      if (!ctx || ctx.state !== 'running') { return false; }
       var t0 = ctx.currentTime + 0.05;
       var notes = [523.25, 659.25, 783.99, 659.25]; // C5 E5 G5 E5: a warm rise and resolve
       notes.forEach(function (f, i) {
@@ -4221,8 +4310,13 @@
       pg.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.6);
       pad.connect(pg); pg.connect(ctx.destination);
       pad.start(t0); pad.stop(t0 + 1.65);
-    } catch (e) {} // silent intro is still complete: never fail boot on audio
+      splashMotifPlayed = true;
+      buzz([25, 60, 25]);
+      splashSoundOn();
+      return true;
+    } catch (e) { return false; } // silent intro is still complete: never fail boot on audio
   }
+  function splashMotif() { playSplashMotif(); } // boot attempt: best-effort, defers to first gesture
   function splashMode() {
     /* returns { ms, short } — short means pet-only, no name fade. */
     try {
@@ -4233,8 +4327,8 @@
       st.count = (st.date === today) ? (st.count || 0) + 1 : 1;
       st.date = today;
       store('iht_splash', JSON.stringify(st));
-      if (now - st.first > 7 * 24 * 3600 * 1000) { return { ms: 800, short: true }; }
-      if (st.count >= 3) { return { ms: 1200, short: false }; }
+      if (now - st.first > 7 * 24 * 3600 * 1000) { return { ms: 2000, short: true }; }
+      if (st.count >= 3) { return { ms: 2000, short: false }; }
       return { ms: 2200, short: false };
     } catch (e) { return { ms: 2200, short: false }; }
   }
@@ -4257,11 +4351,28 @@
     splashActive = true; // go() clears timers; re-arm after navigation
     splashMotif();
     splashTimer = setTimeout(function () { dismissSplash(target); }, mode.ms);
+    /* v55: the first gesture unlocks audio — play the deferred motif while
+       the splash is still up. Panic taps are excluded (help first, no motif). */
+    var onFirstGesture = function (e) {
+      try {
+        if (e && e.target && e.target.id === 'btn-splash-panic') { return; }
+        if (window.__ihtSound) { try { window.__ihtSound.unlock(); } catch (err) {} }
+        if (splashActive) { playSplashMotif(); }
+      } catch (err) {}
+    };
+    try {
+      document.addEventListener('pointerdown', onFirstGesture, { once: true });
+      document.addEventListener('keydown', onFirstGesture, { once: true });
+    } catch (e) {}
     var splashEl = $('screen-splash');
     if (splashEl) {
       splashEl.addEventListener('pointerdown', function (e) {
         if (e.target && e.target.id === 'btn-splash-panic') { return; } // panic has its own handler
-        if (Date.now() - started >= 1000) { dismissSplash(target); }
+        if (Date.now() - started >= 1000) {
+          try { if (window.__ihtSound) { window.__ihtSound.unlock(); } } catch (err) {}
+          playSplashMotif(); // tap is a gesture: motif rings through the transition
+          dismissSplash(target);
+        }
       });
     }
   }

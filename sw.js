@@ -20,8 +20,9 @@
    v49: trigger tags + calm-time pattern insight — installed phones must re-cache app.js/index.html.
    v51: "Before you leave" ready check — installed phones must re-cache app.js/index.html/styles.css + new ready.js.
    v52: ready-check Next guard — installed phones must re-cache ready.js/index.html.
-   v54: "The platform minute" — installed phones must re-cache app.js/index.html/styles.css + new platform.js. */
-var CACHE = 'iht-v54';
+   v54: "The platform minute" — installed phones must re-cache app.js/index.html/styles.css + new platform.js.
+   v56: "Every stop is an exit" — installed phones must re-cache app.js/index.html/styles.css. */
+var CACHE = 'iht-v56';
 var ASSETS = [
   './',
   'index.html',
