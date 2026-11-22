@@ -210,7 +210,9 @@
        link style as the other doors, tool buttons untouched. v47 adds one more
        quiet button in the same style ("Start my sequence"), hidden until the
        rider saves a rescue sequence in Privacy — the default panic screen is
-       unchanged for everyone else. -->
+       unchanged for everyone else. v57 promotes that button to the hero slot
+       when a sequence IS saved (first tool named, guide falls to a secondary
+       card); with nothing saved the screen is exactly as before. -->
   <section class="screen" id="screen-panic" aria-label="Panic help">
     <div class="wrap narrow panicwrap">
       <button class="petmini panicpet" id="pet-panic" aria-label="Your co-rider is here"></button>
@@ -230,7 +232,7 @@
         <span class="po-tx"><strong>Ground me instead</strong></span>
       </button>
       <button class="linklike quiet" data-go="screen-worse" type="button" id="btn-panic-worse">This feels like something worse</button>
-      <button class="linklike quiet" id="btn-panic-seq" type="button" hidden>Start my sequence</button>
+      <button class="linklike quiet" id="btn-panic-seq" type="button" hidden><span class="po-ic" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="6" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="5" cy="18" r="1.6"/><path d="M10 6h9M10 12h9M10 18h9"/></svg></span><span class="po-tx"><strong>Start my sequence</strong><em id="seq-hero-first"></em></span></button>
       <p class="q988" id="crisis-quiet">If it ever gets really bad: <a href="tel:988">call or text 988</a></p>
       <button class="backlink" data-go="screen-home">← back</button>
     </div>
@@ -1182,7 +1184,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 56</p>
+      <p class="fineprint rise d4" id="app-version">version 57</p>
     </div>
   </section>
 

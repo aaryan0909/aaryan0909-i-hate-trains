@@ -532,6 +532,13 @@ body[data-theme="tokyo"] #screen-home, body[data-theme="tokyo"] #screen-ob1, bod
 /* v27 "Talk me through it": visually distinct — near-black card, night styling, never confused with the three tool buttons */
 .po-guide { border-color: rgba(169,182,232,.35); background: linear-gradient(180deg, #0c0e16, #080a10); }
 .po-guide .po-ic { background: rgba(169,182,232,.1); color: var(--lav); box-shadow: 0 0 24px rgba(169,182,232,.18); }
+/* v57 "Start my sequence": when a sequence is saved it takes the hero slot — warm amber, your
+   own tools, distinct from the near-black guide below it and the green breathe card. */
+.po-seq { border-color: rgba(232,184,111,.55); }
+.po-seq .po-ic { background: rgba(232,184,111,.13); color: var(--amber); box-shadow: 0 0 24px rgba(232,184,111,.22); }
+/* v57 guard: the sequence button carries its card markup at all times, but in its quiet-link
+   state (nothing saved yet) it must read as plain text — the icon stays hidden until promotion. */
+#btn-panic-seq.linklike .po-ic { display: none; }
 /* v29 panic hero: the eyes-free rescue takes the dominant first slot above the fold — larger,
    quiet divider "other ways" keeps Breathe > Ground > Cute as the calm secondary row */
 .po-hero { min-height: 116px; border-radius: 26px; padding: 22px; border-width: 2px; margin-bottom: 20px; }

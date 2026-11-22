@@ -778,11 +778,34 @@
     seqAdvance();
   }
   function seqClose(returnId) { if (!seqActive) { go(returnId); return; } stopSequence(); }
-  /* Panic-screen button: hidden until a sequence is saved (synced on every
-     panic entry via renderPanicPlan). */
+  /* v57: when a sequence is saved it LEADS the panic screen — the rider's own
+     tools are the hero (first tool named in the card's second line), and the
+     scripted guide falls to a plain secondary card. When nothing is saved the
+     screen is exactly as before: guide hero, sequence button hidden in its
+     quiet spot below the worse door. Runs on every panic entry via
+     renderPanicPlan; the freeze (v53) already trusts the same readSeq(), so
+     the screen and the freeze now agree about which rescue is primary. */
   function syncSeqButton() {
-    var b = $('btn-panic-seq');
-    if (b) { b.hidden = readSeq().length === 0; }
+    var b = $('btn-panic-seq'), g = $('btn-panic-guide');
+    if (!b || !g) { return; }
+    var ids = readSeq();
+    var first = $('seq-hero-first');
+    var q = $('crisis-quiet');
+    if (!ids.length) {
+      b.hidden = true;
+      b.classList.remove('panicopt', 'po-seq', 'po-hero');
+      b.classList.add('linklike', 'quiet');
+      if (first) { first.textContent = ''; }
+      g.classList.add('po-hero');
+      if (q && b.nextSibling !== q) { q.parentNode.insertBefore(b, q); }
+      return;
+    }
+    b.classList.remove('linklike', 'quiet');
+    b.classList.add('panicopt', 'po-seq', 'po-hero');
+    if (first) { first.textContent = seqTitle(ids[0]) + ' first'; }
+    b.hidden = false;
+    g.classList.remove('po-hero');
+    if (b.nextSibling !== g) { g.parentNode.insertBefore(b, g); }
   }
   (function () {
     var b = $('btn-panic-seq');
