@@ -21,8 +21,10 @@
    v51: "Before you leave" ready check — installed phones must re-cache app.js/index.html/styles.css + new ready.js.
    v52: ready-check Next guard — installed phones must re-cache ready.js/index.html.
    v54: "The platform minute" — installed phones must re-cache app.js/index.html/styles.css + new platform.js.
-   v56: "Every stop is an exit" — installed phones must re-cache app.js/index.html/styles.css. */
-var CACHE = 'iht-v57';
+   v56: "Every stop is an exit" — installed phones must re-cache app.js/index.html/styles.css.
+   v57: "Your sequence leads" — installed phones must re-cache app.js/index.html.
+   v58: "I'm off the train" arrival text — installed phones must re-cache app.js/index.html. */
+var CACHE = 'iht-v58';
 var ASSETS = [
   './',
   'index.html',

@@ -1803,6 +1803,30 @@
     }
   });
 
+  /* ---------- arrival text: "I'm off the train" (v58) ----------
+     The trip card tells someone the plan; nothing closed the loop. When a
+     trip ends, the reflection screen offers one quiet card: share "Off the
+     train, all good." (with the destination when the trip had one) through
+     the native share sheet, clipboard fallback, else the text itself — the
+     same never-a-dead-end pattern as the trip card. Never auto-sent, never
+     in the panic flow; tapping it never leaves the reflection screen. */
+  $('btn-arrival-text').addEventListener('click', function () {
+    tick();
+    var dest = ($('in-dest') && $('in-dest').value || '').trim();
+    var text = dest
+      ? 'Off the train \u2014 made it to ' + dest + '. All good. \u2014 via I Hate Trains'
+      : 'Off the train, all good. \u2014 via I Hate Trains';
+    var hint = $('arrival-hint');
+    function done(msg) { if (hint) { hint.hidden = false; hint.textContent = msg; } }
+    if (navigator.share) {
+      navigator.share({ title: 'I\u2019m off the train', text: text }).then(function () { done('Sent. They know you\u2019re off.'); }, function () { done('Share dismissed. The text is still yours to send.'); });
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done('Arrival text copied. Paste it to your person.'); }, function () { done(text); });
+    } else {
+      done(text);
+    }
+  });
+
   /* ---------- I'm home → reflection ---------- */
   $('btn-im-home').addEventListener('click', function () {
     tick();
