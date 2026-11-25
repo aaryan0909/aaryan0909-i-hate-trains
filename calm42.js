@@ -167,6 +167,7 @@
     }
   }
   function senPick(id) {
+    if (!SEN[id]) { return; } // unknown exercise id: never start a nameless practice
     sen.ex = id; sen.before = null; sen.after = null; senClear();
     var t = $('sen42-before-title'); if (t) { t.textContent = SEN[id].title; }
     var q = $('sen42-before-q'); if (q) { q.textContent = 'Before you start: how scary does this sensation feel right now, 0 to 10? 0 is not scary at all, 10 is the scariest.'; }
@@ -174,8 +175,9 @@
     senStage('sen42-before');
   }
   function senStart() {
-    senStage('sen42-do');
     var ex = SEN[sen.ex];
+    if (!ex) { return; } // no exercise picked (stale timer): nothing to run
+    senStage('sen42-do');
     var title = $('sen42-do-title'); if (title) { title.textContent = ex.title; }
     var body = $('sen42-do-body'); if (body) { body.textContent = senDoCopy(); }
     var big = $('sen42-do-big'); if (big) { big.textContent = ex.kind === 'timer' ? '30' : ex.kind === 'count' ? '0' : '0s'; }
@@ -210,7 +212,9 @@
   }
   function senAfter() {
     senClear();
-    var t = $('sen42-after-title'); if (t) { t.textContent = SEN[sen.ex].title; }
+    var ex = SEN[sen.ex];
+    if (!ex) { return; } // stale timer fired after the exercise was cleared
+    var t = $('sen42-after-title'); if (t) { t.textContent = ex.title; }
     rateGrid('sen42-after-grid', function (n) {
       sen.after = n;
       var r = $('sen42-done-text');

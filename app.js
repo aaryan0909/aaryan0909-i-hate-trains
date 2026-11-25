@@ -1542,7 +1542,10 @@
           cityEl: $('in-city'),
           profile: profile,
           onDone: function (sel) {
-            TriMap.current = sel;
+            /* TriMap.current is assigned LAST: setupOnLine() below invalidates
+               the map pick (a hand-changed line no longer matches it), so
+               assigning first meant every chooser pick was immediately
+               wiped and "Show the map" could never appear (audit 2026-11-25). */
             $('in-line').value = sel.lineName;
             $('in-dest').value = sel.dest;
             window.__ihtSetStops(sel.stopsToGo);
@@ -1560,6 +1563,7 @@
               }
             }
             setupSyncHidden();
+            TriMap.current = sel; // after setupOnLine(): see note above
           }
         });
       }
@@ -2113,6 +2117,7 @@
 
   /* ---------- my plan ---------- */
   var plan = readJSON('iht_plan', null) || { exit: '', reach: '', reachName: '', reachPhone: '', pocket: ['Water', 'Headphones'], c1: '', c2: '', c3: '' };
+  if (!Array.isArray(plan.pocket)) plan.pocket = []; // plans saved before the pocket list existed have no array; the Add handler pushes unguarded (audit 2026-11-25)
   function savePlan(msg) {
     store('iht_plan', JSON.stringify(plan));
     if (msg) { $('plan-saved').textContent = msg; }
@@ -2435,11 +2440,12 @@
   /* ---------- crisis: rider-entered local number ---------- */
   function renderCrisisLocal() {
     var num = (read('iht_crisis_local') || '').trim();
+    var dial = num.replace(/[^+\d]/g, '');
     var a = $('crisis-local');
-    if (num) {
+    if (dial) { // letters-only input used to show a dead tel: link (audit 2026-11-25)
       a.hidden = false;
       $('crisis-local-num').textContent = num;
-      a.href = 'tel:' + num.replace(/[^+\d]/g, '');
+      a.href = 'tel:' + dial;
     } else { a.hidden = true; }
   }
   $('in-crisis-local').addEventListener('change', function () {

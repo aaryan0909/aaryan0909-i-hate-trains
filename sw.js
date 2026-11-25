@@ -23,8 +23,9 @@
    v54: "The platform minute" — installed phones must re-cache app.js/index.html/styles.css + new platform.js.
    v56: "Every stop is an exit" — installed phones must re-cache app.js/index.html/styles.css.
    v57: "Your sequence leads" — installed phones must re-cache app.js/index.html.
-   v58: "I'm off the train" arrival text — installed phones must re-cache app.js/index.html. */
-var CACHE = 'iht-v58';
+   v58: "I'm off the train" arrival text — installed phones must re-cache app.js/index.html.
+   v59: dead-button audit fixes — pocket crash, orphaned non-breath screen, missing toolkit featured row, TriMap chooser pick wiped by setupOnLine. */
+var CACHE = 'iht-v59';
 var ASSETS = [
   './',
   'index.html',
