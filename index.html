@@ -298,6 +298,15 @@
       <div class="petbreathe guidepet" id="guide-pet" aria-hidden="true"></div>
       <p class="guideword" id="guide-word" aria-live="polite">&hellip;</p>
       <p class="guidesub" id="guide-sub"></p>
+      <!-- v60: the ten-minute clock — a quiet ring that fills as the wave
+           passes its ~10-minute peak. No numbers, no countdown. -->
+      <div class="waveclock" id="wave-clock" aria-hidden="true">
+        <svg class="waveclock-ring" viewBox="0 0 64 64" width="56" height="56" aria-hidden="true" focusable="false">
+          <circle class="wc-track" cx="32" cy="32" r="26"></circle>
+          <circle class="wc-fill" id="wave-clock-fill" cx="32" cy="32" r="26"></circle>
+        </svg>
+      </div>
+      <p class="waveclock-line" id="wave-clock-line" aria-live="polite" hidden>Past the peak now — the wave is passing.</p>
       <button class="btn ghost fullwidth guideend" id="btn-guide-end" type="button">I'm steadier</button>
       <button class="linklike quiet" id="btn-guide-ground" type="button">Try grounding instead</button>
     </div>
@@ -1188,7 +1197,7 @@
       <button class="linklike quiet rise d4" id="btn-replay-coach">Replay the helpful hints</button>
       <button class="linklike quiet rise d4" id="btn-replay-setup">Replay setup</button>
       <p class="fineprint rise d4" id="setup-version-note"></p>
-      <p class="fineprint rise d4" id="app-version">version 59</p>
+      <p class="fineprint rise d4" id="app-version">version 60</p>
     </div>
   </section>
 
@@ -1369,6 +1378,7 @@
 <script src="app.js"></script>
 <script src="stopheads.js"></script>
 <script src="guide.js"></script>
+<script src="clock.js"></script>
 <script src="calm42.js"></script>
 <script src="ready.js"></script>
 <script src="platform.js"></script>

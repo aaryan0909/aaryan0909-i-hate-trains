@@ -836,6 +836,17 @@ body.pet-blink .peye-shut { display: block; }
 .btn.ghost.fullwidth.guideend { width: 100%; min-height: 60px; font-size: 18px; border-radius: 18px; margin-top: 6px; border-color: #3a3f52; color: #f4f1e8; }
 .btn.ghost.fullwidth.guideend:active { border-color: var(--lav); }
 
+/* v60: the ten-minute clock — a quiet ring on the guided rescue that fills
+   as the wave passes its ~10-minute peak. No numbers, no countdown pressure. */
+.waveclock { margin: 2px auto 10px; width: 56px; height: 56px; }
+.waveclock-ring { display: block; transform: rotate(-90deg); }
+.waveclock-ring circle { fill: none; stroke-width: 3; }
+.wc-track { stroke: #262b38; }
+.wc-fill { stroke: #8f96ab; stroke-linecap: round; stroke-dasharray: 163.36; stroke-dashoffset: 163.36; transition: stroke-dashoffset 5s linear; }
+.wc-fill.past-peak { stroke: #a8b89a; }
+.waveclock-line { font-size: 14px; color: #a8b89a; margin: 0 0 14px; }
+@media (prefers-reduced-motion: reduce) { .wc-fill { transition: none; } }
+
 /* ============ v31 redesign: phone frame, pet engine, splash, minimalism ============ */
 
 /* Phase 1 — desktop phone-frame preview. On wide screens the app column is capped

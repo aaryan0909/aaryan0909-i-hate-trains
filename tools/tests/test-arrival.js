@@ -78,8 +78,8 @@ ok(t.d.getElementById('arrival-hint').hidden === true, 'arrival hint hidden unti
 const panicHtml = t.d.getElementById('screen-panic').innerHTML;
 ok(panicHtml.indexOf('btn-arrival-text') === -1 && panicHtml.indexOf('arrival') === -1, 'panic screen carries no arrival markup');
 const sw = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
-ok(sw.indexOf('iht-v59') !== -1, 'sw.js cache is iht-v59');
-ok(t.d.getElementById('app-version').textContent.indexOf('59') !== -1, 'About reads version 59');
+ok(sw.indexOf('iht-v60') !== -1, 'sw.js cache is iht-v60');
+ok(t.d.getElementById('app-version').textContent.indexOf('60') !== -1, 'About reads version 60');
 ok(fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8').indexOf('speechSynthesis') === -1, 'no voice anywhere (speechSynthesis absent)');
 
 console.log('share path, with destination:');
